@@ -1,0 +1,40 @@
+name: kruftle
+description: "Reclaim disk space from build artifacts across every project on your machine."
+homepage: https://github.com/dizitart/kruftle
+repository: https://github.com/dizitart/kruftle
+publish_to: 'none'
+
+version: 0.1.0+1
+
+environment:
+  sdk: ^3.12.2
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # State
+  flutter_riverpod: ^3.0.0
+
+  # Core utilities
+  path: ^1.9.0
+  collection: ^1.19.0
+  crypto: ^3.0.6
+  http: ^1.2.2
+
+  # Desktop integration
+  file_selector: ^1.0.3
+  window_manager: ^0.4.3
+  url_launcher: ^6.3.1
+  path_provider: ^2.1.5
+  shared_preferences: ^2.3.3
+  package_info_plus: ^8.1.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+  analyzer: ^8.0.0
+
+flutter:
+  uses-material-design: true
