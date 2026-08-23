@@ -12,6 +12,15 @@ on:
 permissions:
   contents: write
 
+# The Flutter version is pinned rather than tracking stable.
+#
+# `dart format` output changes between Flutter releases, so an unpinned CI
+# reformats files the developer's own toolchain formatted correctly and fails
+# the check for no real reason. Pinning makes local and CI byte-identical.
+# Bumping is deliberate: change this one value, run `dart format .`, commit.
+env:
+  FLUTTER_VERSION: '3.44.8'
+
 jobs:
   version:
     name: Resolve version
@@ -34,7 +43,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: subosito/flutter-action@v2
-        with: { channel: stable, cache: true }
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
       - run: flutter pub get
       - name: Build
         run: flutter build macos --release --build-name=${{ needs.version.outputs.version }} --build-number=${{ github.run_number }}
@@ -64,7 +76,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: subosito/flutter-action@v2
-        with: { channel: stable, cache: true }
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
       - run: flutter pub get
       - name: Build
         run: flutter build windows --release --build-name=${{ needs.version.outputs.version }} --build-number=${{ github.run_number }}
@@ -87,7 +102,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: subosito/flutter-action@v2
-        with: { channel: stable, cache: true }
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
       - name: Install build dependencies
         run: |
           sudo apt-get update
