@@ -14,12 +14,12 @@ check in §3 to confirm the tree is in the state this document claims.
 
 | | |
 |---|---|
-| **Current milestone** | M11 — packaging & first release |
+| **Current milestone** | M11 done — v0.1.0 released |
 | **Last updated** | 2026-08-23 |
 | **Build green?** | Yes — 170 tests, analyzer clean, formatter clean |
 | **Repo** | https://github.com/dizitart/kruftle (public, GPL-3.0) |
-| **CI** | Green on Linux + analyze/test; macOS and Windows builds verified in workflow |
-| **Released?** | Not yet — no tag pushed |
+| **CI** | Green — analyze/test plus release builds on all three OSs |
+| **Released** | [v0.1.0](https://github.com/dizitart/kruftle/releases/tag/v0.1.0) — .dmg, .exe, .AppImage, .deb, checksums.txt |
 
 ---
 
@@ -38,22 +38,24 @@ Legend: `[ ]` not started · `[~]` in progress · `[x]` done & green
 - [x] **M8** Global caches — registry, narrow guard, own screen
 - [x] **M9** Auto-updater — GitHub Releases, SHA-256 verified
 - [x] **M10** Branding — icon, platform assets, product metadata
-- [~] **M11** Packaging & CI — workflows written, first release not yet cut
+- [x] **M11** Packaging & CI — v0.1.0 published, all four assets verified
 
 ### What is left
 
-1. **Cut `v0.1.0`** — push the tag, watch `release.yml`, confirm all four
-   assets plus `checksums.txt` land on the release.
-2. **Verify self-update for real** — install `v0.1.0`, publish `v0.1.1`,
-   confirm the installed build offers and applies it. This is the one feature
-   that cannot be proven without two published releases.
-3. **Visual check of the global caches screen** — its logic has 18 tests, but
+1. **The last mile of self-update.** Everything up to the hand-off is verified
+   against the live API — `tool/check_update.dart 0.0.1 --download` finds the
+   right asset per platform, downloads it and passes SHA-256. What has *not*
+   been exercised is `Updater.install`: opening the .dmg, running the .exe
+   silently, replacing the AppImage in place. That needs an installed older
+   build and a second release. Publish `v0.1.1` and try it from an installed
+   `v0.1.0`.
+2. **Visual check of the global caches screen** — its logic has 18 tests, but
    the screen itself has never been looked at (the session that built it ended
    with the machine locked). Run the app, click the globe icon in the title bar.
-4. **Windows and Linux run-throughs** — only macOS has been driven by hand.
+3. **Windows and Linux run-throughs** — only macOS has been driven by hand.
    Worth checking: PATH probing without a login shell on Windows, and the
    `\\?\` long-path case noted in §6.
-5. Tier-2 stacks from `PROJECT_PLAN.md` §3, whenever wanted.
+4. Tier-2 stacks from `PROJECT_PLAN.md` §3, whenever wanted.
 
 ---
 
@@ -103,6 +105,19 @@ Newest first.
   stopping the run.
 
 **Two bugs that only the real app found** — both recorded in §6.
+
+**Released** — v0.1.0. The release workflow needed two fixes to go green:
+PowerShell reads `"$env:ProgramFiles(x86)"` as `$env:ProgramFiles` followed by
+a literal `(x86)`, eating the space, so the Inno Setup path has to use brace
+syntax; and CI had to pin `FLUTTER_VERSION` because floating stable formats
+differently from the dev machine.
+
+Verified on the published artifacts, not just in CI:
+
+- All three installers download from the real Releases API and pass SHA-256.
+- The .dmg mounts, carries the Applications symlink, and holds a **universal**
+  (x86_64 + arm64) ad-hoc-signed bundle with the right id and version.
+- The updater offers nothing when already at 0.1.0.
 
 **Next session picks up at** — §2 "What is left", item 1.
 
