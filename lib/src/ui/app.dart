@@ -85,7 +85,7 @@ class _TitleBar extends StatelessWidget {
         ),
         const SizedBox(width: 10),
         Text(
-          'reclaim your disk',
+          'Reclaim your disk',
           style: TextStyle(
             fontSize: 12,
             color: context.colors.onSurfaceVariant,

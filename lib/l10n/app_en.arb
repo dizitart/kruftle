@@ -1,0 +1,456 @@
+{
+  "@@locale": "en",
+
+  "appTagline": "Reclaim your disk",
+  "@appTagline": {
+    "description": "Subtitle next to the product name in the title bar"
+  },
+
+  "actionCancel": "Cancel",
+  "actionClose": "Close",
+  "actionShow": "Show",
+  "actionClear": "Clear",
+  "actionAll": "All",
+  "actionAllMatching": "All matching",
+  "actionNone": "None",
+  "actionBack": "Back",
+  "actionNext": "Next",
+  "actionDone": "Done",
+  "actionSkip": "Skip",
+  "actionSave": "Save",
+  "actionDelete": "Delete",
+  "actionAdd": "Add",
+  "actionEdit": "Edit",
+  "actionRetry": "Retry",
+  "actionNotNow": "Not now",
+
+  "titleBarGlobalCaches": "Global SDK caches",
+  "titleBarSettings": "Settings",
+  "titleBarDiskUsage": "Disk usage",
+  "titleBarSchedule": "Scheduled cleanups",
+  "titleBarProfiles": "Cleanup profiles",
+  "titleBarChangelog": "What's new",
+  "titleBarAbout": "About Kruftle",
+
+  "railFolder": "Folder",
+  "railScan": "Scan",
+  "railReview": "Review",
+  "railClean": "Clean",
+  "railReport": "Report",
+
+  "sourceHeading": "Which directory should Kruftle look through?",
+  "sourceSubheading": "Everything underneath it is examined. Nothing is touched until you say so.",
+  "sourceChooseFolder": "Choose a folder",
+  "sourceChooseFolderHelp": "Your codebase root, or any folder holding projects",
+  "sourceConfirmButton": "Scan this folder",
+  "sourceRecent": "Recent",
+  "sourceForget": "Remove from recents",
+
+  "scanningLooking": "Looking for projects",
+  "scanningMeasuring": "Measuring what they hold",
+  "scanningProjectsFound": "projects found",
+  "scanningDirectoriesWalked": "directories walked",
+  "scanningMeasured": "measured",
+  "scanningNothingYet": "Nothing found yet.",
+  "scanningStop": "Stop scanning",
+
+  "reviewScanAgain": "Scan again",
+  "reviewChangeFolder": "Change folder",
+  "reviewProjectCount": "{count, plural, =1{1 project} other{{count} projects}}",
+  "@reviewProjectCount": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "reviewFilterHint": "Filter by name, path or stack   ( / )",
+  "reviewSortedBySize": "Sorted by size",
+  "reviewSortedByPath": "Sorted by path",
+  "reviewNoProjects": "No projects with build output under this folder.",
+  "reviewNoMatches": "Nothing matches \"{query}\".",
+  "@reviewNoMatches": {
+    "placeholders": { "query": { "type": "String" } }
+  },
+  "reviewInSelected": "{count, plural, =1{in 1 selected project} other{in {count} selected projects}}",
+  "@reviewInSelected": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "reviewMeasuredByDryRun": "measured by the dry run",
+  "reviewStillMeasuring": "still measuring — {percent}%",
+  "@reviewStillMeasuring": {
+    "placeholders": { "percent": { "type": "int" } }
+  },
+  "reviewFoundInTotal": "{size} found in total across {count} projects.",
+  "@reviewFoundInTotal": {
+    "placeholders": {
+      "size": { "type": "String" },
+      "count": { "type": "int" }
+    }
+  },
+  "reviewPlanSummary": "{steps} steps across {projects} projects.",
+  "@reviewPlanSummary": {
+    "placeholders": {
+      "steps": { "type": "int" },
+      "projects": { "type": "int" }
+    }
+  },
+  "reviewAlsoDelete": "Also delete outright",
+  "reviewAlsoDeleteHelp": "Kruftle prefers each toolchain’s own clean command. These categories are removed by deleting the directory, so they are off unless you say otherwise.",
+  "reviewRiskBuildOutput": "Build output when the SDK is missing",
+  "reviewRiskBuildOutputHelp": "For projects whose toolchain is not installed, delete the known output directory instead. Rebuilding restores it.",
+  "reviewRiskDependencies": "Downloaded dependencies",
+  "reviewRiskDependenciesHelp": "node_modules, .venv, deps. Restored from the lockfile, but that costs a download.",
+  "reviewRiskCache": "Tool caches",
+  "reviewRiskCacheHelp": ".gradle, .turbo, .mypy_cache and friends. Only cost is a slower next build.",
+  "reviewMissingToolchains": "Some selected projects have no SDK installed. Without the first option above, they will be skipped.",
+  "reviewGitTracked": "{count, plural, =1{1 artifact directory is} other{{count} artifact directories are}} tracked by git and will be left alone. Deleting committed content is not something a rebuild can undo.",
+  "@reviewGitTracked": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "reviewDryRun": "Dry run",
+  "reviewRemeasure": "Re-measure",
+  "reviewCleanNow": "Clean now",
+  "reviewDryRunNote": "A dry run changes nothing. You can skip it.",
+  "reviewLargestDirectories": "Where the space is",
+  "reviewLargestDirectoriesHelp": "The biggest artifact directories under this folder. Hover a block for its path.",
+
+  "confirmDeleteTitle": "Delete these directories?",
+  "confirmDeleteIntro": "Alongside running each toolchain’s clean command, Kruftle will delete:",
+  "confirmCategoryBuildOutput": "build output directories where the SDK is missing",
+  "confirmCategoryDependencies": "downloaded dependency directories",
+  "confirmCategoryCache": "tool cache directories",
+  "confirmDeleteScope": "Across {count} selected projects under {folder}. Everything here is regenerable, and anything git tracks is skipped.",
+  "@confirmDeleteScope": {
+    "placeholders": {
+      "count": { "type": "int" },
+      "folder": { "type": "String" }
+    }
+  },
+  "confirmDeleteAccept": "Delete and clean",
+
+  "runningHeading": "Cleaning",
+  "runningProgress": "{done} of {total} steps",
+  "@runningProgress": {
+    "placeholders": {
+      "done": { "type": "int" },
+      "total": { "type": "int" }
+    }
+  },
+  "runningStop": "Stop",
+
+  "reportStopped": "Stopped",
+  "reportDone": "Done",
+  "reportRanFor": "Ran for {duration} across {projects} projects.",
+  "@reportRanFor": {
+    "placeholders": {
+      "duration": { "type": "String" },
+      "projects": { "type": "int" }
+    }
+  },
+  "reportReclaimed": "reclaimed",
+  "reportStepsCompleted": "steps completed",
+  "reportFailed": "failed",
+  "reportNothingToDo": "nothing to do",
+  "reportRefused": "refused",
+  "reportUnderEstimate": "The dry run estimated {estimate}. Clean commands decide for themselves what to remove — some keep caches a rebuild can reuse, which is usually what you want.",
+  "@reportUnderEstimate": {
+    "placeholders": { "estimate": { "type": "String" } }
+  },
+  "reportRefusedNotice": "{count, plural, =1{1 target was} other{{count} targets were}} refused by a safety check and left untouched.",
+  "@reportRefusedNotice": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "reportWhatWentWrong": "What went wrong",
+  "reportNoDetail": "No detail reported.",
+  "reportScanAgain": "Scan again",
+  "reportAnotherFolder": "Another folder",
+  "reportExportLog": "Export log",
+  "reportLogExported": "Log exported to {name}",
+  "@reportLogExported": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "reportDiskBefore": "before",
+  "reportDiskAfter": "after",
+  "reportDiskHeading": "{volume} — {free} free of {total}",
+  "@reportDiskHeading": {
+    "placeholders": {
+      "volume": { "type": "String" },
+      "free": { "type": "String" },
+      "total": { "type": "String" }
+    }
+  },
+  "reportDiskUnavailable": "This volume does not report its free space.",
+
+  "toolAvailable": "{binary} is installed — {stack} projects will be cleaned with their own command.",
+  "@toolAvailable": {
+    "placeholders": {
+      "binary": { "type": "String" },
+      "stack": { "type": "String" }
+    }
+  },
+  "toolMissing": "{binary} is not on PATH. Kruftle can only clean this by deleting the build directory, which needs your explicit permission.",
+  "@toolMissing": {
+    "placeholders": { "binary": { "type": "String" } }
+  },
+  "toolNotApplicable": "{stack} has no official clean command.",
+  "@toolNotApplicable": {
+    "placeholders": { "stack": { "type": "String" } }
+  },
+
+  "cachesTitle": "Global caches",
+  "cachesRemeasure": "Re-measure",
+  "cachesIntro": "These caches are shared by every project on this machine. Emptying one frees space now and costs a re-download later — it never loses work.",
+  "cachesFreed": "Freed {size} from {count, plural, =1{1 cache} other{{count} caches}}.",
+  "@cachesFreed": {
+    "placeholders": {
+      "size": { "type": "String" },
+      "count": { "type": "int" }
+    }
+  },
+  "cachesNoneFound": "No global caches found in your home directory.",
+  "cachesSelected": "selected",
+  "cachesEmptySelected": "Empty selected",
+  "cachesEmptying": "Emptying…",
+  "cachesConfirmTitle": "Empty these caches?",
+  "cachesConfirmBody": "These are shared by every project on this machine, not just the one you last scanned. Emptying them frees {size} now and costs a re-download the next time any project needs them.",
+  "@cachesConfirmBody": {
+    "placeholders": { "size": { "type": "String" } }
+  },
+  "cachesConfirmAccept": "Empty them",
+  "cachesUsesCommand": "Emptied with the toolchain’s own command rather than by deleting files.",
+  "cachesUsesDelete": "No official command for this cache, so the directory is removed.",
+  "cachesDeleteTag": "delete",
+
+  "updateAvailable": "Kruftle {version} is available ({size}).",
+  "@updateAvailable": {
+    "placeholders": {
+      "version": { "type": "String" },
+      "size": { "type": "String" }
+    }
+  },
+  "updateDownloading": "Downloading {version}… {percent}%",
+  "@updateDownloading": {
+    "placeholders": {
+      "version": { "type": "String" },
+      "percent": { "type": "int" }
+    }
+  },
+  "updateReady": "Kruftle {version} is verified and ready. The installer has been opened.",
+  "@updateReady": {
+    "placeholders": { "version": { "type": "String" } }
+  },
+  "updateFailed": "The update failed.",
+  "updateAction": "Update",
+
+  "settingsTitle": "Settings",
+  "settingsSectionAppearance": "Appearance",
+  "settingsTheme": "Theme",
+  "settingsThemeSystem": "Match the system",
+  "settingsThemeLight": "Light",
+  "settingsThemeDark": "Dark",
+  "settingsLanguage": "Language",
+  "settingsLanguageSystem": "Match the system",
+  "settingsReduceMotion": "Reduce motion",
+  "settingsReduceMotionHelp": "Replace the sweeping and pulsing animations with plain progress. Also honoured automatically when the operating system asks for reduced motion.",
+  "settingsSectionScanning": "Scanning",
+  "settingsMaxDepth": "Maximum depth",
+  "settingsMaxDepthHelp": "How far below the chosen folder to look. Deeper finds more nested projects and takes longer.",
+  "settingsLevels": "{count} levels",
+  "@settingsLevels": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "settingsHiddenDirectories": "Include hidden directories",
+  "settingsHiddenDirectoriesHelp": "Folders beginning with a dot. Usually editor state and tool caches rather than projects.",
+  "settingsSectionCleaning": "Cleaning",
+  "settingsConcurrency": "Projects at once",
+  "settingsConcurrencyHelp": "Clean commands that run in parallel. More is faster until the disk becomes the bottleneck. {cores} cores available.",
+  "@settingsConcurrencyHelp": {
+    "placeholders": { "cores": { "type": "int" } }
+  },
+  "settingsTimeout": "Step timeout",
+  "settingsTimeoutHelp": "A clean command that runs longer than this is killed and reported, so one stuck build tool cannot hold up the whole run.",
+  "settingsSeconds": "{count} seconds",
+  "@settingsSeconds": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "settingsMinutes": "{count} minutes",
+  "@settingsMinutes": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "settingsConfirmBeforeDelete": "Confirm before deleting",
+  "settingsConfirmBeforeDeleteHelp": "Show a summary dialog whenever a run will delete directories outright rather than only running clean commands.",
+  "settingsSectionPreselect": "Pre-select these deletion categories",
+  "settingsPreselectHelp": "A convenience only. Every run still shows them ticked and still asks before deleting anything.",
+  "settingsSectionLogging": "Logging",
+  "settingsLogDetail": "Detail",
+  "settingsLogRetention": "Log files kept",
+  "settingsLogRetentionHelp": "Older files are removed once the active log is rotated.",
+  "settingsNone": "none",
+  "settingsSectionUpdates": "Updates",
+  "settingsCheckUpdates": "Check for updates automatically",
+  "settingsCheckUpdatesHelp": "Kruftle asks GitHub Releases on launch and offers a verified download. It never installs without asking.",
+  "settingsSectionSizes": "Sizes",
+  "settingsSizeMode": "How sizes are counted",
+  "settingsSizeModeOnDisk": "Space actually used on disk",
+  "settingsSizeModeApparent": "Total length of the files",
+  "settingsSizeModeHelp": "On-disk matches what the operating system reports and what you get back, including block rounding and filesystem compression. It needs a native call that is unavailable on Windows, which falls back to file lengths.",
+  "settingsSectionAbout": "About",
+  "settingsShowTour": "Show the feature tour again",
+  "settingsChangelog": "What's new in this version",
+  "settingsPrivacyPolicy": "Privacy Policy",
+  "settingsTermsOfService": "Terms of Service",
+  "settingsVersion": "Version {version}",
+  "@settingsVersion": {
+    "placeholders": { "version": { "type": "String" } }
+  },
+  "settingsLicence": "Free software under the GNU General Public License v3.0 or later.",
+  "settingsSourceCode": "Source code",
+
+  "tourWelcomeTitle": "Welcome to Kruftle",
+  "tourWelcomeBody": "Build artifacts pile up quietly. Kruftle finds every project on your disk, works out what built it, and asks that toolchain to clean up after itself.",
+  "tourWelcomeStart": "Show me around",
+  "tourWelcomeSkip": "Skip the tour",
+  "tourScanTitle": "Point it at a folder",
+  "tourScanBody": "Choose your codebase root. Kruftle walks everything underneath, recognising more than forty languages and build tools from the files they leave behind — including projects nested inside other projects.",
+  "tourReviewTitle": "See what it found before anything happens",
+  "tourReviewBody": "Every project, every artifact directory, and what each one costs you — measured, not guessed. Tick what you want cleaned. Nothing is touched until you say so.",
+  "tourSafetyTitle": "Safety is not optional",
+  "tourSafetyBody": "Kruftle prefers each toolchain's own clean command over deleting files. Raw deletion is allow-listed by directory name, never follows a symlink, refuses to leave the folder you chose, and always asks first. Anything git tracks is left alone.",
+  "tourCachesTitle": "The caches in your home directory too",
+  "tourCachesBody": "Cargo's registry, Gradle's caches, the npm and pub caches — shared by every project and often the biggest win on the disk. They get their own screen and their own confirmation.",
+  "tourScheduleTitle": "Set it and forget it",
+  "tourScheduleBody": "Have Kruftle remind you daily, weekly or monthly, so the cruft never gets a chance to build up again.",
+  "tourFinishTitle": "That's the whole app",
+  "tourFinishBody": "Everything runs on your machine. Nothing is uploaded, and there is no account to make.",
+  "tourFinishAction": "Get started",
+
+  "scheduleTitle": "Scheduled cleanups",
+  "scheduleEnable": "Remind me to clean up",
+  "scheduleEnableHelp": "Kruftle checks whether a cleanup is due while it is running, and tells you at launch if one was missed. It cannot wake itself while closed.",
+  "scheduleFrequency": "How often",
+  "scheduleDaily": "Daily",
+  "scheduleWeekly": "Weekly",
+  "scheduleMonthly": "Monthly",
+  "scheduleTimeOfDay": "At",
+  "scheduleDayOfWeek": "On",
+  "scheduleDayOfMonth": "On day",
+  "scheduleFolder": "Folder to scan",
+  "scheduleChooseFolder": "Choose a folder…",
+  "scheduleNextRun": "Next reminder {when}.",
+  "@scheduleNextRun": {
+    "placeholders": { "when": { "type": "String" } }
+  },
+  "scheduleNeverRun": "No cleanup has run yet.",
+  "scheduleLastRun": "Last cleanup {when}.",
+  "@scheduleLastRun": {
+    "placeholders": { "when": { "type": "String" } }
+  },
+  "scheduleDueTitle": "A cleanup is due",
+  "scheduleDueBody": "It has been {days} days since the last one under {folder}.",
+  "@scheduleDueBody": {
+    "placeholders": {
+      "days": { "type": "int" },
+      "folder": { "type": "String" }
+    }
+  },
+  "scheduleDueAction": "Scan now",
+  "scheduleDueDismiss": "Later",
+  "scheduleNotifyOnFinish": "Notify me when a cleanup finishes",
+  "scheduleNotificationDueTitle": "Kruftle — cleanup due",
+  "scheduleNotificationDueBody": "It is time to clear build artifacts out of {folder}.",
+  "@scheduleNotificationDueBody": {
+    "placeholders": { "folder": { "type": "String" } }
+  },
+  "scheduleNotificationDoneTitle": "Kruftle — {size} reclaimed",
+  "@scheduleNotificationDoneTitle": {
+    "placeholders": { "size": { "type": "String" } }
+  },
+  "scheduleNotificationDoneBody": "Cleaned {projects} projects in {duration}.",
+  "@scheduleNotificationDoneBody": {
+    "placeholders": {
+      "projects": { "type": "int" },
+      "duration": { "type": "String" }
+    }
+  },
+
+  "profilesTitle": "Cleanup profiles",
+  "profilesIntro": "A profile teaches Kruftle a project type it does not know yet: which file marks it, what command cleans it, and which directories it may remove. Profiles sit alongside the built-in stacks and obey exactly the same safety rules.",
+  "profilesNone": "No custom profiles yet.",
+  "profilesNew": "New profile",
+  "profilesImport": "Import…",
+  "profilesExport": "Export…",
+  "profilesName": "Name",
+  "profilesNameHint": "Unreal Engine",
+  "profilesMarkers": "Marker files",
+  "profilesMarkersHint": "*.uproject",
+  "profilesMarkersHelp": "A directory containing any of these is treated as this kind of project. One per line. A leading dot-star matches by extension.",
+  "profilesCommand": "Clean command",
+  "profilesCommandHint": "make clean",
+  "profilesCommandHelp": "Run with the project directory as its working directory. Leave empty to only delete the directories below.",
+  "profilesArtifacts": "Directories it may remove",
+  "profilesArtifactsHint": "Binaries\nIntermediate",
+  "profilesArtifactsHelp": "One per line, relative to the project root. This is an allow-list: nothing outside it is ever deleted, and deletion still needs your per-run confirmation.",
+  "profilesExcludes": "Never scan these paths",
+  "profilesExcludesHint": "**/vendor/**",
+  "profilesExcludesHelp": "Glob patterns. Matching directories are skipped entirely, by every profile and every built-in stack.",
+  "profilesEnabled": "Enabled",
+  "profilesDeleteConfirm": "Delete the profile “{name}”?",
+  "@profilesDeleteConfirm": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "profilesErrorName": "Give the profile a name.",
+  "profilesErrorMarkers": "A profile needs at least one marker file, or it would match every folder.",
+  "profilesErrorNothingToDo": "Give the profile a clean command, some directories to remove, or both.",
+  "profilesErrorAbsolutePath": "Directories must be relative to the project root: “{path}” is not.",
+  "@profilesErrorAbsolutePath": {
+    "placeholders": { "path": { "type": "String" } }
+  },
+  "profilesErrorEscapes": "“{path}” points outside the project. That is never allowed.",
+  "@profilesErrorEscapes": {
+    "placeholders": { "path": { "type": "String" } }
+  },
+  "profilesErrorDuplicate": "A profile called “{name}” already exists.",
+  "@profilesErrorDuplicate": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "profilesImportFailed": "That file is not a Kruftle profile export.",
+  "profilesImported": "{count, plural, =1{Imported 1 profile.} other{Imported {count} profiles.}}",
+  "@profilesImported": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+
+  "diskTitle": "Disk usage",
+  "diskVolume": "Volume",
+  "diskUsed": "used",
+  "diskFree": "free",
+  "diskReclaimable": "reclaimable",
+  "diskOfTotal": "{used} of {total} used",
+  "@diskOfTotal": {
+    "placeholders": {
+      "used": { "type": "String" },
+      "total": { "type": "String" }
+    }
+  },
+  "diskFreedThisRun": "{size} freed",
+  "@diskFreedThisRun": {
+    "placeholders": { "size": { "type": "String" } }
+  },
+  "diskTreemapEmpty": "Nothing measured yet.",
+
+  "changelogTitle": "What's new",
+  "changelogVersionHeading": "Version {version}",
+  "@changelogVersionHeading": {
+    "placeholders": { "version": { "type": "String" } }
+  },
+  "changelogUnavailable": "The changelog could not be read.",
+  "changelogAdded": "Added",
+  "changelogChanged": "Changed",
+  "changelogFixed": "Fixed",
+  "changelogWhatsNewBanner": "Kruftle has been updated to {version}.",
+  "@changelogWhatsNewBanner": {
+    "placeholders": { "version": { "type": "String" } }
+  },
+  "changelogWhatsNewAction": "See what changed",
+
+  "legalPrivacyTitle": "Privacy Policy",
+  "legalTermsTitle": "Terms of Service",
+  "legalUnavailable": "This document could not be loaded.",
+  "legalOpenInBrowser": "Open in browser"
+}

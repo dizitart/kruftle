@@ -8,6 +8,7 @@ import 'package:kruftle/src/core/clean/process_runner.dart';
 import 'package:kruftle/src/core/models/clean.dart';
 import 'package:kruftle/src/core/models/project.dart';
 import 'package:kruftle/src/core/models/stack.dart';
+import 'package:kruftle/src/core/scan/sizer.dart';
 import 'package:kruftle/src/core/scan/toolchain.dart';
 import 'package:path/path.dart' as p;
 
@@ -102,9 +103,15 @@ void main() {
     allowedRisks: risks,
   );
 
+  // Pinned to the apparent size. These tests assert exact byte counts for
+  // fixture files; the on-disk size the app defaults to is rounded up to whole
+  // blocks by the filesystem, which is correct in the app and useless here.
+  // Which of the two definitions is used is `SizeMode`'s business, and it has
+  // its own tests.
   Future<CleanReport> execute(CleanPlan plan, {ProcessRunner? runner}) async {
     final events = await Cleaner(
       runner: runner ?? FakeRunner(),
+      sizer: Sizer(mode: SizeMode.apparent),
     ).run(plan).toList();
     return events.whereType<RunFinished>().single.report;
   }
@@ -196,7 +203,10 @@ void main() {
         [makeProject('app', bytesEach: 1000)],
         risks: {CleanRisk.buildOutput},
       );
-      final measured = await Cleaner(runner: FakeRunner()).dryRun(plan);
+      final measured = await Cleaner(
+        runner: FakeRunner(),
+        sizer: Sizer(mode: SizeMode.apparent),
+      ).dryRun(plan);
 
       expect(measured.touchedArtifacts, hasLength(1));
       expect(measured.estimatedBytes, 1000);
@@ -255,7 +265,10 @@ void main() {
         risks: {CleanRisk.buildOutput},
       );
 
-      final measured = await Cleaner(runner: FakeRunner()).dryRun(plan);
+      final measured = await Cleaner(
+        runner: FakeRunner(),
+        sizer: Sizer(mode: SizeMode.apparent),
+      ).dryRun(plan);
 
       expect(measured.estimatedBytes, 8192);
       expect(

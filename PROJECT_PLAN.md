@@ -23,6 +23,11 @@ refactor.
 | Auto-update | **Custom GitHub Releases updater** | Poll Releases API → verify SHA-256 from `checksums.txt` → download → hand off to OS installer → exit. Identical on 3 OSs, no Sparkle/appcast infra, no signing prerequisite. |
 | Code signing | **None (unsigned / ad-hoc)** | macOS ad-hoc `.dmg` + documented quarantine removal; Windows Inno Setup `.exe` through SmartScreen; Linux AppImage + `.deb`. CI is structured so signing can be added later purely via secrets. |
 | Aggressive cleaning | node_modules, global SDK caches, Python venv/`__pycache__` are all **supported but OFF by default**, opt-in per run | Owner explicitly enabled these. Default run remains "official clean commands only". |
+| Motion | Hand-written `CustomPainter` animations, **no Rive/Lottie** | The animations wanted here — sweeps, counters, progress — are geometry over time. A runtime plus an asset pipeline plus a licence audit to draw an arc is the trade this project exists to avoid. Revisit only if real `.riv` art shows up. |
+| Localisation | `gen-l10n` + ARB, ten locales | Flutter's own tooling. No `intl`-adjacent third party, no runtime string loader. |
+| Charts | `CustomPainter` | Two visualisations (a gauge and a treemap). A charting library is more code than both of them together. |
+| Native disk figures | `dart:ffi` direct to `statvfs` / `GetDiskFreeSpaceExW` | Three lines of binding per platform against a stable C ABI, versus a plugin with three native build files. Falls back to the Dart estimate whenever a symbol is missing. |
+| Scheduling | In-process while the app runs; missed runs offered at next launch | Waking a closed app means a launchd plist, a Task Scheduler entry and a systemd timer, each installed and uninstalled by the packager. Out of proportion for v0.2.0. Stated as a ceiling, not hidden. |
 
 ### Design principle that governs everything
 
@@ -107,13 +112,16 @@ matrix, and one-implementation interfaces are how this codebase rots.
 
 ### Target stack matrix
 
-Tier 1 (must ship in v1.0):
+Tier 1 (shipped in v0.1.0):
 Rust/Cargo · Flutter · Dart · Maven · Gradle · Node (npm/yarn/pnpm/bun) ·
 Python (setuptools/poetry/uv) · Go · CMake · Make · .NET · Swift/SPM · Xcode ·
 Android/Gradle · Zig · Elixir/Mix · Ruby/Bundler
 
-Tier 2 (post-1.0, same mechanism): Haskell/Stack · Scala/sbt · Clojure ·
-Bazel · Nim · Crystal · Unity · Composer · Deno · Terraform `.terraform`
+Tier 2 (v0.2.0, same mechanism — see M15):
+Bazel · Meson/Ninja · Autotools · Conan · vcpkg · PlatformIO · Haskell (Stack
+and Cabal) · Scala/sbt · Clojure (Leiningen and tools.deps) · Nim · Crystal ·
+Deno · PHP/Composer · Terraform · Unity · Julia · R · Perl · Erlang/rebar3 ·
+OCaml/Dune · D/Dub · Gleam · Fortran/fpm · Ada/Alire
 
 ---
 
@@ -224,6 +232,139 @@ Steps: **1 Choose root → 2 Scan results → 3 Select → 4 Preview (dry run, s
 - [ ] Push to `dizitart/kruftle`, first tagged release
 
 ---
+
+## 5b. v0.2.0 milestones
+
+Everything in §5 shipped as v0.1.0. The following is the v0.2.0 body of work,
+requested by the owner in one batch. The ordering is not arbitrary: the
+foundations (native disk, localisation) land before the screens that consume
+them, so no screen has to be written twice.
+
+Same rule as before — each milestone ends with `dart format`, `dart analyze
+--fatal-infos` and `flutter test` all green, tests written before or with the
+code.
+
+### M12 — Native disk measurement
+- [ ] `core/disk/native_disk.dart` — `dart:ffi` bindings, no plugin dependency
+  - POSIX `statvfs` (macOS/Linux) and `GetDiskFreeSpaceExW` (Windows) for exact
+    free / total / used bytes on the volume holding a path
+  - POSIX `lstat` → `st_blocks × 512` for **allocated** (on-disk) size, which is
+    what `du` reports and what the user actually gets back
+- [ ] `Sizer` gains an allocated-size mode; apparent size stays the fallback and
+  the only mode on Windows
+- **Verify:** free space cross-checked against `df`; allocated size
+  cross-checked against `du -sk` on a fixture tree; every FFI path degrades to
+  the Dart fallback rather than throwing when a symbol is missing.
+
+### M13 — Localisation
+- [ ] `flutter_localizations` + `gen-l10n`, ARB files under `lib/l10n/`
+- [ ] Ten locales — the most-spoken ones only: **en, es, zh, hi, ar, pt, fr,
+      de, ja, ru**. Arabic exercises RTL, which Flutter gives us for free but
+      which the layouts must not fight.
+- [ ] Every user-facing string in `lib/src/ui/**` moves to the ARB; a test
+      fails the build if a `Text('literal')` sneaks back in
+- [ ] Language picker in Settings, defaulting to the system locale
+- **Verify:** every locale parses and has the same key set as `en`; a widget
+  test pumps the app in `ar` and asserts RTL; the no-literal-strings guard test.
+
+### M14 — Light / dark / system theme
+- [ ] `Settings.themeMode`, honoured by `MaterialApp`, chooser in Settings
+- [ ] The light palette audited on every screen — it exists today but has never
+      been looked at
+- **Verify:** persistence round-trip; a widget test per mode.
+
+### M15 — Tier-2 stacks
+- [ ] The Tier-2 matrix in §3, one file per family, one registry line each
+- **Verify:** the existing table-driven registry test extended — every stack
+  detected from its markers, and every stack's artifact list non-overlapping
+  with its own markers.
+
+### M16 — Motion
+The app currently changes state without saying so. A scan of a large tree runs
+for seconds; a clean runs for minutes. Motion is what makes that legible.
+
+- [ ] `ui/anim/` — a small set of `CustomPainter` + `AnimationController`
+      pieces: a radar sweep for scanning, a sweeping "cleaning" band, an
+      animated byte counter, a completion burst, shimmer for pending sizes
+- [ ] **No animation dependency.** Rive would mean a runtime, an asset pipeline
+      and a licence audit to draw a sweeping arc that `CustomPainter` draws in
+      forty lines at the display's native refresh rate. Reconsider only if a
+      designer delivers real `.riv` art.
+- [ ] Every animation respects `MediaQuery.disableAnimations` and a
+      `Settings.reduceMotion` switch
+- **Verify:** widget tests pump each animation through a frame budget and
+  assert it is still ticking and that it stops when reduced motion is on.
+
+### M17 — Disk usage visualisation
+- [ ] Before/after volume gauge on the report, fed by M12's free-space call
+- [ ] A treemap of the largest artifact directories on the review step, so the
+      user sees *where* the space is before deciding
+- [ ] Both drawn with `CustomPainter`; no charting dependency
+- **Verify:** treemap layout is a pure function — tests assert the rectangles
+  tile the bounds exactly and that area is proportional to bytes.
+
+### M18 — Custom cleanup profiles
+- [ ] `core/profiles/` — a user-defined stack: display name, marker files, an
+      optional command, artifact directory names, include/exclude path globs
+- [ ] Merged into `StackRegistry` at runtime, so a custom profile is
+      indistinguishable from a built-in one downstream
+- [ ] Exclude globs also filter the scanner
+- [ ] Editor screen with import/export as JSON
+- **Verify:** a profile's command runs with the exact argv given; **every
+  safety rail still applies to custom profiles** — one test per rail proving a
+  profile cannot be used to escape containment, delete outside its own
+  allow-list, or skip the confirmation gate.
+
+### M19 — Scheduled cleanups
+- [ ] `core/schedule/` — daily / weekly / monthly, a time of day, a saved root,
+      and `nextRunAfter(DateTime)` as a pure function
+- [ ] Desktop notification when a cleanup is due, and when one finishes
+- [ ] **Ceiling, stated up front:** the schedule fires while Kruftle is
+      running, and a missed run is offered at next launch. Waking a closed app
+      needs a launchd plist / Task Scheduler entry / systemd timer per OS —
+      three installers' worth of work for a developer tool the user opens on
+      purpose. Not in v0.2.0.
+- **Verify:** `nextRunAfter` table-driven over month ends, DST and leap years;
+  a due schedule fires exactly once; notifications are behind an injectable
+  interface so tests do not need a notification centre.
+
+### M20 — Welcome & feature tour
+- [ ] First-run welcome, a short tour of the five things the app does, skippable
+- [ ] Replayable from Settings, so it is not a one-shot the user can never see
+      again
+- **Verify:** shown when the first-run flag is unset, never again after; every
+  tour page reachable and the skip button always present.
+
+### M21 — Changelog
+- [ ] `assets/changelog.json`, a `Changelog` model, an in-app page
+- [ ] "What's new" surfaced once after an update, driven by the last-seen
+      version in settings
+- **Verify:** the asset parses and is ordered newest-first; a test fails if the
+  top entry does not match `pubspec.yaml`'s version.
+
+### M22 — Privacy Policy & Terms
+- [ ] Both adapted from `dizitart/dizitart_com/content/legal`, rewritten for
+      what Kruftle actually does — a desktop app that deletes local files, has
+      no accounts, and talks to exactly one network endpoint (the GitHub
+      Releases API, only when update checks are on)
+- [ ] Shipped as assets and rendered in-app, plus in the repo
+- **Verify:** a test asserts both documents ship, are non-empty, and that the
+  claims a test can check are true — e.g. the only outbound host in the source
+  tree is the one the policy names.
+
+### M23 — Processor architectures
+- [ ] macOS: universal (x86_64 + arm64) — already shipping, keep it
+- [ ] Windows: x64 **and** arm64
+- [ ] Linux: x86_64 **and** arm64, AppImage and `.deb` for both
+- [ ] The updater picks the asset for the running architecture, not just the OS
+- **Verify:** asset-selection tests per (os, arch) pair, including the case
+  where only the other architecture's asset exists — which must offer nothing
+  rather than the wrong binary.
+
+### M24 — Release & self-update
+- [ ] Ship v0.2.0 and verify an installed v0.1.0 updates itself to it — the
+      one thing v0.1.0 could not prove, for want of a second release
+- **Verify:** by hand, on a real installed build.
 
 ## 6. Definition of done
 

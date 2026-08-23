@@ -26,7 +26,10 @@ void main() {
       write('a/b/two.bin', 2000);
       write('a/b/c/three.bin', 3000);
 
-      expect(directorySizeSync(p.join(tmp.path, 'a')), 6000);
+      expect(
+        directorySizeSync(p.join(tmp.path, 'a'), mode: SizeMode.apparent),
+        6000,
+      );
     });
 
     test('reports zero for a directory that does not exist', () {
@@ -47,7 +50,10 @@ void main() {
       ).createSync(p.join(tmp.path, 'real'));
 
       expect(
-        directorySizeSync(p.join(tmp.path, 'measured')),
+        directorySizeSync(
+          p.join(tmp.path, 'measured'),
+          mode: SizeMode.apparent,
+        ),
         100,
         reason: 'the 5000 bytes behind the link belong to another tree',
       );
@@ -63,7 +69,7 @@ void main() {
       final paths = [
         for (final n in ['one', 'two', 'three']) p.join(tmp.path, n),
       ];
-      final sizes = await Sizer().measureAll(paths);
+      final sizes = await Sizer(mode: SizeMode.apparent).measureAll(paths);
 
       expect(sizes.keys.toSet(), paths.toSet());
       expect(sizes.values.reduce((a, b) => a + b), 7168);
@@ -75,8 +81,14 @@ void main() {
       }
       final paths = [for (var i = 0; i < 12; i++) p.join(tmp.path, 'd$i')];
 
-      final serial = await Sizer(concurrency: 1).measureAll(paths);
-      final parallel = await Sizer(concurrency: 8).measureAll(paths);
+      final serial = await Sizer(
+        concurrency: 1,
+        mode: SizeMode.apparent,
+      ).measureAll(paths);
+      final parallel = await Sizer(
+        concurrency: 8,
+        mode: SizeMode.apparent,
+      ).measureAll(paths);
 
       expect(serial, parallel);
       expect(parallel.values.reduce((a, b) => a + b), 6000);
@@ -134,6 +146,71 @@ void main() {
     test('an unreadable path is zero, not a thrown batch', () async {
       final sizes = await Sizer().measureAll([p.join(tmp.path, 'missing')]);
       expect(sizes.values.single, 0);
+    });
+  });
+
+  group('SizeMode.onDisk', () {
+    test('charges a small file for the whole block it occupies', () {
+      write('blocks/tiny.bin', 10);
+
+      final apparent = directorySizeSync(
+        p.join(tmp.path, 'blocks'),
+        mode: SizeMode.apparent,
+      );
+      final onDisk = directorySizeSync(
+        p.join(tmp.path, 'blocks'),
+        mode: SizeMode.onDisk,
+      );
+
+      expect(apparent, 10);
+      if (!Platform.isMacOS && !Platform.isLinux) {
+        expect(onDisk, apparent, reason: 'no native call, so no change');
+        return;
+      }
+      expect(
+        onDisk,
+        greaterThan(apparent),
+        reason:
+            'ten bytes still costs a block, and the directory costs one too',
+      );
+    });
+
+    test('matches du, which is the number the user gets back', () {
+      if (!Platform.isMacOS && !Platform.isLinux) return;
+
+      for (var i = 0; i < 40; i++) {
+        write('tree/sub$i/f.bin', 700);
+      }
+
+      final measured = directorySizeSync(
+        p.join(tmp.path, 'tree'),
+        mode: SizeMode.onDisk,
+      );
+      final du = Process.runSync('du', ['-sk', p.join(tmp.path, 'tree')]);
+      final duBytes =
+          int.parse((du.stdout as String).trim().split(RegExp(r'\s+')).first) *
+          1024;
+
+      expect(measured, duBytes);
+    });
+
+    test('still refuses to follow a symlink', () {
+      write('real/big.bin', 40000);
+      Directory(p.join(tmp.path, 'measured')).createSync();
+      Link(
+        p.join(tmp.path, 'measured', 'link'),
+      ).createSync(p.join(tmp.path, 'real'));
+
+      final onDisk = directorySizeSync(
+        p.join(tmp.path, 'measured'),
+        mode: SizeMode.onDisk,
+      );
+
+      expect(
+        onDisk,
+        lessThan(40000),
+        reason: 'the bytes behind the link belong to another tree',
+      );
     });
   });
 

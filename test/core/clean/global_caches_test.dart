@@ -8,6 +8,7 @@ import 'package:kruftle/src/core/clean/process_runner.dart';
 import 'package:kruftle/src/core/clean/safety.dart';
 import 'package:kruftle/src/core/models/clean.dart';
 import 'package:kruftle/src/core/models/stack.dart';
+import 'package:kruftle/src/core/scan/sizer.dart';
 import 'package:kruftle/src/core/scan/toolchain.dart';
 import 'package:path/path.dart' as p;
 
@@ -147,6 +148,7 @@ void main() {
 
       final cleaner = GlobalCacheCleaner(
         toolchain: ToolchainProbe(environment: const {}),
+        sizer: Sizer(mode: SizeMode.apparent),
       );
       final measured = await cleaner.measure(
         await cleaner.survey(home: home.path, windows: false),
@@ -160,6 +162,7 @@ void main() {
 
       final cleaner = GlobalCacheCleaner(
         toolchain: ToolchainProbe(environment: const {}),
+        sizer: Sizer(mode: SizeMode.apparent),
       );
       final targets = await cleaner.survey(home: home.path, windows: false);
       final outcomes = await cleaner.clean(
@@ -218,6 +221,7 @@ void main() {
         registry: [
           kGlobalCaches.firstWhere((c) => c.displayName == 'npm cache'),
         ],
+        sizer: Sizer(mode: SizeMode.apparent),
       );
       final outcomes = await cleaner.clean(
         [
