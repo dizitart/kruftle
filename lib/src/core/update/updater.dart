@@ -57,9 +57,9 @@ class Updater {
     this.includePreReleases = false,
     bool? windows,
     bool? macOS,
-  })  : _client = client ?? http.Client(),
-        _windows = windows ?? Platform.isWindows,
-        _macOS = macOS ?? Platform.isMacOS;
+  }) : _client = client ?? http.Client(),
+       _windows = windows ?? Platform.isWindows,
+       _macOS = macOS ?? Platform.isMacOS;
 
   final Version currentVersion;
   final String repository;
@@ -75,8 +75,8 @@ class Updater {
   String get _assetSuffix => _windows
       ? '.exe'
       : _macOS
-          ? '.dmg'
-          : '.AppImage';
+      ? '.dmg'
+      : '.AppImage';
 
   /// Null when already up to date, or when the check simply could not be made.
   ///
@@ -86,10 +86,12 @@ class Updater {
   Future<AvailableUpdate?> check() async {
     final List<dynamic> releases;
     try {
-      final response = await _client.get(
-        _releasesUrl,
-        headers: const {'Accept': 'application/vnd.github+json'},
-      ).timeout(const Duration(seconds: 15));
+      final response = await _client
+          .get(
+            _releasesUrl,
+            headers: const {'Accept': 'application/vnd.github+json'},
+          )
+          .timeout(const Duration(seconds: 15));
       if (response.statusCode != 200) return null;
       releases = jsonDecode(response.body) as List<dynamic>;
     } on Object {
@@ -219,17 +221,18 @@ class Updater {
   Future<void> install(File installer) async {
     if (_windows) {
       // Inno Setup: run silently, restart the app when finished.
-      await Process.start(
-        installer.path,
-        ['/SILENT', '/CLOSEAPPLICATIONS', '/RESTARTAPPLICATIONS'],
-        mode: ProcessStartMode.detached,
-      );
+      await Process.start(installer.path, [
+        '/SILENT',
+        '/CLOSEAPPLICATIONS',
+        '/RESTARTAPPLICATIONS',
+      ], mode: ProcessStartMode.detached);
     } else if (_macOS) {
       // Mounting the .dmg and showing it is as far as we go: dragging the app
       // to /Applications is the user's decision, and doing it for them means
       // writing into a directory we were never granted.
-      await Process.start('open', [installer.path],
-          mode: ProcessStartMode.detached);
+      await Process.start('open', [
+        installer.path,
+      ], mode: ProcessStartMode.detached);
     } else {
       // AppImage: make it executable and replace the running one in place.
       await Process.run('chmod', ['+x', installer.path]);
@@ -237,8 +240,9 @@ class Updater {
       if (current != null && current.isNotEmpty) {
         await installer.copy(current);
       } else {
-        await Process.start('xdg-open', [installer.parent.path],
-            mode: ProcessStartMode.detached);
+        await Process.start('xdg-open', [
+          installer.parent.path,
+        ], mode: ProcessStartMode.detached);
       }
     }
   }

@@ -57,7 +57,8 @@ class StackRegistry {
 
   /// True when any stack could claim this directory, used by the scanner to
   /// decide whether to stop descending.
-  bool isProjectRoot(DirListing listing) => stacks.any((s) => s.detect(listing));
+  bool isProjectRoot(DirListing listing) =>
+      stacks.any((s) => s.detect(listing));
 }
 
 extension<T> on Iterable<T> {

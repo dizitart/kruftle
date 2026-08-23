@@ -16,7 +16,11 @@ const goStack = StackDefinition(
   id: StackId.go,
   displayName: 'Go',
   markers: {'go.mod'},
-  tool: ToolProbe(binary: 'go', versionArgs: ['version'], installUrl: 'https://go.dev/dl/'),
+  tool: ToolProbe(
+    binary: 'go',
+    versionArgs: ['version'],
+    installUrl: 'https://go.dev/dl/',
+  ),
   // -cache is the build cache, -testcache the test results cache. Module cache
   // (-modcache) is global, not per project, so it lives in the global-caches
   // screen instead.
@@ -29,7 +33,11 @@ const zigStack = StackDefinition(
   id: StackId.zig,
   displayName: 'Zig',
   markers: {'build.zig'},
-  tool: ToolProbe(binary: 'zig', versionArgs: ['version'], installUrl: 'https://ziglang.org/download/'),
+  tool: ToolProbe(
+    binary: 'zig',
+    versionArgs: ['version'],
+    installUrl: 'https://ziglang.org/download/',
+  ),
   // Zig has no `clean` subcommand; its output dirs are stable and documented.
   artifacts: [
     ArtifactPath('zig-out'),

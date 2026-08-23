@@ -41,8 +41,9 @@ class _StepReviewState extends ConsumerState<StepReview> {
       if (query.isEmpty) return true;
       return project.name.toLowerCase().contains(query) ||
           project.path.toLowerCase().contains(query) ||
-          project.stacks
-              .any((s) => s.displayName.toLowerCase().contains(query));
+          project.stacks.any(
+            (s) => s.displayName.toLowerCase().contains(query),
+          );
     }).toList();
 
     // Sorting by a size that is still being measured makes rows jump around
@@ -99,50 +100,44 @@ class _StepReviewState extends ConsumerState<StepReview> {
   /// Without this the review screen is a dead end: the step rail is a progress
   /// indicator, not navigation.
   Widget _header(WizardState state, WizardController controller) => Row(
-        children: [
-          Icon(
-            Icons.folder_rounded,
-            size: 16,
-            color: context.colors.onSurfaceVariant,
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  p.basename(state.root ?? ''),
-                  style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                const SizedBox(height: 1),
-                PathText(state.root ?? '', size: 11),
-              ],
+    children: [
+      Icon(
+        Icons.folder_rounded,
+        size: 16,
+        color: context.colors.onSurfaceVariant,
+      ),
+      const SizedBox(width: 10),
+      Expanded(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              p.basename(state.root ?? ''),
+              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
             ),
-          ),
-          Text(
-            '${state.projects.length} '
-            '${state.projects.length == 1 ? 'project' : 'projects'}',
-            style: TextStyle(
-              fontSize: 12,
-              color: context.colors.onSurfaceVariant,
-            ),
-          ),
-          const SizedBox(width: 12),
-          IconButton(
-            onPressed: () => controller.startScan(state.root!),
-            icon: const Icon(Icons.refresh_rounded, size: 17),
-            tooltip: 'Scan again',
-          ),
-          TextButton.icon(
-            onPressed: controller.restart,
-            icon: const Icon(Icons.arrow_back_rounded, size: 15),
-            label: const Text('Change folder'),
-          ),
-        ],
-      );
+            const SizedBox(height: 1),
+            PathText(state.root ?? '', size: 11),
+          ],
+        ),
+      ),
+      Text(
+        '${state.projects.length} '
+        '${state.projects.length == 1 ? 'project' : 'projects'}',
+        style: TextStyle(fontSize: 12, color: context.colors.onSurfaceVariant),
+      ),
+      const SizedBox(width: 12),
+      IconButton(
+        onPressed: () => controller.startScan(state.root!),
+        icon: const Icon(Icons.refresh_rounded, size: 17),
+        tooltip: 'Scan again',
+      ),
+      TextButton.icon(
+        onPressed: controller.restart,
+        icon: const Icon(Icons.arrow_back_rounded, size: 15),
+        label: const Text('Change folder'),
+      ),
+    ],
+  );
 
   // ------------------------------------------------------------------- table
 
@@ -150,89 +145,96 @@ class _StepReviewState extends ConsumerState<StepReview> {
     WizardState state,
     List<DetectedProject> visible,
     WizardController controller,
-  ) =>
-      Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+  ) => Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Row(
         children: [
-          Row(
-            children: [
-              Expanded(
-                child: TextField(
-                  controller: _filter,
-                  focusNode: _filterFocus,
-                  onChanged: (v) => setState(() => _query = v),
-                  style: const TextStyle(fontSize: 13),
-                  decoration: InputDecoration(
-                    hintText: 'Filter by name, path or stack   ( / )',
-                    prefixIcon: const Icon(Icons.search_rounded, size: 17),
-                    prefixIconConstraints:
-                        const BoxConstraints(minWidth: 38, minHeight: 34),
-                    suffixIcon: _query.isEmpty
-                        ? null
-                        : IconButton(
-                            icon: const Icon(Icons.close_rounded, size: 15),
-                            onPressed: () {
-                              _filter.clear();
-                              setState(() => _query = '');
-                            },
-                          ),
-                    contentPadding:
-                        const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 10),
-              TextButton(
-                onPressed: _query.isEmpty
-                    ? controller.selectAll
-                    : () => controller
-                        .selectOnly(visible.map((project) => project.path)),
-                child: Text(_query.isEmpty ? 'All' : 'All matching'),
-              ),
-              TextButton(onPressed: controller.selectNone, child: const Text('None')),
-              IconButton(
-                onPressed: () => setState(() => _sortBySize = !_sortBySize),
-                icon: Icon(
-                  _sortBySize
-                      ? Icons.data_usage_rounded
-                      : Icons.sort_by_alpha_rounded,
-                  size: 17,
-                ),
-                tooltip: _sortBySize ? 'Sorted by size' : 'Sorted by path',
-              ),
-            ],
-          ),
-          const SizedBox(height: 14),
           Expanded(
-            child: visible.isEmpty
-                ? Center(
-                    child: Text(
-                      state.projects.isEmpty
-                          ? 'No projects with build output under this folder.'
-                          : 'Nothing matches "$_query".',
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: context.colors.onSurfaceVariant,
+            child: TextField(
+              controller: _filter,
+              focusNode: _filterFocus,
+              onChanged: (v) => setState(() => _query = v),
+              style: const TextStyle(fontSize: 13),
+              decoration: InputDecoration(
+                hintText: 'Filter by name, path or stack   ( / )',
+                prefixIcon: const Icon(Icons.search_rounded, size: 17),
+                prefixIconConstraints: const BoxConstraints(
+                  minWidth: 38,
+                  minHeight: 34,
+                ),
+                suffixIcon: _query.isEmpty
+                    ? null
+                    : IconButton(
+                        icon: const Icon(Icons.close_rounded, size: 15),
+                        onPressed: () {
+                          _filter.clear();
+                          setState(() => _query = '');
+                        },
                       ),
-                    ),
-                  )
-                : Card(
-                    child: ListView.separated(
-                      padding: EdgeInsets.zero,
-                      itemCount: visible.length,
-                      separatorBuilder: (_, _) => const Divider(height: 1),
-                      itemBuilder: (context, index) => _ProjectRow(
-                        project: visible[index],
-                        root: state.root!,
-                        tools: state.tools,
-                        selected: state.selected.contains(visible[index].path),
-                        onToggle: () => controller.toggle(visible[index].path),
-                      ),
-                    ),
+                contentPadding: const EdgeInsets.symmetric(
+                  vertical: 12,
+                  horizontal: 8,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 10),
+          TextButton(
+            onPressed: _query.isEmpty
+                ? controller.selectAll
+                : () => controller.selectOnly(
+                    visible.map((project) => project.path),
                   ),
+            child: Text(_query.isEmpty ? 'All' : 'All matching'),
+          ),
+          TextButton(
+            onPressed: controller.selectNone,
+            child: const Text('None'),
+          ),
+          IconButton(
+            onPressed: () => setState(() => _sortBySize = !_sortBySize),
+            icon: Icon(
+              _sortBySize
+                  ? Icons.data_usage_rounded
+                  : Icons.sort_by_alpha_rounded,
+              size: 17,
+            ),
+            tooltip: _sortBySize ? 'Sorted by size' : 'Sorted by path',
           ),
         ],
-      );
+      ),
+      const SizedBox(height: 14),
+      Expanded(
+        child: visible.isEmpty
+            ? Center(
+                child: Text(
+                  state.projects.isEmpty
+                      ? 'No projects with build output under this folder.'
+                      : 'Nothing matches "$_query".',
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: context.colors.onSurfaceVariant,
+                  ),
+                ),
+              )
+            : Card(
+                child: ListView.separated(
+                  padding: EdgeInsets.zero,
+                  itemCount: visible.length,
+                  separatorBuilder: (_, _) => const Divider(height: 1),
+                  itemBuilder: (context, index) => _ProjectRow(
+                    project: visible[index],
+                    root: state.root!,
+                    tools: state.tools,
+                    selected: state.selected.contains(visible[index].path),
+                    onToggle: () => controller.toggle(visible[index].path),
+                  ),
+                ),
+              ),
+      ),
+    ],
+  );
 
   // ----------------------------------------------------------------- sidebar
 
@@ -249,128 +251,134 @@ class _StepReviewState extends ConsumerState<StepReview> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-        Card(
-          child: Padding(
-            padding: const EdgeInsets.all(18),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                StatTile(
-                  value: formatBytes(
-                    plan?.estimatedBytes ?? state.selectedBytes,
-                  ),
-                  label: plan == null
-                      ? 'in ${state.selected.length} selected '
-                          '${state.selected.length == 1 ? 'project' : 'projects'}'
-                      : 'measured by the dry run',
-                  emphasis: true,
-                  color: context.colors.primary,
-                ),
-                if (state.sizingProgress != null) ...[
-                  const SizedBox(height: 12),
-                  Row(
-                    children: [
-                      SizedBox(
-                        width: 11,
-                        height: 11,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 1.6,
-                          value: state.sizingProgress,
+                Card(
+                  child: Padding(
+                    padding: const EdgeInsets.all(18),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        StatTile(
+                          value: formatBytes(
+                            plan?.estimatedBytes ?? state.selectedBytes,
+                          ),
+                          label: plan == null
+                              ? 'in ${state.selected.length} selected '
+                                    '${state.selected.length == 1 ? 'project' : 'projects'}'
+                              : 'measured by the dry run',
+                          emphasis: true,
                           color: context.colors.primary,
                         ),
-                      ),
-                      const SizedBox(width: 9),
-                      Text(
-                        'still measuring — '
-                        '${((state.sizingProgress ?? 0) * 100).round()}%',
-                        style: TextStyle(
-                          fontSize: 11.5,
-                          color: context.colors.onSurfaceVariant,
+                        if (state.sizingProgress != null) ...[
+                          const SizedBox(height: 12),
+                          Row(
+                            children: [
+                              SizedBox(
+                                width: 11,
+                                height: 11,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 1.6,
+                                  value: state.sizingProgress,
+                                  color: context.colors.primary,
+                                ),
+                              ),
+                              const SizedBox(width: 9),
+                              Text(
+                                'still measuring — '
+                                '${((state.sizingProgress ?? 0) * 100).round()}%',
+                                style: TextStyle(
+                                  fontSize: 11.5,
+                                  color: context.colors.onSurfaceVariant,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                        const SizedBox(height: 14),
+                        Text(
+                          plan == null
+                              ? '${formatBytes(state.totalBytes)} found in total across '
+                                    '${state.projects.length} projects.'
+                              : '${plan.steps.length} steps across '
+                                    '${plan.projectPaths.length} projects.',
+                          style: TextStyle(
+                            fontSize: 12,
+                            height: 1.45,
+                            color: context.colors.onSurfaceVariant,
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                ],
-                const SizedBox(height: 14),
+                ),
+
+                const SizedBox(height: 18),
+                const PanelLabel('Also delete outright'),
+                const SizedBox(height: 4),
                 Text(
-                  plan == null
-                      ? '${formatBytes(state.totalBytes)} found in total across '
-                          '${state.projects.length} projects.'
-                      : '${plan.steps.length} steps across '
-                          '${plan.projectPaths.length} projects.',
+                  'Kruftle prefers each toolchain’s own clean command. These '
+                  'categories are removed by deleting the directory, so they are off '
+                  'unless you say otherwise.',
                   style: TextStyle(
-                    fontSize: 12,
+                    fontSize: 11.5,
                     height: 1.45,
                     color: context.colors.onSurfaceVariant,
                   ),
                 ),
-              ],
-            ),
-          ),
-        ),
+                const SizedBox(height: 8),
 
-        const SizedBox(height: 18),
-        const PanelLabel('Also delete outright'),
-        const SizedBox(height: 4),
-        Text(
-          'Kruftle prefers each toolchain’s own clean command. These '
-          'categories are removed by deleting the directory, so they are off '
-          'unless you say otherwise.',
-          style: TextStyle(
-            fontSize: 11.5,
-            height: 1.45,
-            color: context.colors.onSurfaceVariant,
-          ),
-        ),
-        const SizedBox(height: 8),
+                RiskToggle(
+                  risk: CleanRisk.buildOutput,
+                  value: state.risks.contains(CleanRisk.buildOutput),
+                  onChanged: (v) =>
+                      controller.setRisk(CleanRisk.buildOutput, v),
+                  title: 'Build output when the SDK is missing',
+                  subtitle:
+                      'For projects whose toolchain is not installed, delete the '
+                      'known output directory instead. Rebuilding restores it.',
+                ),
+                RiskToggle(
+                  risk: CleanRisk.dependencies,
+                  value: state.risks.contains(CleanRisk.dependencies),
+                  onChanged: (v) =>
+                      controller.setRisk(CleanRisk.dependencies, v),
+                  title: 'Downloaded dependencies',
+                  subtitle:
+                      'node_modules, .venv, deps. Restored from the lockfile, '
+                      'but that costs a download.',
+                ),
+                RiskToggle(
+                  risk: CleanRisk.cache,
+                  value: state.risks.contains(CleanRisk.cache),
+                  onChanged: (v) => controller.setRisk(CleanRisk.cache, v),
+                  title: 'Tool caches',
+                  subtitle:
+                      '.gradle, .turbo, .mypy_cache and friends. Only cost is a '
+                      'slower next build.',
+                ),
 
-        RiskToggle(
-          risk: CleanRisk.buildOutput,
-          value: state.risks.contains(CleanRisk.buildOutput),
-          onChanged: (v) => controller.setRisk(CleanRisk.buildOutput, v),
-          title: 'Build output when the SDK is missing',
-          subtitle: 'For projects whose toolchain is not installed, delete the '
-              'known output directory instead. Rebuilding restores it.',
-        ),
-        RiskToggle(
-          risk: CleanRisk.dependencies,
-          value: state.risks.contains(CleanRisk.dependencies),
-          onChanged: (v) => controller.setRisk(CleanRisk.dependencies, v),
-          title: 'Downloaded dependencies',
-          subtitle: 'node_modules, .venv, deps. Restored from the lockfile, '
-              'but that costs a download.',
-        ),
-        RiskToggle(
-          risk: CleanRisk.cache,
-          value: state.risks.contains(CleanRisk.cache),
-          onChanged: (v) => controller.setRisk(CleanRisk.cache, v),
-          title: 'Tool caches',
-          subtitle: '.gradle, .turbo, .mypy_cache and friends. Only cost is a '
-              'slower next build.',
-        ),
+                if (state.hasMissingToolchains &&
+                    !state.risks.contains(CleanRisk.buildOutput)) ...[
+                  const SizedBox(height: 12),
+                  const NoticeBanner(
+                    message:
+                        'Some selected projects have no SDK installed. Without '
+                        'the first option above, they will be skipped.',
+                    icon: Icons.info_outline_rounded,
+                    color: KruftleTheme.warn,
+                  ),
+                ],
 
-        if (state.hasMissingToolchains &&
-            !state.risks.contains(CleanRisk.buildOutput)) ...[
-          const SizedBox(height: 12),
-          const NoticeBanner(
-            message: 'Some selected projects have no SDK installed. Without '
-                'the first option above, they will be skipped.',
-            icon: Icons.info_outline_rounded,
-            color: KruftleTheme.warn,
-          ),
-        ],
-
-        if (plan != null && plan.gitTracked.isNotEmpty) ...[
-          const SizedBox(height: 12),
-          NoticeBanner(
-            message: '${plan.gitTracked.length} artifact '
-                '${plan.gitTracked.length == 1 ? 'directory is' : 'directories are'} '
-                'tracked by git and will be left alone. Deleting committed '
-                'content is not something a rebuild can undo.',
-            icon: Icons.shield_outlined,
-          ),
-        ],
-
+                if (plan != null && plan.gitTracked.isNotEmpty) ...[
+                  const SizedBox(height: 12),
+                  NoticeBanner(
+                    message:
+                        '${plan.gitTracked.length} artifact '
+                        '${plan.gitTracked.length == 1 ? 'directory is' : 'directories are'} '
+                        'tracked by git and will be left alone. Deleting committed '
+                        'content is not something a rebuild can undo.',
+                    icon: Icons.shield_outlined,
+                  ),
+                ],
               ],
             ),
           ),
@@ -439,14 +447,18 @@ class _ConfirmDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final categories = {
-      CleanRisk.buildOutput: 'build output directories where the SDK is missing',
+      CleanRisk.buildOutput:
+          'build output directories where the SDK is missing',
       CleanRisk.dependencies: 'downloaded dependency directories',
       CleanRisk.cache: 'tool cache directories',
     };
 
     return AlertDialog(
-      icon: const Icon(Icons.warning_amber_rounded,
-          size: 30, color: KruftleTheme.warn),
+      icon: const Icon(
+        Icons.warning_amber_rounded,
+        size: 30,
+        color: KruftleTheme.warn,
+      ),
       title: const Text('Delete these directories?'),
       content: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 440),

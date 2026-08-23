@@ -69,10 +69,13 @@ class StepSource extends ConsumerWidget {
             _RecentRoot(
               path: root,
               onOpen: () => controller.startScan(root),
-              onForget: () => ref.read(settingsProvider.notifier).update(
+              onForget: () => ref
+                  .read(settingsProvider.notifier)
+                  .update(
                     (s) => s.copyWith(
-                      defaultRoots:
-                          s.defaultRoots.where((r) => r != root).toList(),
+                      defaultRoots: s.defaultRoots
+                          .where((r) => r != root)
+                          .toList(),
                     ),
                   ),
             ),
@@ -89,43 +92,40 @@ class _DropTarget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => InkWell(
-        onTap: onBrowse,
+    onTap: onBrowse,
+    borderRadius: BorderRadius.circular(12),
+    child: Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(vertical: 44),
+      decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(12),
-        child: Container(
-          width: double.infinity,
-          padding: const EdgeInsets.symmetric(vertical: 44),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(
-              color: context.colors.outlineVariant,
-              width: 1.5,
+        border: Border.all(color: context.colors.outlineVariant, width: 1.5),
+        color: context.colors.surfaceContainerLowest,
+      ),
+      child: Column(
+        children: [
+          Icon(
+            Icons.folder_open_rounded,
+            size: 38,
+            color: context.colors.primary,
+          ),
+          const SizedBox(height: 14),
+          const Text(
+            'Choose a folder',
+            style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            'Your codebase root, or any folder holding projects',
+            style: TextStyle(
+              fontSize: 12.5,
+              color: context.colors.onSurfaceVariant,
             ),
-            color: context.colors.surfaceContainerLowest,
           ),
-          child: Column(
-            children: [
-              Icon(
-                Icons.folder_open_rounded,
-                size: 38,
-                color: context.colors.primary,
-              ),
-              const SizedBox(height: 14),
-              const Text(
-                'Choose a folder',
-                style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
-              ),
-              const SizedBox(height: 6),
-              Text(
-                'Your codebase root, or any folder holding projects',
-                style: TextStyle(
-                  fontSize: 12.5,
-                  color: context.colors.onSurfaceVariant,
-                ),
-              ),
-            ],
-          ),
-        ),
-      );
+        ],
+      ),
+    ),
+  );
 }
 
 class _RecentRoot extends StatelessWidget {

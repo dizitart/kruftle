@@ -20,8 +20,8 @@ abstract final class KruftleTheme {
   static List<String> get monoFallback => Platform.isMacOS
       ? const ['SF Mono', 'Menlo', 'Monaco', 'monospace']
       : Platform.isWindows
-          ? const ['Cascadia Mono', 'Consolas', 'Courier New', 'monospace']
-          : const ['Ubuntu Mono', 'DejaVu Sans Mono', 'monospace'];
+      ? const ['Cascadia Mono', 'Consolas', 'Courier New', 'monospace']
+      : const ['Ubuntu Mono', 'DejaVu Sans Mono', 'monospace'];
 
   static String get monoFamily => monoFallback.first;
 
@@ -36,8 +36,7 @@ abstract final class KruftleTheme {
       surface: isDark ? const Color(0xFF16181D) : const Color(0xFFFBFAF8),
     );
 
-    final surfaceRaised =
-        isDark ? const Color(0xFF1D2027) : Colors.white;
+    final surfaceRaised = isDark ? const Color(0xFF1D2027) : Colors.white;
     final border = isDark
         ? Colors.white.withValues(alpha: 0.08)
         : Colors.black.withValues(alpha: 0.08);
@@ -72,17 +71,13 @@ abstract final class KruftleTheme {
       ),
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8),
-          ),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
         ),
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8),
-          ),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
           side: BorderSide(color: border),
         ),

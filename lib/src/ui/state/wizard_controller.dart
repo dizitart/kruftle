@@ -81,11 +81,10 @@ class WizardState {
   /// True when a selected project's toolchain is missing, so the UI can explain
   /// why opting into deletion might be worth it.
   bool get hasMissingToolchains => selectedProjects.any(
-        (project) => project.stacks.any(
-          (s) =>
-              s.command != null && tools[s.stackId] == ToolStatus.missing,
-        ),
-      );
+    (project) => project.stacks.any(
+      (s) => s.command != null && tools[s.stackId] == ToolStatus.missing,
+    ),
+  );
 
   double get runProgress =>
       stepsTotal == 0 ? 0 : (stepsDone / stepsTotal).clamp(0, 1);
@@ -110,25 +109,24 @@ class WizardState {
     bool clearError = false,
     bool clearPlan = false,
     bool clearSizing = false,
-  }) =>
-      WizardState(
-        step: step ?? this.step,
-        root: root ?? this.root,
-        projects: projects ?? this.projects,
-        selected: selected ?? this.selected,
-        risks: risks ?? this.risks,
-        tools: tools ?? this.tools,
-        currentPath: currentPath ?? this.currentPath,
-        directoriesScanned: directoriesScanned ?? this.directoriesScanned,
-        sizingProgress: clearSizing ? null : sizingProgress ?? this.sizingProgress,
-        plan: clearPlan ? null : plan ?? this.plan,
-        stepsDone: stepsDone ?? this.stepsDone,
-        stepsTotal: stepsTotal ?? this.stepsTotal,
-        runningStep: runningStep ?? this.runningStep,
-        finishedSteps: finishedSteps ?? this.finishedSteps,
-        report: report ?? this.report,
-        error: clearError ? null : error ?? this.error,
-      );
+  }) => WizardState(
+    step: step ?? this.step,
+    root: root ?? this.root,
+    projects: projects ?? this.projects,
+    selected: selected ?? this.selected,
+    risks: risks ?? this.risks,
+    tools: tools ?? this.tools,
+    currentPath: currentPath ?? this.currentPath,
+    directoriesScanned: directoriesScanned ?? this.directoriesScanned,
+    sizingProgress: clearSizing ? null : sizingProgress ?? this.sizingProgress,
+    plan: clearPlan ? null : plan ?? this.plan,
+    stepsDone: stepsDone ?? this.stepsDone,
+    stepsTotal: stepsTotal ?? this.stepsTotal,
+    runningStep: runningStep ?? this.runningStep,
+    finishedSteps: finishedSteps ?? this.finishedSteps,
+    report: report ?? this.report,
+    error: clearError ? null : error ?? this.error,
+  );
 }
 
 /// Drives the whole wizard. One controller rather than one per step, because
@@ -264,7 +262,10 @@ class WizardController extends Notifier<WizardState> {
       );
     }
 
-    final ticker = Timer.periodic(const Duration(milliseconds: 400), (_) => flush());
+    final ticker = Timer.periodic(
+      const Duration(milliseconds: 400),
+      (_) => flush(),
+    );
 
     await Sizer().measureAll(
       paths,
@@ -291,20 +292,19 @@ class WizardController extends Notifier<WizardState> {
   List<DetectedProject> _applySizes(
     List<DetectedProject> projects,
     Map<String, int> sizes,
-  ) =>
-      [
-        for (final project in projects)
-          project.withStacks([
-            for (final stack in project.stacks)
-              stack.withArtifacts([
-                for (final artifact in stack.artifacts)
-                  if (sizes.containsKey(artifact.absolutePath))
-                    artifact.withSize(sizes[artifact.absolutePath]!)
-                  else
-                    artifact,
-              ]),
+  ) => [
+    for (final project in projects)
+      project.withStacks([
+        for (final stack in project.stacks)
+          stack.withArtifacts([
+            for (final artifact in stack.artifacts)
+              if (sizes.containsKey(artifact.absolutePath))
+                artifact.withSize(sizes[artifact.absolutePath]!)
+              else
+                artifact,
           ]),
-      ];
+      ]),
+  ];
 
   Future<void> cancelScan() async {
     await _scanSubscription?.cancel();
@@ -322,9 +322,9 @@ class WizardController extends Notifier<WizardState> {
   }
 
   void selectAll() => state = state.copyWith(
-        selected: state.projects.map((p) => p.path).toSet(),
-        clearPlan: true,
-      );
+    selected: state.projects.map((p) => p.path).toSet(),
+    clearPlan: true,
+  );
 
   void selectNone() =>
       state = state.copyWith(selected: const {}, clearPlan: true);
@@ -342,11 +342,11 @@ class WizardController extends Notifier<WizardState> {
   // ------------------------------------------------------------------ running
 
   Future<CleanPlan> _buildPlan() => const CleanPlanner().plan(
-        scanRoot: state.root!,
-        projects: state.selectedProjects,
-        toolStatus: state.tools,
-        allowedRisks: state.risks,
-      );
+    scanRoot: state.root!,
+    projects: state.selectedProjects,
+    toolStatus: state.tools,
+    allowedRisks: state.risks,
+  );
 
   /// Measures what a run would free, changing nothing.
   Future<void> dryRun() async {
@@ -394,35 +394,37 @@ class WizardController extends Notifier<WizardState> {
     final outcomes = <StepOutcome>[];
     final completed = Completer<void>();
 
-    _runSubscription = cleaner.run(plan).listen(
-      (event) {
-        switch (event) {
-          case StepStarted(:final step):
-            state = state.copyWith(runningStep: step);
-          case StepFinished(:final outcome):
-            outcomes.add(outcome);
-            _logOutcome(outcome);
-            state = state.copyWith(
-              stepsDone: outcomes.length,
-              finishedSteps: List.of(outcomes),
-            );
-          case RunFinished(:final report):
-            _log.info('Cleanup finished', {
-              'freedBytes': report.bytesFreed,
-              'estimatedBytes': report.estimatedBytes,
-              'failed': report.problems.length,
-              'cancelled': report.cancelled,
-              'seconds': report.duration.inSeconds,
-            });
-            state = state.copyWith(step: WizardStep.report, report: report);
-        }
-      },
-      onDone: completed.complete,
-      onError: (Object e) {
-        _fail('$e');
-        completed.complete();
-      },
-    );
+    _runSubscription = cleaner
+        .run(plan)
+        .listen(
+          (event) {
+            switch (event) {
+              case StepStarted(:final step):
+                state = state.copyWith(runningStep: step);
+              case StepFinished(:final outcome):
+                outcomes.add(outcome);
+                _logOutcome(outcome);
+                state = state.copyWith(
+                  stepsDone: outcomes.length,
+                  finishedSteps: List.of(outcomes),
+                );
+              case RunFinished(:final report):
+                _log.info('Cleanup finished', {
+                  'freedBytes': report.bytesFreed,
+                  'estimatedBytes': report.estimatedBytes,
+                  'failed': report.problems.length,
+                  'cancelled': report.cancelled,
+                  'seconds': report.duration.inSeconds,
+                });
+                state = state.copyWith(step: WizardStep.report, report: report);
+            }
+          },
+          onDone: completed.complete,
+          onError: (Object e) {
+            _fail('$e');
+            completed.complete();
+          },
+        );
 
     await completed.future;
     _cleaner = null;
@@ -473,8 +475,9 @@ class WizardController extends Notifier<WizardState> {
   }
 }
 
-final wizardProvider =
-    NotifierProvider<WizardController, WizardState>(WizardController.new);
+final wizardProvider = NotifierProvider<WizardController, WizardState>(
+  WizardController.new,
+);
 
 /// Convenience for the safety banner on the review step.
 String describeViolation(SafetyViolation violation) => violation.message;

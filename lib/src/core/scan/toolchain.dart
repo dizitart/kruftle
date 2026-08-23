@@ -27,8 +27,8 @@ enum ToolStatus {
 /// actual login shell what its PATH is, once, and search that.
 class ToolchainProbe {
   ToolchainProbe({Map<String, String>? environment, bool? windows})
-      : _environment = environment ?? Platform.environment,
-        _windows = windows ?? Platform.isWindows;
+    : _environment = environment ?? Platform.environment,
+      _windows = windows ?? Platform.isWindows;
 
   final Map<String, String> _environment;
   final bool _windows;
@@ -56,10 +56,7 @@ class ToolchainProbe {
 
   Future<String?> _search(String binary) async {
     final candidates = _windows
-        ? [
-            for (final ext in _windowsExtensions) '$binary$ext',
-            binary,
-          ]
+        ? [for (final ext in _windowsExtensions) '$binary$ext', binary]
         : [binary];
 
     for (final dir in await _path()) {
@@ -94,10 +91,10 @@ class ToolchainProbe {
     final shell = _environment['SHELL'];
     if (shell == null || shell.isEmpty) return const [];
     try {
-      final result = await Process.run(
-        shell,
-        ['-lic', 'printf %s "\$PATH"'],
-      ).timeout(const Duration(seconds: 5));
+      final result = await Process.run(shell, [
+        '-lic',
+        'printf %s "\$PATH"',
+      ]).timeout(const Duration(seconds: 5));
       if (result.exitCode != 0) return const [];
       return (result.stdout as String).trim().split(':');
     } on Object {

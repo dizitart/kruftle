@@ -8,8 +8,11 @@ import 'package:kruftle/src/core/settings/settings.dart';
 void main() {
   test('defaults are conservative', () {
     const settings = Settings();
-    expect(settings.rememberedRisks, isEmpty,
-        reason: 'no raw deletion category is enabled out of the box');
+    expect(
+      settings.rememberedRisks,
+      isEmpty,
+      reason: 'no raw deletion category is enabled out of the box',
+    );
     expect(settings.confirmBeforeDelete, isTrue);
     expect(settings.defaultRoots, isEmpty);
   });
@@ -59,8 +62,10 @@ void main() {
   });
 
   test('corrupt storage yields defaults instead of a crash', () {
-    expect(Settings.decode('not json at all').maxScanDepth,
-        const Settings().maxScanDepth);
+    expect(
+      Settings.decode('not json at all').maxScanDepth,
+      const Settings().maxScanDepth,
+    );
     expect(Settings.decode(null).cleanConcurrency, 4);
     expect(Settings.decode('').cleanConcurrency, 4);
   });

@@ -27,28 +27,27 @@ class UpdateBanner extends ConsumerWidget {
       child: Row(
         children: [
           Icon(
-            failed ? Icons.error_outline_rounded : Icons.arrow_circle_up_rounded,
+            failed
+                ? Icons.error_outline_rounded
+                : Icons.arrow_circle_up_rounded,
             size: 17,
             color: tint,
           ),
           const SizedBox(width: 11),
           Expanded(
-            child: Text(
-              switch (state.phase) {
-                UpdatePhase.available =>
-                  'Kruftle ${update.version} is available '
-                      '(${formatBytes(update.sizeBytes)}).',
-                UpdatePhase.downloading =>
-                  'Downloading ${update.version}… '
-                      '${(state.progress * 100).round()}%',
-                UpdatePhase.ready =>
-                  'Kruftle ${update.version} is verified and ready. '
-                      'The installer has been opened.',
-                UpdatePhase.failed => state.error ?? 'The update failed.',
-                UpdatePhase.idle => '',
-              },
-              style: TextStyle(fontSize: 12.5, color: tint),
-            ),
+            child: Text(switch (state.phase) {
+              UpdatePhase.available =>
+                'Kruftle ${update.version} is available '
+                    '(${formatBytes(update.sizeBytes)}).',
+              UpdatePhase.downloading =>
+                'Downloading ${update.version}… '
+                    '${(state.progress * 100).round()}%',
+              UpdatePhase.ready =>
+                'Kruftle ${update.version} is verified and ready. '
+                    'The installer has been opened.',
+              UpdatePhase.failed => state.error ?? 'The update failed.',
+              UpdatePhase.idle => '',
+            }, style: TextStyle(fontSize: 12.5, color: tint)),
           ),
           if (state.phase == UpdatePhase.downloading)
             SizedBox(

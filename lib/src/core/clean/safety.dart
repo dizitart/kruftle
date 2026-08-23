@@ -30,17 +30,15 @@ enum SafetyViolation {
   symlink;
 
   String get message => switch (this) {
-        forbiddenRoot =>
-          'This is a system or home directory. Kruftle will not touch it.',
-        tooShallow =>
-          'This path is too close to the filesystem root to be safe.',
-        notADirectory => 'This is not a directory that exists.',
-        outsideRoot => 'This path resolves outside the directory you chose.',
-        notAllowListed =>
-          'This is not a known build output directory for any detected stack.',
-        symlink =>
-          'This is a symbolic link. Kruftle never deletes through links.',
-      };
+    forbiddenRoot =>
+      'This is a system or home directory. Kruftle will not touch it.',
+    tooShallow => 'This path is too close to the filesystem root to be safe.',
+    notADirectory => 'This is not a directory that exists.',
+    outsideRoot => 'This path resolves outside the directory you chose.',
+    notAllowListed =>
+      'This is not a known build output directory for any detected stack.',
+    symlink => 'This is a symbolic link. Kruftle never deletes through links.',
+  };
 }
 
 /// Absolute paths that may never be a scan root or a delete target, whatever
@@ -48,10 +46,7 @@ enum SafetyViolation {
 ///
 /// Comparison is case-insensitive on Windows and macOS, both of which have
 /// case-insensitive filesystems by default.
-Set<String> forbiddenRoots({
-  String? home,
-  bool windows = false,
-}) {
+Set<String> forbiddenRoots({String? home, bool windows = false}) {
   final userHome = home ?? _homeDirectory();
   return {
     if (windows) ...const {
@@ -103,8 +98,10 @@ SafetyViolation? checkScanRoot(
   final isWindows = windows ?? Platform.isWindows;
   final normalized = _normalize(path, windows: isWindows);
 
-  final forbidden = forbiddenRoots(home: home, windows: isWindows)
-      .map((r) => _normalize(r, windows: isWindows));
+  final forbidden = forbiddenRoots(
+    home: home,
+    windows: isWindows,
+  ).map((r) => _normalize(r, windows: isWindows));
   if (forbidden.contains(normalized)) return SafetyViolation.forbiddenRoot;
 
   if (_depth(normalized, windows: isWindows) < 2) {
@@ -148,7 +145,8 @@ SafetyViolation? checkDeleteTarget({
 
   // Containment is checked *after* resolution, so a link planted mid-path
   // cannot smuggle the target outside the tree the user consented to.
-  final resolver = resolve ?? (String q) => Directory(q).resolveSymbolicLinksSync();
+  final resolver =
+      resolve ?? (String q) => Directory(q).resolveSymbolicLinksSync();
   final resolvedTarget = _normalize(resolver(target), windows: isWindows);
   final resolvedRoot = _normalize(resolver(scanRoot), windows: isWindows);
 
@@ -157,8 +155,9 @@ SafetyViolation? checkDeleteTarget({
     return SafetyViolation.outsideRoot;
   }
 
-  final forbidden = forbiddenRoots(windows: isWindows)
-      .map((r) => _normalize(r, windows: isWindows));
+  final forbidden = forbiddenRoots(
+    windows: isWindows,
+  ).map((r) => _normalize(r, windows: isWindows));
   if (forbidden.contains(resolvedTarget)) return SafetyViolation.forbiddenRoot;
 
   return null;
@@ -170,9 +169,7 @@ bool _containsRelative(
   required bool windows,
 }) {
   final needle = _normalize(relative, windows: windows);
-  return allowed
-      .map((a) => _normalize(a, windows: windows))
-      .contains(needle);
+  return allowed.map((a) => _normalize(a, windows: windows)).contains(needle);
 }
 
 /// Canonical form for comparison: no trailing separator, forward slashes, and

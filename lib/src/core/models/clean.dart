@@ -23,17 +23,17 @@ class CleanStep {
     required this.stackName,
     required CleanCommand this.command,
     required this.covers,
-  })  : kind = StepKind.command,
-        artifact = null;
+  }) : kind = StepKind.command,
+       artifact = null;
 
   const CleanStep.delete({
     required this.projectPath,
     required this.stackId,
     required this.stackName,
     required ArtifactHit this.artifact,
-  })  : kind = StepKind.delete,
-        command = null,
-        covers = const [];
+  }) : kind = StepKind.delete,
+       command = null,
+       covers = const [];
 
   final StepKind kind;
   final String projectPath;
@@ -49,14 +49,14 @@ class CleanStep {
 
   /// Every artifact path this step touches, for de-duplicated estimation.
   List<ArtifactHit> get touched => switch (kind) {
-        StepKind.command => covers,
-        StepKind.delete => [artifact!],
-      };
+    StepKind.command => covers,
+    StepKind.delete => [artifact!],
+  };
 
   String get description => switch (kind) {
-        StepKind.command => '$command',
-        StepKind.delete => 'delete ${artifact!.relative}/',
-      };
+    StepKind.command => '$command',
+    StepKind.delete => 'delete ${artifact!.relative}/',
+  };
 }
 
 /// How a step ended.
@@ -138,13 +138,12 @@ class CleanPlan {
   /// opt-in delete step may also target it, and counting those bytes twice
   /// would promise the user space that does not exist.
   Map<String, ArtifactHit> get touchedArtifacts => {
-        for (final step in steps)
-          for (final artifact in step.touched)
-            artifact.absolutePath: artifact,
-      };
+    for (final step in steps)
+      for (final artifact in step.touched) artifact.absolutePath: artifact,
+  };
 
-  int get estimatedBytes => touchedArtifacts.values
-      .fold(0, (sum, a) => sum + (a.sizeBytes ?? 0));
+  int get estimatedBytes =>
+      touchedArtifacts.values.fold(0, (sum, a) => sum + (a.sizeBytes ?? 0));
 }
 
 /// What actually happened.
@@ -173,7 +172,7 @@ class CleanReport {
       outcomes.where((o) => o.status == status).length;
 
   int get projectsTouched => {
-        for (final o in outcomes)
-          if (o.status == StepStatus.success) o.step.projectPath,
-      }.length;
+    for (final o in outcomes)
+      if (o.status == StepStatus.success) o.step.projectPath,
+  }.length;
 }

@@ -28,10 +28,13 @@ class GitGuard {
 
     final ProcessResult result;
     try {
-      result = await Process.run(
-        'git',
-        ['-C', projectPath, 'ls-files', '--', ...relatives],
-      ).timeout(const Duration(seconds: 10));
+      result = await Process.run('git', [
+        '-C',
+        projectPath,
+        'ls-files',
+        '--',
+        ...relatives,
+      ]).timeout(const Duration(seconds: 10));
     } on Object {
       return const {};
     }

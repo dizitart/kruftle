@@ -37,22 +37,26 @@ class SettingsPage extends ConsumerWidget {
             children: [
               _SliderRow(
                 label: 'Maximum depth',
-                help: 'How far below the chosen folder to look. Deeper finds '
+                help:
+                    'How far below the chosen folder to look. Deeper finds '
                     'more nested projects and takes longer.',
                 value: settings.maxScanDepth.toDouble(),
                 min: 2,
                 max: 32,
                 format: (v) => '${v.round()} levels',
-                onChanged: (v) => controller
-                    .update((s) => s.copyWith(maxScanDepth: v.round())),
+                onChanged: (v) => controller.update(
+                  (s) => s.copyWith(maxScanDepth: v.round()),
+                ),
               ),
               _SwitchRow(
                 label: 'Include hidden directories',
-                help: 'Folders beginning with a dot. Usually editor state and '
+                help:
+                    'Folders beginning with a dot. Usually editor state and '
                     'tool caches rather than projects.',
                 value: settings.scanHiddenDirectories,
-                onChanged: (v) => controller
-                    .update((s) => s.copyWith(scanHiddenDirectories: v)),
+                onChanged: (v) => controller.update(
+                  (s) => s.copyWith(scanHiddenDirectories: v),
+                ),
               ),
             ],
           ),
@@ -62,19 +66,22 @@ class SettingsPage extends ConsumerWidget {
             children: [
               _SliderRow(
                 label: 'Projects at once',
-                help: 'Clean commands that run in parallel. More is faster '
+                help:
+                    'Clean commands that run in parallel. More is faster '
                     'until the disk becomes the bottleneck. '
                     '${Platform.numberOfProcessors} cores available.',
                 value: settings.cleanConcurrency.toDouble(),
                 min: 1,
                 max: 16,
                 format: (v) => '${v.round()}',
-                onChanged: (v) => controller
-                    .update((s) => s.copyWith(cleanConcurrency: v.round())),
+                onChanged: (v) => controller.update(
+                  (s) => s.copyWith(cleanConcurrency: v.round()),
+                ),
               ),
               _SliderRow(
                 label: 'Step timeout',
-                help: 'A clean command that runs longer than this is killed '
+                help:
+                    'A clean command that runs longer than this is killed '
                     'and reported, so one stuck build tool cannot hold up the '
                     'whole run.',
                 value: settings.stepTimeoutSeconds.toDouble(),
@@ -84,24 +91,28 @@ class SettingsPage extends ConsumerWidget {
                 format: (v) => v < 120
                     ? '${v.round()} seconds'
                     : '${(v / 60).round()} minutes',
-                onChanged: (v) => controller
-                    .update((s) => s.copyWith(stepTimeoutSeconds: v.round())),
+                onChanged: (v) => controller.update(
+                  (s) => s.copyWith(stepTimeoutSeconds: v.round()),
+                ),
               ),
               _SwitchRow(
                 label: 'Confirm before deleting',
-                help: 'Show a summary dialog whenever a run will delete '
+                help:
+                    'Show a summary dialog whenever a run will delete '
                     'directories outright rather than only running clean '
                     'commands.',
                 value: settings.confirmBeforeDelete,
-                onChanged: (v) => controller
-                    .update((s) => s.copyWith(confirmBeforeDelete: v)),
+                onChanged: (v) => controller.update(
+                  (s) => s.copyWith(confirmBeforeDelete: v),
+                ),
               ),
             ],
           ),
 
           _Section(
             title: 'Pre-select these deletion categories',
-            subtitle: 'A convenience only. Every run still shows them ticked '
+            subtitle:
+                'A convenience only. Every run still shows them ticked '
                 'and still asks before deleting anything.',
             children: [
               for (final (risk, label) in const [
@@ -127,9 +138,7 @@ class SettingsPage extends ConsumerWidget {
               _DropdownRow<LogLevel>(
                 label: 'Detail',
                 value: settings.logLevel,
-                items: {
-                  for (final level in LogLevel.values) level: level.name,
-                },
+                items: {for (final level in LogLevel.values) level: level.name},
                 onChanged: (v) {
                   controller.update((s) => s.copyWith(logLevel: v));
                 },
@@ -141,8 +150,9 @@ class SettingsPage extends ConsumerWidget {
                 min: 0,
                 max: 20,
                 format: (v) => v == 0 ? 'none' : '${v.round()}',
-                onChanged: (v) => controller
-                    .update((s) => s.copyWith(logRetentionFiles: v.round())),
+                onChanged: (v) => controller.update(
+                  (s) => s.copyWith(logRetentionFiles: v.round()),
+                ),
               ),
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 10),
@@ -170,7 +180,8 @@ class SettingsPage extends ConsumerWidget {
             children: [
               _SwitchRow(
                 label: 'Check for updates automatically',
-                help: 'Kruftle asks GitHub Releases on launch and offers a '
+                help:
+                    'Kruftle asks GitHub Releases on launch and offers a '
                     'verified download. It never installs without asking.',
                 value: settings.checkForUpdates,
                 onChanged: (v) =>
@@ -188,18 +199,14 @@ class SettingsPage extends ConsumerWidget {
     final (command, args) = Platform.isMacOS
         ? ('open', [directory])
         : Platform.isWindows
-            ? ('explorer', [directory])
-            : ('xdg-open', [directory]);
+        ? ('explorer', [directory])
+        : ('xdg-open', [directory]);
     Process.run(command, args);
   }
 }
 
 class _Section extends StatelessWidget {
-  const _Section({
-    required this.title,
-    required this.children,
-    this.subtitle,
-  });
+  const _Section({required this.title, required this.children, this.subtitle});
 
   final String title;
   final String? subtitle;
@@ -207,32 +214,32 @@ class _Section extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Padding(
-        padding: const EdgeInsets.only(bottom: 28),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            PanelLabel(title),
-            if (subtitle != null) ...[
-              const SizedBox(height: 6),
-              Text(
-                subtitle!,
-                style: TextStyle(
-                  fontSize: 12,
-                  height: 1.45,
-                  color: context.colors.onSurfaceVariant,
-                ),
-              ),
-            ],
-            const SizedBox(height: 10),
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-                child: Column(children: children),
-              ),
+    padding: const EdgeInsets.only(bottom: 28),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        PanelLabel(title),
+        if (subtitle != null) ...[
+          const SizedBox(height: 6),
+          Text(
+            subtitle!,
+            style: TextStyle(
+              fontSize: 12,
+              height: 1.45,
+              color: context.colors.onSurfaceVariant,
             ),
-          ],
+          ),
+        ],
+        const SizedBox(height: 10),
+        Card(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+            child: Column(children: children),
+          ),
         ),
-      );
+      ],
+    ),
+  );
 }
 
 class _SwitchRow extends StatelessWidget {
@@ -250,34 +257,34 @@ class _SwitchRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Padding(
-        padding: const EdgeInsets.symmetric(vertical: 10),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(label, style: const TextStyle(fontSize: 13)),
-                  if (help != null) ...[
-                    const SizedBox(height: 3),
-                    Text(
-                      help!,
-                      style: TextStyle(
-                        fontSize: 11.5,
-                        height: 1.4,
-                        color: context.colors.onSurfaceVariant,
-                      ),
-                    ),
-                  ],
-                ],
-              ),
-            ),
-            const SizedBox(width: 20),
-            Switch(value: value, onChanged: onChanged),
-          ],
+    padding: const EdgeInsets.symmetric(vertical: 10),
+    child: Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(label, style: const TextStyle(fontSize: 13)),
+              if (help != null) ...[
+                const SizedBox(height: 3),
+                Text(
+                  help!,
+                  style: TextStyle(
+                    fontSize: 11.5,
+                    height: 1.4,
+                    color: context.colors.onSurfaceVariant,
+                  ),
+                ),
+              ],
+            ],
+          ),
         ),
-      );
+        const SizedBox(width: 20),
+        Switch(value: value, onChanged: onChanged),
+      ],
+    ),
+  );
 }
 
 class _SliderRow extends StatelessWidget {
@@ -303,42 +310,40 @@ class _SliderRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Padding(
-        padding: const EdgeInsets.symmetric(vertical: 10),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+    padding: const EdgeInsets.symmetric(vertical: 10),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
           children: [
-            Row(
-              children: [
-                Expanded(
-                  child: Text(label, style: const TextStyle(fontSize: 13)),
-                ),
-                Text(
-                  format(value),
-                  style: context.mono(size: 12, color: context.colors.primary),
-                ),
-              ],
-            ),
-            if (help != null) ...[
-              const SizedBox(height: 3),
-              Text(
-                help!,
-                style: TextStyle(
-                  fontSize: 11.5,
-                  height: 1.4,
-                  color: context.colors.onSurfaceVariant,
-                ),
-              ),
-            ],
-            Slider(
-              value: value.clamp(min, max),
-              min: min,
-              max: max,
-              divisions: divisions ?? (max - min).round(),
-              onChanged: onChanged,
+            Expanded(child: Text(label, style: const TextStyle(fontSize: 13))),
+            Text(
+              format(value),
+              style: context.mono(size: 12, color: context.colors.primary),
             ),
           ],
         ),
-      );
+        if (help != null) ...[
+          const SizedBox(height: 3),
+          Text(
+            help!,
+            style: TextStyle(
+              fontSize: 11.5,
+              height: 1.4,
+              color: context.colors.onSurfaceVariant,
+            ),
+          ),
+        ],
+        Slider(
+          value: value.clamp(min, max),
+          min: min,
+          max: max,
+          divisions: divisions ?? (max - min).round(),
+          onChanged: onChanged,
+        ),
+      ],
+    ),
+  );
 }
 
 class _DropdownRow<T> extends StatelessWidget {
@@ -356,21 +361,21 @@ class _DropdownRow<T> extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Padding(
-        padding: const EdgeInsets.symmetric(vertical: 10),
-        child: Row(
-          children: [
-            Expanded(child: Text(label, style: const TextStyle(fontSize: 13))),
-            DropdownButton<T>(
-              value: value,
-              underline: const SizedBox.shrink(),
-              style: TextStyle(fontSize: 13, color: context.colors.onSurface),
-              items: [
-                for (final entry in items.entries)
-                  DropdownMenuItem(value: entry.key, child: Text(entry.value)),
-              ],
-              onChanged: (v) => v == null ? null : onChanged(v),
-            ),
+    padding: const EdgeInsets.symmetric(vertical: 10),
+    child: Row(
+      children: [
+        Expanded(child: Text(label, style: const TextStyle(fontSize: 13))),
+        DropdownButton<T>(
+          value: value,
+          underline: const SizedBox.shrink(),
+          style: TextStyle(fontSize: 13, color: context.colors.onSurface),
+          items: [
+            for (final entry in items.entries)
+              DropdownMenuItem(value: entry.key, child: Text(entry.value)),
           ],
+          onChanged: (v) => v == null ? null : onChanged(v),
         ),
-      );
+      ],
+    ),
+  );
 }

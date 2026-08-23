@@ -18,8 +18,7 @@ Future<void> main(List<String> args) async {
         scanned++;
       case ProjectFound(:final project):
         final stacks = project.stacks.map((s) => s.displayName).join(', ');
-        final artifacts =
-            project.allArtifacts.map((a) => a.relative).join(' ');
+        final artifacts = project.allArtifacts.map((a) => a.relative).join(' ');
         found.add('  ${project.name.padRight(28)} $stacks  [$artifacts]');
       case ScanFailed(:final violation):
         stderr.writeln('refused: ${violation.message}');
@@ -30,9 +29,13 @@ Future<void> main(List<String> args) async {
   stopwatch.stop();
   found.sort();
   stdout.writeln(found.join('\n'));
-  stdout.writeln('\n${found.length} projects with artifacts, '
-      '$scanned dirs walked, ${stopwatch.elapsedMilliseconds} ms');
+  stdout.writeln(
+    '\n${found.length} projects with artifacts, '
+    '$scanned dirs walked, ${stopwatch.elapsedMilliseconds} ms',
+  );
 
   final tools = await scanner.toolAvailability();
-  stdout.writeln('\ntoolchains: ${tools.entries.map((e) => '${e.key.name}=${e.value.name}').join(' ')}');
+  stdout.writeln(
+    '\ntoolchains: ${tools.entries.map((e) => '${e.key.name}=${e.value.name}').join(' ')}',
+  );
 }

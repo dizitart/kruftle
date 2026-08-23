@@ -4,8 +4,10 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:kruftle/src/core/models/stack.dart';
 import 'package:kruftle/src/core/registry/stack_registry.dart';
 
-DirListing listing({Set<String> files = const {}, Set<String> dirs = const {}}) =>
-    DirListing(files: files, directories: dirs);
+DirListing listing({
+  Set<String> files = const {},
+  Set<String> dirs = const {},
+}) => DirListing(files: files, directories: dirs);
 
 void main() {
   const registry = StackRegistry();
@@ -60,17 +62,28 @@ void main() {
       expect(ids, isNot(contains(StackId.dart)));
     });
 
-    test('reports every stack in a polyglot project, highest priority first', () {
-      // A Flutter app with a native Gradle build and a Rust FFI crate.
-      final polyglot = listing(
-        files: {'pubspec.yaml', 'build.gradle', 'Cargo.toml', 'Makefile'},
-        dirs: {'android', 'ios'},
-      );
-      final ids = registry.detect(polyglot).map((s) => s.id).toList();
+    test(
+      'reports every stack in a polyglot project, highest priority first',
+      () {
+        // A Flutter app with a native Gradle build and a Rust FFI crate.
+        final polyglot = listing(
+          files: {'pubspec.yaml', 'build.gradle', 'Cargo.toml', 'Makefile'},
+          dirs: {'android', 'ios'},
+        );
+        final ids = registry.detect(polyglot).map((s) => s.id).toList();
 
-      expect(ids, containsAll([StackId.flutter, StackId.gradle, StackId.rust, StackId.make]));
-      expect(ids.first, StackId.flutter, reason: 'highest priority leads');
-    });
+        expect(
+          ids,
+          containsAll([
+            StackId.flutter,
+            StackId.gradle,
+            StackId.rust,
+            StackId.make,
+          ]),
+        );
+        expect(ids.first, StackId.flutter, reason: 'highest priority leads');
+      },
+    );
 
     test('an empty directory matches nothing', () {
       expect(registry.detect(listing()), isEmpty);
@@ -116,8 +129,11 @@ void main() {
       expect(managerFor({'package.json', 'yarn.lock'}), 'yarn');
       expect(managerFor({'package.json', 'bun.lockb'}), 'bun');
       expect(managerFor({'package.json', 'package-lock.json'}), 'npm');
-      expect(managerFor({'package.json'}), 'npm',
-          reason: 'npm is the ecosystem default when no lockfile is present');
+      expect(
+        managerFor({'package.json'}),
+        'npm',
+        reason: 'npm is the ecosystem default when no lockfile is present',
+      );
     });
 
     test('python offers a clean only when setuptools can provide one', () {
@@ -164,22 +180,31 @@ void main() {
       }
     });
 
-    test('no artifact path is absolute, a glob, or escapes the project root', () {
-      for (final stack in kStacks) {
-        for (final artifact in stack.artifacts) {
-          expect(artifact.relative, isNot(startsWith('/')));
-          expect(artifact.relative, isNot(contains('..')));
-          expect(artifact.relative, isNot(contains('*')));
-          expect(artifact.relative, isNot(contains('?')));
-          expect(artifact.relative, isNotEmpty);
+    test(
+      'no artifact path is absolute, a glob, or escapes the project root',
+      () {
+        for (final stack in kStacks) {
+          for (final artifact in stack.artifacts) {
+            expect(artifact.relative, isNot(startsWith('/')));
+            expect(artifact.relative, isNot(contains('..')));
+            expect(artifact.relative, isNot(contains('*')));
+            expect(artifact.relative, isNot(contains('?')));
+            expect(artifact.relative, isNotEmpty);
+          }
         }
-      }
-    });
+      },
+    );
 
     test('dependency directories are never marked as plain build output', () {
       // node_modules and venvs cost real time to restore; they must stay behind
       // the opt-in gate.
-      const mustBeOptIn = {'node_modules', '.venv', 'venv', 'deps', 'vendor/bundle'};
+      const mustBeOptIn = {
+        'node_modules',
+        '.venv',
+        'venv',
+        'deps',
+        'vendor/bundle',
+      };
       for (final stack in kStacks) {
         for (final artifact in stack.artifacts) {
           if (mustBeOptIn.contains(artifact.relative)) {
@@ -196,7 +221,11 @@ void main() {
     test('every stack declares a display name and at least one marker', () {
       for (final stack in kStacks) {
         expect(stack.displayName, isNotEmpty);
-        expect(stack.markers, isNotEmpty, reason: '${stack.id} is undetectable');
+        expect(
+          stack.markers,
+          isNotEmpty,
+          reason: '${stack.id} is undetectable',
+        );
       }
     });
   });

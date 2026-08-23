@@ -16,8 +16,9 @@ class Version implements Comparable<Version> {
   /// version without one, per semver.
   final String? preRelease;
 
-  static final _pattern =
-      RegExp(r'^v?(\d+)\.(\d+)\.(\d+)(?:-([0-9A-Za-z.-]+))?(?:\+[0-9A-Za-z.-]+)?$');
+  static final _pattern = RegExp(
+    r'^v?(\d+)\.(\d+)\.(\d+)(?:-([0-9A-Za-z.-]+))?(?:\+[0-9A-Za-z.-]+)?$',
+  );
 
   /// Parses `1.2.3`, `v1.2.3`, `1.2.3-beta.1`, `1.2.3+42`. Returns null for
   /// anything else rather than throwing: a release tag we cannot read simply is
@@ -54,8 +55,7 @@ class Version implements Comparable<Version> {
   bool operator <(Version other) => compareTo(other) < 0;
 
   @override
-  bool operator ==(Object other) =>
-      other is Version && compareTo(other) == 0;
+  bool operator ==(Object other) => other is Version && compareTo(other) == 0;
 
   @override
   int get hashCode => Object.hash(major, minor, patch, preRelease);

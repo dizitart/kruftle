@@ -89,13 +89,13 @@ BEGIN
     BEGIN
         BLOCK "040904e4"
         BEGIN
-            VALUE "CompanyName", "com.dizitart" "\0"
-            VALUE "FileDescription", "kruftle" "\0"
+            VALUE "CompanyName", "Dizitart" "\0"
+            VALUE "FileDescription", "Kruftle — reclaim disk space from build artifacts" "\0"
             VALUE "FileVersion", VERSION_AS_STRING "\0"
-            VALUE "InternalName", "kruftle" "\0"
-            VALUE "LegalCopyright", "Copyright (C) 2026 com.dizitart. All rights reserved." "\0"
+            VALUE "InternalName", "Kruftle" "\0"
+            VALUE "LegalCopyright", "Copyright (C) 2026 Dizitart. Licensed under the GNU GPL v3." "\0"
             VALUE "OriginalFilename", "kruftle.exe" "\0"
-            VALUE "ProductName", "kruftle" "\0"
+            VALUE "ProductName", "Kruftle" "\0"
             VALUE "ProductVersion", VERSION_AS_STRING "\0"
         END
     END

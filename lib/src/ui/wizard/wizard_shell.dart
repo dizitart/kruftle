@@ -63,25 +63,25 @@ class _StepRail extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Container(
-        width: 168,
-        padding: const EdgeInsets.fromLTRB(16, 28, 12, 16),
-        color: context.colors.surfaceContainerLowest,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            for (final (step, label, icon) in _steps)
-              _RailItem(
-                label: label,
-                icon: icon,
-                state: step.index == current.index
-                    ? _ItemState.active
-                    : step.index < current.index
-                        ? _ItemState.done
-                        : _ItemState.upcoming,
-              ),
-          ],
-        ),
-      );
+    width: 168,
+    padding: const EdgeInsets.fromLTRB(16, 28, 12, 16),
+    color: context.colors.surfaceContainerLowest,
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        for (final (step, label, icon) in _steps)
+          _RailItem(
+            label: label,
+            icon: icon,
+            state: step.index == current.index
+                ? _ItemState.active
+                : step.index < current.index
+                ? _ItemState.done
+                : _ItemState.upcoming,
+          ),
+      ],
+    ),
+  );
 }
 
 enum _ItemState { done, active, upcoming }
@@ -102,7 +102,9 @@ class _RailItem extends StatelessWidget {
     final color = switch (state) {
       _ItemState.active => context.colors.primary,
       _ItemState.done => KruftleTheme.freed,
-      _ItemState.upcoming => context.colors.onSurfaceVariant.withValues(alpha: 0.45),
+      _ItemState.upcoming => context.colors.onSurfaceVariant.withValues(
+        alpha: 0.45,
+      ),
     };
 
     return Container(

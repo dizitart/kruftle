@@ -63,8 +63,12 @@ class SystemProcessRunner implements ProcessRunner {
     final stdoutBuffer = StringBuffer();
     final stderrBuffer = StringBuffer();
     final drained = Future.wait([
-      process.stdout.forEach((d) => stdoutBuffer.write(String.fromCharCodes(d))),
-      process.stderr.forEach((d) => stderrBuffer.write(String.fromCharCodes(d))),
+      process.stdout.forEach(
+        (d) => stdoutBuffer.write(String.fromCharCodes(d)),
+      ),
+      process.stderr.forEach(
+        (d) => stderrBuffer.write(String.fromCharCodes(d)),
+      ),
     ]);
 
     try {

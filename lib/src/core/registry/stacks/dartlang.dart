@@ -19,7 +19,10 @@ const flutterStack = StackDefinition(
   displayName: 'Flutter',
   markers: {'pubspec.yaml'},
   matches: _isFlutterProject,
-  tool: ToolProbe(binary: 'flutter', installUrl: 'https://docs.flutter.dev/get-started/install'),
+  tool: ToolProbe(
+    binary: 'flutter',
+    installUrl: 'https://docs.flutter.dev/get-started/install',
+  ),
   cleanCommand: CleanCommand('flutter', ['clean']),
   artifacts: [
     ArtifactPath('build'),

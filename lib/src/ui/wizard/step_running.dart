@@ -177,10 +177,10 @@ class _OutcomeLog extends StatelessWidget {
 }
 
 (IconData, Color) statusAppearance(StepStatus status) => switch (status) {
-      StepStatus.success => (Icons.check_rounded, KruftleTheme.freed),
-      StepStatus.skipped => (Icons.remove_rounded, Colors.grey),
-      StepStatus.cancelled => (Icons.block_rounded, Colors.grey),
-      StepStatus.refused => (Icons.shield_outlined, KruftleTheme.warn),
-      StepStatus.timedOut => (Icons.timer_off_outlined, KruftleTheme.danger),
-      StepStatus.failed => (Icons.close_rounded, KruftleTheme.danger),
-    };
+  StepStatus.success => (Icons.check_rounded, KruftleTheme.freed),
+  StepStatus.skipped => (Icons.remove_rounded, Colors.grey),
+  StepStatus.cancelled => (Icons.block_rounded, Colors.grey),
+  StepStatus.refused => (Icons.shield_outlined, KruftleTheme.warn),
+  StepStatus.timedOut => (Icons.timer_off_outlined, KruftleTheme.danger),
+  StepStatus.failed => (Icons.close_rounded, KruftleTheme.danger),
+};

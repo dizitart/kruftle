@@ -64,26 +64,28 @@ class ToolBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => switch (status) {
-        ToolStatus.available => Tag(
-            stackName,
-            color: KruftleTheme.freed,
-            icon: Icons.check_rounded,
-            tooltip: '$binary is installed — $stackName projects will be '
-                'cleaned with their own command.',
-          ),
-        ToolStatus.missing => Tag(
-            stackName,
-            color: KruftleTheme.warn,
-            icon: Icons.priority_high_rounded,
-            tooltip: '$binary is not on PATH. Kruftle can only clean this by '
-                'deleting the build directory, which needs your explicit '
-                'permission.',
-          ),
-        ToolStatus.notApplicable => Tag(
-            stackName,
-            tooltip: '$stackName has no official clean command.',
-          ),
-      };
+    ToolStatus.available => Tag(
+      stackName,
+      color: KruftleTheme.freed,
+      icon: Icons.check_rounded,
+      tooltip:
+          '$binary is installed — $stackName projects will be '
+          'cleaned with their own command.',
+    ),
+    ToolStatus.missing => Tag(
+      stackName,
+      color: KruftleTheme.warn,
+      icon: Icons.priority_high_rounded,
+      tooltip:
+          '$binary is not on PATH. Kruftle can only clean this by '
+          'deleting the build directory, which needs your explicit '
+          'permission.',
+    ),
+    ToolStatus.notApplicable => Tag(
+      stackName,
+      tooltip: '$stackName has no official clean command.',
+    ),
+  };
 }
 
 /// Section heading inside a panel.
@@ -94,14 +96,14 @@ class PanelLabel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Text(
-        text.toUpperCase(),
-        style: TextStyle(
-          fontSize: 10.5,
-          letterSpacing: 1.1,
-          fontWeight: FontWeight.w700,
-          color: context.colors.onSurfaceVariant,
-        ),
-      );
+    text.toUpperCase(),
+    style: TextStyle(
+      fontSize: 10.5,
+      letterSpacing: 1.1,
+      fontWeight: FontWeight.w700,
+      color: context.colors.onSurfaceVariant,
+    ),
+  );
 }
 
 /// A single headline figure with its caption.
@@ -121,29 +123,29 @@ class StatTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            value,
-            style: TextStyle(
-              fontSize: emphasis ? 34 : 20,
-              height: 1.1,
-              fontWeight: FontWeight.w700,
-              color: color ?? context.colors.onSurface,
-              letterSpacing: -0.5,
-            ),
-          ),
-          const SizedBox(height: 3),
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 11.5,
-              color: context.colors.onSurfaceVariant,
-            ),
-          ),
-        ],
-      );
+    crossAxisAlignment: CrossAxisAlignment.start,
+    mainAxisSize: MainAxisSize.min,
+    children: [
+      Text(
+        value,
+        style: TextStyle(
+          fontSize: emphasis ? 34 : 20,
+          height: 1.1,
+          fontWeight: FontWeight.w700,
+          color: color ?? context.colors.onSurface,
+          letterSpacing: -0.5,
+        ),
+      ),
+      const SizedBox(height: 3),
+      Text(
+        label,
+        style: TextStyle(
+          fontSize: 11.5,
+          color: context.colors.onSurfaceVariant,
+        ),
+      ),
+    ],
+  );
 }
 
 /// A path, shown the way a terminal would, ellipsised from the left so the
@@ -157,14 +159,14 @@ class PathText extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Text(
-        path,
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-        style: context.mono(
-          size: size,
-          color: color ?? context.colors.onSurfaceVariant,
-        ),
-      );
+    path,
+    maxLines: 1,
+    overflow: TextOverflow.ellipsis,
+    style: context.mono(
+      size: size,
+      color: color ?? context.colors.onSurfaceVariant,
+    ),
+  );
 }
 
 /// Explains a risk category and lets the user opt in for this run.
@@ -186,50 +188,50 @@ class RiskToggle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => InkWell(
-        onTap: () => onChanged(!value),
-        borderRadius: BorderRadius.circular(8),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 4),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              SizedBox(
-                width: 22,
-                height: 22,
-                child: Checkbox(
-                  value: value,
-                  onChanged: (v) => onChanged(v ?? false),
-                  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: const TextStyle(
-                        fontSize: 12.5,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      subtitle,
-                      style: TextStyle(
-                        fontSize: 11.5,
-                        height: 1.35,
-                        color: context.colors.onSurfaceVariant,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
+    onTap: () => onChanged(!value),
+    borderRadius: BorderRadius.circular(8),
+    child: Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 4),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 22,
+            height: 22,
+            child: Checkbox(
+              value: value,
+              onChanged: (v) => onChanged(v ?? false),
+              materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            ),
           ),
-        ),
-      );
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontSize: 12.5,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  subtitle,
+                  style: TextStyle(
+                    fontSize: 11.5,
+                    height: 1.35,
+                    color: context.colors.onSurfaceVariant,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    ),
+  );
 }
 
 /// Inline notice — used for scan failures and safety explanations.

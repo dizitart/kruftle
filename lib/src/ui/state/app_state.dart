@@ -23,8 +23,8 @@ const _settingsKey = 'kruftle.settings.v1';
 class SettingsController extends Notifier<Settings> {
   @override
   Settings build() => Settings.decode(
-        ref.read(sharedPreferencesProvider).getString(_settingsKey),
-      );
+    ref.read(sharedPreferencesProvider).getString(_settingsKey),
+  );
 
   Future<void> save(Settings updated) async {
     state = updated;
@@ -45,8 +45,9 @@ class SettingsController extends Notifier<Settings> {
   }
 }
 
-final settingsProvider =
-    NotifierProvider<SettingsController, Settings>(SettingsController.new);
+final settingsProvider = NotifierProvider<SettingsController, Settings>(
+  SettingsController.new,
+);
 
 final activityLogProvider = Provider<ActivityLog>((ref) {
   return ActivityLog(

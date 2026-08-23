@@ -15,13 +15,13 @@ class KruftleApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => MaterialApp(
-        title: 'Kruftle',
-        debugShowCheckedModeBanner: false,
-        theme: KruftleTheme.light(),
-        darkTheme: KruftleTheme.dark(),
-        themeMode: ThemeMode.system,
-        home: const _Home(),
-      );
+    title: 'Kruftle',
+    debugShowCheckedModeBanner: false,
+    theme: KruftleTheme.light(),
+    darkTheme: KruftleTheme.dark(),
+    themeMode: ThemeMode.system,
+    home: const _Home(),
+  );
 }
 
 class _Home extends ConsumerStatefulWidget {
@@ -46,15 +46,15 @@ class _HomeState extends ConsumerState<_Home> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-        body: Column(
-          children: [
-            const _TitleBar(),
-            const Divider(height: 1),
-            const UpdateBanner(),
-            const Expanded(child: WizardShell()),
-          ],
-        ),
-      );
+    body: Column(
+      children: [
+        const _TitleBar(),
+        const Divider(height: 1),
+        const UpdateBanner(),
+        const Expanded(child: WizardShell()),
+      ],
+    ),
+  );
 }
 
 class _TitleBar extends StatelessWidget {
@@ -62,44 +62,43 @@ class _TitleBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Container(
-        height: 52,
-        padding: const EdgeInsets.symmetric(horizontal: 18),
-        color: context.colors.surfaceContainerLowest,
-        child: Row(
-          children: [
-            Icon(
-              Icons.auto_delete_outlined,
-              size: 19,
-              color: context.colors.primary,
-            ),
-            const SizedBox(width: 10),
-            const Text(
-              'Kruftle',
-              style: TextStyle(
-                fontSize: 14.5,
-                fontWeight: FontWeight.w700,
-                letterSpacing: -0.2,
-              ),
-            ),
-            const SizedBox(width: 10),
-            Text(
-              'reclaim your disk',
-              style: TextStyle(
-                fontSize: 12,
-                color: context.colors.onSurfaceVariant,
-              ),
-            ),
-            const Spacer(),
-            IconButton(
-              onPressed: () => Navigator.of(context).push(
-                MaterialPageRoute<void>(
-                  builder: (_) => const SettingsPage(),
-                ),
-              ),
-              icon: const Icon(Icons.tune_rounded, size: 18),
-              tooltip: 'Settings',
-            ),
-          ],
+    height: 52,
+    padding: const EdgeInsets.symmetric(horizontal: 18),
+    color: context.colors.surfaceContainerLowest,
+    child: Row(
+      children: [
+        Image.asset(
+          'assets/icon/kruftle-512.png',
+          width: 20,
+          height: 20,
+          filterQuality: FilterQuality.medium,
         ),
-      );
+        const SizedBox(width: 10),
+        const Text(
+          'Kruftle',
+          style: TextStyle(
+            fontSize: 14.5,
+            fontWeight: FontWeight.w700,
+            letterSpacing: -0.2,
+          ),
+        ),
+        const SizedBox(width: 10),
+        Text(
+          'reclaim your disk',
+          style: TextStyle(
+            fontSize: 12,
+            color: context.colors.onSurfaceVariant,
+          ),
+        ),
+        const Spacer(),
+        IconButton(
+          onPressed: () => Navigator.of(
+            context,
+          ).push(MaterialPageRoute<void>(builder: (_) => const SettingsPage())),
+          icon: const Icon(Icons.tune_rounded, size: 18),
+          tooltip: 'Settings',
+        ),
+      ],
+    ),
+  );
 }

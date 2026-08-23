@@ -1,0 +1,138 @@
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to build, without the leading v (e.g. 1.2.3)'
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  version:
+    name: Resolve version
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.resolve.outputs.version }}
+    steps:
+      - id: resolve
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "version=${{ inputs.version }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "version=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+          fi
+
+  macos:
+    name: macOS
+    needs: version
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with: { channel: stable, cache: true }
+      - run: flutter pub get
+      - name: Build
+        run: flutter build macos --release --build-name=${{ needs.version.outputs.version }} --build-number=${{ github.run_number }}
+
+      - name: Sign ad-hoc
+        # Not a Developer ID signature — Kruftle ships unsigned. An ad-hoc
+        # signature still gives the bundle a stable identity, which stops
+        # macOS reporting it as damaged rather than merely unverified.
+        run: codesign --force --deep --sign - build/macos/Build/Products/Release/Kruftle.app
+
+      - name: Package .dmg
+        run: |
+          VERSION=${{ needs.version.outputs.version }}
+          mkdir -p dist staging
+          cp -R build/macos/Build/Products/Release/Kruftle.app staging/
+          ln -s /Applications staging/Applications
+          hdiutil create -volname "Kruftle" -srcfolder staging -ov \
+            -format UDZO "dist/Kruftle-$VERSION-macos.dmg"
+
+      - uses: actions/upload-artifact@v4
+        with: { name: macos, path: dist/*.dmg }
+
+  windows:
+    name: Windows
+    needs: version
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with: { channel: stable, cache: true }
+      - run: flutter pub get
+      - name: Build
+        run: flutter build windows --release --build-name=${{ needs.version.outputs.version }} --build-number=${{ github.run_number }}
+
+      - name: Package installer
+        shell: pwsh
+        run: |
+          choco install innosetup --no-progress -y
+          & "$env:ProgramFiles(x86)\Inno Setup 6\ISCC.exe" `
+            "/DAppVersion=${{ needs.version.outputs.version }}" `
+            "/Odist" packaging\windows\kruftle.iss
+
+      - uses: actions/upload-artifact@v4
+        with: { name: windows, path: dist/*.exe }
+
+  linux:
+    name: Linux
+    needs: version
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with: { channel: stable, cache: true }
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang cmake ninja-build pkg-config \
+            libgtk-3-dev liblzma-dev libstdc++-12-dev desktop-file-utils fuse
+      - run: flutter pub get
+      - name: Build
+        run: flutter build linux --release --build-name=${{ needs.version.outputs.version }} --build-number=${{ github.run_number }}
+      - name: Package AppImage and deb
+        run: packaging/linux/build-packages.sh ${{ needs.version.outputs.version }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: linux
+          path: |
+            dist/*.AppImage
+            dist/*.deb
+
+  publish:
+    name: Publish release
+    needs: [version, macos, windows, linux]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with: { path: artifacts }
+
+      - name: Collect assets and checksums
+        run: |
+          mkdir -p dist
+          find artifacts -type f -exec mv {} dist/ \;
+          cd dist
+          # The in-app updater refuses to install anything whose SHA-256 is not
+          # listed here, so this file is a hard requirement of every release,
+          # not a nicety.
+          sha256sum * > checksums.txt
+          cat checksums.txt
+
+      - name: Publish
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          VERSION=${{ needs.version.outputs.version }}
+          gh release create "v$VERSION" dist/* \
+            --repo "$GITHUB_REPOSITORY" \
+            --title "Kruftle $VERSION" \
+            --generate-notes \
+            --verify-tag || \
+          gh release upload "v$VERSION" dist/* --repo "$GITHUB_REPOSITORY" --clobber

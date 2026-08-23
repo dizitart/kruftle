@@ -53,23 +53,22 @@ void main() {
       bool prerelease = false,
       bool draft = false,
       List<String> assets = const [installer, 'checksums.txt'],
-    }) =>
-        jsonEncode([
-          {
-            'tag_name': tag,
-            'draft': draft,
-            'prerelease': prerelease,
-            'body': 'Fixes things.',
-            'assets': [
-              for (final name in assets)
-                {
-                  'name': name,
-                  'size': 1024,
-                  'browser_download_url': 'https://example.test/$name',
-                },
-            ],
-          },
-        ]);
+    }) => jsonEncode([
+      {
+        'tag_name': tag,
+        'draft': draft,
+        'prerelease': prerelease,
+        'body': 'Fixes things.',
+        'assets': [
+          for (final name in assets)
+            {
+              'name': name,
+              'size': 1024,
+              'browser_download_url': 'https://example.test/$name',
+            },
+        ],
+      },
+    ]);
 
     MockClient clientFor(String releases, {String? checksums}) =>
         MockClient((request) async {
@@ -82,15 +81,17 @@ void main() {
           return http.Response('', 404);
         });
 
-    Updater updaterWith(http.Client client, {String current = '1.0.0',
-        bool preReleases = false}) =>
-        Updater(
-          currentVersion: Version.tryParse(current)!,
-          client: client,
-          includePreReleases: preReleases,
-          windows: false,
-          macOS: true,
-        );
+    Updater updaterWith(
+      http.Client client, {
+      String current = '1.0.0',
+      bool preReleases = false,
+    }) => Updater(
+      currentVersion: Version.tryParse(current)!,
+      client: client,
+      includePreReleases: preReleases,
+      windows: false,
+      macOS: true,
+    );
 
     test('finds a newer release and its verified installer', () async {
       final update = await updaterWith(clientFor(releasesJson())).check();
@@ -114,8 +115,9 @@ void main() {
     });
 
     test('ignores drafts', () async {
-      final update =
-          await updaterWith(clientFor(releasesJson(draft: true))).check();
+      final update = await updaterWith(
+        clientFor(releasesJson(draft: true)),
+      ).check();
       expect(update, isNull);
     });
 
@@ -133,8 +135,11 @@ void main() {
         clientFor(releasesJson(assets: const [installer])),
       ).check();
 
-      expect(update, isNull,
-          reason: 'an installer we cannot verify is not an update');
+      expect(
+        update,
+        isNull,
+        reason: 'an installer we cannot verify is not an update',
+      );
     });
 
     test('picks the asset matching this platform', () async {
@@ -146,7 +151,10 @@ void main() {
       ];
       final checksums = assets.map((a) => '$digest  $a').join('\n');
 
-      Future<String?> assetFor({required bool windows, required bool mac}) async {
+      Future<String?> assetFor({
+        required bool windows,
+        required bool mac,
+      }) async {
         final update = await Updater(
           currentVersion: Version.tryParse('1.0.0')!,
           client: clientFor(releasesJson(assets: assets), checksums: checksums),
@@ -161,16 +169,21 @@ void main() {
       expect(await assetFor(windows: false, mac: false), endsWith('.AppImage'));
     });
 
-    test('a network failure is silent, not an error the user must dismiss',
-        () async {
-      final client = MockClient((_) async => throw const SocketException('no route'));
-      expect(await updaterWith(client).check(), isNull);
-    });
+    test(
+      'a network failure is silent, not an error the user must dismiss',
+      () async {
+        final client = MockClient(
+          (_) async => throw const SocketException('no route'),
+        );
+        expect(await updaterWith(client).check(), isNull);
+      },
+    );
 
     test('a rate-limited or broken API is silent too', () async {
       expect(
-        await updaterWith(MockClient((_) async => http.Response('{}', 403)))
-            .check(),
+        await updaterWith(
+          MockClient((_) async => http.Response('{}', 403)),
+        ).check(),
         isNull,
       );
     });
@@ -185,55 +198,64 @@ void main() {
     final realDigest = sha256.convert(payload).toString();
 
     AvailableUpdate updateWith(String expectedDigest) => AvailableUpdate(
-          version: Version.tryParse('1.4.0')!,
-          assetName: 'Kruftle-1.4.0.dmg',
-          downloadUrl: 'https://example.test/Kruftle-1.4.0.dmg',
-          sha256: expectedDigest,
-          notes: '',
-          sizeBytes: payload.length,
-        );
+      version: Version.tryParse('1.4.0')!,
+      assetName: 'Kruftle-1.4.0.dmg',
+      downloadUrl: 'https://example.test/Kruftle-1.4.0.dmg',
+      sha256: expectedDigest,
+      notes: '',
+      sizeBytes: payload.length,
+    );
 
     Updater downloaderFor(int status) => Updater(
-          currentVersion: Version.tryParse('1.0.0')!,
-          client: MockClient((_) async => http.Response.bytes(payload, status)),
-        );
+      currentVersion: Version.tryParse('1.0.0')!,
+      client: MockClient((_) async => http.Response.bytes(payload, status)),
+    );
 
     test('writes the file when the checksum matches', () async {
-      final file = await downloaderFor(200)
-          .download(updateWith(realDigest), directory: tmp.path);
+      final file = await downloaderFor(
+        200,
+      ).download(updateWith(realDigest), directory: tmp.path);
 
       expect(file.existsSync(), isTrue);
       expect(file.readAsBytesSync(), payload);
     });
 
-    test('refuses and deletes the file when the checksum does not match',
-        () async {
-      final updater = downloaderFor(200);
+    test(
+      'refuses and deletes the file when the checksum does not match',
+      () async {
+        final updater = downloaderFor(200);
 
-      await expectLater(
-        updater.download(updateWith('b' * 64), directory: tmp.path),
-        throwsA(isA<UpdateFailure>().having(
-          (e) => e.message, 'message', contains('Checksum mismatch'))),
-      );
+        await expectLater(
+          updater.download(updateWith('b' * 64), directory: tmp.path),
+          throwsA(
+            isA<UpdateFailure>().having(
+              (e) => e.message,
+              'message',
+              contains('Checksum mismatch'),
+            ),
+          ),
+        );
 
-      expect(
-        Directory(tmp.path).listSync(),
-        isEmpty,
-        reason: 'an unverified binary must not be left on disk',
-      );
-    });
+        expect(
+          Directory(tmp.path).listSync(),
+          isEmpty,
+          reason: 'an unverified binary must not be left on disk',
+        );
+      },
+    );
 
     test('a checksum comparison is case-insensitive', () async {
-      final file = await downloaderFor(200).download(
-        updateWith(realDigest.toUpperCase()),
-        directory: tmp.path,
-      );
+      final file = await downloaderFor(
+        200,
+      ).download(updateWith(realDigest.toUpperCase()), directory: tmp.path);
       expect(file.existsSync(), isTrue);
     });
 
     test('an HTTP error is a clear failure, not a corrupt file', () async {
       await expectLater(
-        downloaderFor(404).download(updateWith(realDigest), directory: tmp.path),
+        downloaderFor(
+          404,
+        ).download(updateWith(realDigest), directory: tmp.path),
         throwsA(isA<UpdateFailure>()),
       );
     });

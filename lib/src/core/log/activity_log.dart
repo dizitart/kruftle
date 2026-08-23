@@ -33,24 +33,25 @@ class LogEntry {
   final Map<String, Object?> data;
 
   Map<String, Object?> toJson() => {
-        'time': time.toIso8601String(),
-        'level': level.name,
-        'message': message,
-        if (data.isNotEmpty) 'data': data,
-      };
+    'time': time.toIso8601String(),
+    'level': level.name,
+    'message': message,
+    if (data.isNotEmpty) 'data': data,
+  };
 
   static LogEntry fromJson(Map<String, Object?> json) => LogEntry(
-        time: DateTime.parse(json['time']! as String),
-        level: LogLevel.values.byName(json['level']! as String),
-        message: json['message']! as String,
-        data: (json['data'] as Map<String, Object?>?) ?? const {},
-      );
+    time: DateTime.parse(json['time']! as String),
+    level: LogLevel.values.byName(json['level']! as String),
+    message: json['message']! as String,
+    data: (json['data'] as Map<String, Object?>?) ?? const {},
+  );
 
   /// Human-readable single line, which is also the export format.
   @override
   String toString() {
-    final context =
-        data.isEmpty ? '' : '  ${data.entries.map((e) => '${e.key}=${e.value}').join(' ')}';
+    final context = data.isEmpty
+        ? ''
+        : '  ${data.entries.map((e) => '${e.key}=${e.value}').join(' ')}';
     return '${time.toIso8601String()}  ${level.name.toUpperCase().padRight(7)}  '
         '$message$context';
   }
@@ -88,7 +89,11 @@ class ActivityLog {
   /// durable record; this is just what is on screen.
   List<LogEntry> get entries => List.unmodifiable(_buffered);
 
-  void log(LogLevel level, String message, [Map<String, Object?> data = const {}]) {
+  void log(
+    LogLevel level,
+    String message, [
+    Map<String, Object?> data = const {},
+  ]) {
     if (!(level >= minimumLevel)) return;
     final entry = LogEntry(
       time: DateTime.now(),

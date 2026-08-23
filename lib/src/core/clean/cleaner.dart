@@ -43,8 +43,7 @@ class CleanPlanner {
       );
 
       for (final stack in project.stacks) {
-        final toolReady =
-            toolStatus[stack.stackId] == ToolStatus.available;
+        final toolReady = toolStatus[stack.stackId] == ToolStatus.available;
         final hasCommand = stack.command != null && toolReady;
 
         if (hasCommand) {
@@ -123,8 +122,8 @@ class Cleaner {
     Sizer? sizer,
     this.concurrency = 4,
     this.stepTimeout = const Duration(minutes: 5),
-  })  : _runner = runner ?? SystemProcessRunner(),
-        _sizer = sizer ?? Sizer();
+  }) : _runner = runner ?? SystemProcessRunner(),
+       _sizer = sizer ?? Sizer();
 
   final ProcessRunner _runner;
   final Sizer _sizer;
@@ -159,9 +158,7 @@ class Cleaner {
       scanRoot: plan.scanRoot,
       allowedRisks: plan.allowedRisks,
       gitTracked: plan.gitTracked,
-      steps: [
-        for (final step in plan.steps) _resize(step, sizes),
-      ],
+      steps: [for (final step in plan.steps) _resize(step, sizes)],
     );
   }
 
@@ -210,7 +207,11 @@ class Cleaner {
 
     unawaited(
       Future.wait([
-        for (var i = 0; i < concurrency.clamp(1, queue.length.clamp(1, 32)); i++)
+        for (
+          var i = 0;
+          i < concurrency.clamp(1, queue.length.clamp(1, 32));
+          i++
+        )
           worker(),
       ]).then((_) => events.close()),
     );
@@ -257,15 +258,19 @@ class Cleaner {
           timeout: stepTimeout,
         );
         if (result.timedOut) {
-          return done(StepStatus.timedOut,
-              message: 'Killed after ${stepTimeout.inSeconds}s.');
+          return done(
+            StepStatus.timedOut,
+            message: 'Killed after ${stepTimeout.inSeconds}s.',
+          );
         }
         return result.succeeded
             ? done(StepStatus.success, message: result.stdout.trim())
-            : done(StepStatus.failed,
+            : done(
+                StepStatus.failed,
                 message: result.stderr.trim().isEmpty
                     ? 'exited ${result.exitCode}'
-                    : result.stderr.trim());
+                    : result.stderr.trim(),
+              );
 
       case StepKind.delete:
         final target = step.artifact!.absolutePath;
@@ -283,7 +288,11 @@ class Cleaner {
           return done(StepStatus.skipped, message: 'Already gone.');
         }
         if (violation != null) {
-          return done(StepStatus.refused, message: violation.message, v: violation);
+          return done(
+            StepStatus.refused,
+            message: violation.message,
+            v: violation,
+          );
         }
 
         try {
@@ -296,23 +305,22 @@ class Cleaner {
   }
 
   CleanStep _resize(CleanStep step, Map<String, int> sizes) {
-    ArtifactHit sized(ArtifactHit a) =>
-        a.withSize(sizes[a.absolutePath] ?? 0);
+    ArtifactHit sized(ArtifactHit a) => a.withSize(sizes[a.absolutePath] ?? 0);
 
     return switch (step.kind) {
       StepKind.command => CleanStep.command(
-          projectPath: step.projectPath,
-          stackId: step.stackId,
-          stackName: step.stackName,
-          command: step.command!,
-          covers: step.covers.map(sized).toList(),
-        ),
+        projectPath: step.projectPath,
+        stackId: step.stackId,
+        stackName: step.stackName,
+        command: step.command!,
+        covers: step.covers.map(sized).toList(),
+      ),
       StepKind.delete => CleanStep.delete(
-          projectPath: step.projectPath,
-          stackId: step.stackId,
-          stackName: step.stackName,
-          artifact: sized(step.artifact!),
-        ),
+        projectPath: step.projectPath,
+        stackId: step.stackId,
+        stackName: step.stackName,
+        artifact: sized(step.artifact!),
+      ),
     };
   }
 }

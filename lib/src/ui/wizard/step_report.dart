@@ -82,9 +82,7 @@ class StepReport extends ConsumerWidget {
                 StatTile(
                   value: '${report.problems.length}',
                   label: 'failed',
-                  color: report.problems.isEmpty
-                      ? null
-                      : KruftleTheme.danger,
+                  color: report.problems.isEmpty ? null : KruftleTheme.danger,
                 ),
                 const SizedBox(width: 40),
                 StatTile(
@@ -107,7 +105,8 @@ class StepReport extends ConsumerWidget {
         if (report.bytesFreed < report.estimatedBytes) ...[
           const SizedBox(height: 14),
           NoticeBanner(
-            message: 'The dry run estimated ${formatBytes(report.estimatedBytes)}. '
+            message:
+                'The dry run estimated ${formatBytes(report.estimatedBytes)}. '
                 'Clean commands decide for themselves what to remove — some '
                 'keep caches a rebuild can reuse, which is usually what you '
                 'want.',
@@ -118,7 +117,8 @@ class StepReport extends ConsumerWidget {
         if (report.count(StepStatus.refused) > 0) ...[
           const SizedBox(height: 14),
           NoticeBanner(
-            message: '${report.count(StepStatus.refused)} '
+            message:
+                '${report.count(StepStatus.refused)} '
                 '${report.count(StepStatus.refused) == 1 ? 'target was' : 'targets were'} '
                 'refused by a safety check and left untouched.',
             icon: Icons.shield_outlined,
@@ -219,38 +219,35 @@ class _Problems extends StatelessWidget {
 class _ExportButton extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) => OutlinedButton.icon(
-        onPressed: () async {
-          final location = await getSaveLocation(
-            suggestedName:
-                'kruftle-${DateTime.now().toIso8601String().split('T').first}.log',
-          );
-          if (location == null) return;
-
-          final file = ref.read(activityLogProvider).export(location.path);
-          if (!context.mounted) return;
-
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Log exported to ${p.basename(file.path)}'),
-              behavior: SnackBarBehavior.floating,
-              width: 420,
-              action: SnackBarAction(
-                label: 'Show',
-                onPressed: () => _reveal(file),
-              ),
-            ),
-          );
-        },
-        icon: const Icon(Icons.download_rounded, size: 17),
-        label: const Text('Export log'),
+    onPressed: () async {
+      final location = await getSaveLocation(
+        suggestedName:
+            'kruftle-${DateTime.now().toIso8601String().split('T').first}.log',
       );
+      if (location == null) return;
+
+      final file = ref.read(activityLogProvider).export(location.path);
+      if (!context.mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Log exported to ${p.basename(file.path)}'),
+          behavior: SnackBarBehavior.floating,
+          width: 420,
+          action: SnackBarAction(label: 'Show', onPressed: () => _reveal(file)),
+        ),
+      );
+    },
+    icon: const Icon(Icons.download_rounded, size: 17),
+    label: const Text('Export log'),
+  );
 
   void _reveal(File file) {
     final (command, args) = Platform.isMacOS
         ? ('open', ['-R', file.path])
         : Platform.isWindows
-            ? ('explorer', ['/select,', file.path])
-            : ('xdg-open', [file.parent.path]);
+        ? ('explorer', ['/select,', file.path])
+        : ('xdg-open', [file.parent.path]);
     Process.run(command, args);
   }
 }

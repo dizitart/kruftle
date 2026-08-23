@@ -78,7 +78,9 @@ class UpdateController extends Notifier<UpdateState> {
       );
       await updater.install(installer);
     } on UpdateFailure catch (e) {
-      ref.read(activityLogProvider).error('Update failed', {'reason': e.message});
+      ref.read(activityLogProvider).error('Update failed', {
+        'reason': e.message,
+      });
       state = UpdateState(
         phase: UpdatePhase.failed,
         update: update,
@@ -90,5 +92,6 @@ class UpdateController extends Notifier<UpdateState> {
   void dismiss() => state = const UpdateState();
 }
 
-final updateProvider =
-    NotifierProvider<UpdateController, UpdateState>(UpdateController.new);
+final updateProvider = NotifierProvider<UpdateController, UpdateState>(
+  UpdateController.new,
+);

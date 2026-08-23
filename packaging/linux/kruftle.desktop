@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=Kruftle
+GenericName=Build Artifact Cleaner
+Comment=Reclaim disk space from build artifacts across every project on your machine
+Exec=kruftle
+Icon=kruftle
+Terminal=false
+Categories=Development;Utility;
+Keywords=disk;cleanup;build;cache;developer;
+StartupWMClass=kruftle

@@ -82,8 +82,10 @@ void main() {
       file('app/build.gradle');
 
       final projects = await scanProjects();
-      expect(stacksOf(named(projects, 'app')),
-          containsAll([StackId.flutter, StackId.gradle]));
+      expect(
+        stacksOf(named(projects, 'app')),
+        containsAll([StackId.flutter, StackId.gradle]),
+      );
     });
   });
 
@@ -99,8 +101,10 @@ void main() {
 
       final projects = await scanProjects();
       expect(projects.map((x) => x.name).toSet(), {'app', 'rust'});
-      expect(named(projects, 'rust').depth,
-          greaterThan(named(projects, 'app').depth));
+      expect(
+        named(projects, 'rust').depth,
+        greaterThan(named(projects, 'app').depth),
+      );
     });
 
     test('never descends into node_modules', () async {
@@ -154,24 +158,32 @@ void main() {
       expect(await scanProjects(), isEmpty);
     });
 
-    test('survives a symlink cycle instead of looping forever', () async {
-      file('app/Cargo.toml');
-      dir('app/target');
-      Link(p.join(root, 'app', 'loop')).createSync(root);
+    test(
+      'survives a symlink cycle instead of looping forever',
+      () async {
+        file('app/Cargo.toml');
+        dir('app/target');
+        Link(p.join(root, 'app', 'loop')).createSync(root);
 
-      final projects = await scanProjects();
-      expect(projects, hasLength(1));
-    }, timeout: const Timeout(Duration(seconds: 20)));
+        final projects = await scanProjects();
+        expect(projects, hasLength(1));
+      },
+      timeout: const Timeout(Duration(seconds: 20)),
+    );
 
-    test('does not report a symlinked artifact directory as cleanable', () async {
-      final outside = Directory(p.join(tmp.path, 'shared_target'))..createSync();
-      file('app/Cargo.toml');
-      Link(p.join(root, 'app', 'target')).createSync(outside.path);
+    test(
+      'does not report a symlinked artifact directory as cleanable',
+      () async {
+        final outside = Directory(p.join(tmp.path, 'shared_target'))
+          ..createSync();
+        file('app/Cargo.toml');
+        Link(p.join(root, 'app', 'target')).createSync(outside.path);
 
-      // The crate exists but its only artifact is a link, so there is nothing
-      // safe to clean and the project is not offered.
-      expect(await scanProjects(), isEmpty);
-    });
+        // The crate exists but its only artifact is a link, so there is nothing
+        // safe to clean and the project is not offered.
+        expect(await scanProjects(), isEmpty);
+      },
+    );
   });
 
   group('command resolution during a scan', () {
@@ -181,9 +193,10 @@ void main() {
       dir('svc/build');
 
       final projects = await scanProjects();
-      final gradle = named(projects, 'svc')
-          .stacks
-          .firstWhere((s) => s.stackId == StackId.gradle);
+      final gradle = named(
+        projects,
+        'svc',
+      ).stacks.firstWhere((s) => s.stackId == StackId.gradle);
       expect(gradle.command, const CleanCommand('./gradlew', ['clean']));
     });
 
@@ -199,8 +212,9 @@ void main() {
 
   group('refusals', () {
     test('refuses to scan a forbidden root', () async {
-      final events =
-          await ProjectScanner().scan(const ScanRequest(root: '/')).toList();
+      final events = await ProjectScanner()
+          .scan(const ScanRequest(root: '/'))
+          .toList();
       expect(events.single, isA<ScanFailed>());
       expect(
         (events.single as ScanFailed).violation,
@@ -212,8 +226,10 @@ void main() {
       final events = await ProjectScanner()
           .scan(ScanRequest(root: p.join(root, 'nope')))
           .toList();
-      expect((events.single as ScanFailed).violation,
-          SafetyViolation.notADirectory);
+      expect(
+        (events.single as ScanFailed).violation,
+        SafetyViolation.notADirectory,
+      );
     });
   });
 
@@ -234,8 +250,11 @@ void main() {
       });
 
       await Future<void>.delayed(const Duration(milliseconds: 400));
-      expect(seen, lessThan(60),
-          reason: 'the walk must stop, not run to completion');
+      expect(
+        seen,
+        lessThan(60),
+        reason: 'the walk must stop, not run to completion',
+      );
     });
   });
 
@@ -244,8 +263,9 @@ void main() {
       file('app/Cargo.toml');
       dir('app/target');
 
-      final events =
-          await ProjectScanner().scan(ScanRequest(root: root)).toList();
+      final events = await ProjectScanner()
+          .scan(ScanRequest(root: root))
+          .toList();
       final progress = events.whereType<ScanningDirectory>().toList();
 
       expect(progress, isNotEmpty);

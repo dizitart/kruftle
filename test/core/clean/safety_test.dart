@@ -12,24 +12,36 @@ void main() {
 
     test('refuses the filesystem root', () {
       expect(
-        checkScanRoot('/', home: '/Users/dev', windows: false,
-            directoryExists: alwaysExists),
+        checkScanRoot(
+          '/',
+          home: '/Users/dev',
+          windows: false,
+          directoryExists: alwaysExists,
+        ),
         SafetyViolation.forbiddenRoot,
       );
     });
 
     test('refuses the user home directory', () {
       expect(
-        checkScanRoot('/Users/dev', home: '/Users/dev', windows: false,
-            directoryExists: alwaysExists),
+        checkScanRoot(
+          '/Users/dev',
+          home: '/Users/dev',
+          windows: false,
+          directoryExists: alwaysExists,
+        ),
         SafetyViolation.forbiddenRoot,
       );
     });
 
     test('refuses a home path written with a trailing separator', () {
       expect(
-        checkScanRoot('/Users/dev/', home: '/Users/dev', windows: false,
-            directoryExists: alwaysExists),
+        checkScanRoot(
+          '/Users/dev/',
+          home: '/Users/dev',
+          windows: false,
+          directoryExists: alwaysExists,
+        ),
         SafetyViolation.forbiddenRoot,
       );
     });
@@ -37,8 +49,12 @@ void main() {
     test('refuses system directories', () {
       for (final dir in ['/usr', '/etc', '/System', '/var', '/Applications']) {
         expect(
-          checkScanRoot(dir, home: '/Users/dev', windows: false,
-              directoryExists: alwaysExists),
+          checkScanRoot(
+            dir,
+            home: '/Users/dev',
+            windows: false,
+            directoryExists: alwaysExists,
+          ),
           SafetyViolation.forbiddenRoot,
           reason: dir,
         );
@@ -46,10 +62,19 @@ void main() {
     });
 
     test('refuses Windows system directories', () {
-      for (final dir in [r'C:\', r'C:\Windows', r'C:\Users', r'C:\Program Files']) {
+      for (final dir in [
+        r'C:\',
+        r'C:\Windows',
+        r'C:\Users',
+        r'C:\Program Files',
+      ]) {
         expect(
-          checkScanRoot(dir, home: r'C:\Users\dev', windows: true,
-              directoryExists: alwaysExists),
+          checkScanRoot(
+            dir,
+            home: r'C:\Users\dev',
+            windows: true,
+            directoryExists: alwaysExists,
+          ),
           SafetyViolation.forbiddenRoot,
           reason: dir,
         );
@@ -58,37 +83,57 @@ void main() {
 
     test('is case-insensitive on Windows', () {
       expect(
-        checkScanRoot(r'c:\windows', home: r'C:\Users\dev', windows: true,
-            directoryExists: alwaysExists),
+        checkScanRoot(
+          r'c:\windows',
+          home: r'C:\Users\dev',
+          windows: true,
+          directoryExists: alwaysExists,
+        ),
         SafetyViolation.forbiddenRoot,
       );
     });
 
     test('refuses a path only one level deep', () {
       expect(
-        checkScanRoot('/scratch', home: '/Users/dev', windows: false,
-            directoryExists: alwaysExists),
+        checkScanRoot(
+          '/scratch',
+          home: '/Users/dev',
+          windows: false,
+          directoryExists: alwaysExists,
+        ),
         SafetyViolation.tooShallow,
       );
     });
 
     test('refuses a directory that does not exist', () {
       expect(
-        checkScanRoot('/Users/dev/nope/gone', home: '/Users/dev',
-            windows: false, directoryExists: (_) => false),
+        checkScanRoot(
+          '/Users/dev/nope/gone',
+          home: '/Users/dev',
+          windows: false,
+          directoryExists: (_) => false,
+        ),
         SafetyViolation.notADirectory,
       );
     });
 
     test('accepts an ordinary project tree', () {
       expect(
-        checkScanRoot('/Volumes/External/codebase', home: '/Users/dev',
-            windows: false, directoryExists: alwaysExists),
+        checkScanRoot(
+          '/Volumes/External/codebase',
+          home: '/Users/dev',
+          windows: false,
+          directoryExists: alwaysExists,
+        ),
         isNull,
       );
       expect(
-        checkScanRoot(r'D:\work\projects', home: r'C:\Users\dev', windows: true,
-            directoryExists: alwaysExists),
+        checkScanRoot(
+          r'D:\work\projects',
+          home: r'C:\Users\dev',
+          windows: true,
+          directoryExists: alwaysExists,
+        ),
         isNull,
       );
     });
@@ -104,17 +149,16 @@ void main() {
       String Function(String)? resolve,
       bool Function(String)? isLink,
       bool Function(String)? exists,
-    }) =>
-        checkDeleteTarget(
-          scanRoot: root,
-          projectRoot: project,
-          target: target,
-          allowedRelatives: allowed,
-          windows: false,
-          resolve: resolve ?? (q) => q,
-          isLink: isLink ?? (_) => false,
-          directoryExists: exists ?? (_) => true,
-        );
+    }) => checkDeleteTarget(
+      scanRoot: root,
+      projectRoot: project,
+      target: target,
+      allowedRelatives: allowed,
+      windows: false,
+      resolve: resolve ?? (q) => q,
+      isLink: isLink ?? (_) => false,
+      directoryExists: exists ?? (_) => true,
+    );
 
     test('accepts an allow-listed artifact directory', () {
       expect(check('/work/app/target'), isNull);
@@ -160,15 +204,14 @@ void main() {
     });
 
     test('refuses a target that no longer exists', () {
-      expect(check('/work/app/target', exists: (_) => false),
-          SafetyViolation.notADirectory);
+      expect(
+        check('/work/app/target', exists: (_) => false),
+        SafetyViolation.notADirectory,
+      );
     });
 
     test('accepts a nested allow-listed path such as .next/cache', () {
-      expect(
-        check('/work/app/.next/cache', allowed: {'.next/cache'}),
-        isNull,
-      );
+      expect(check('/work/app/.next/cache', allowed: {'.next/cache'}), isNull);
       // ...but not the parent it lives in.
       expect(
         check('/work/app/.next', allowed: {'.next/cache'}),

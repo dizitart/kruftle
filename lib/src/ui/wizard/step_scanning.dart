@@ -55,10 +55,7 @@ class StepScanning extends ConsumerWidget {
             ),
             if (sizing != null) ...[
               const SizedBox(width: 40),
-              StatTile(
-                value: '${(sizing * 100).round()}%',
-                label: 'measured',
-              ),
+              StatTile(value: '${(sizing * 100).round()}%', label: 'measured'),
             ],
           ],
         ),

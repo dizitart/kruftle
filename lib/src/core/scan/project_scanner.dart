@@ -59,11 +59,9 @@ class ScanFailed extends ScanEvent {
 /// generator suspends at its next `yield` and the walk stops. There is no
 /// separate cancellation token to keep in sync.
 class ProjectScanner {
-  ProjectScanner({
-    StackRegistry? registry,
-    ToolchainProbe? toolchain,
-  })  : _registry = registry ?? const StackRegistry(),
-        _toolchain = toolchain ?? ToolchainProbe();
+  ProjectScanner({StackRegistry? registry, ToolchainProbe? toolchain})
+    : _registry = registry ?? const StackRegistry(),
+      _toolchain = toolchain ?? ToolchainProbe();
 
   final StackRegistry _registry;
   final ToolchainProbe _toolchain;

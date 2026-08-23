@@ -61,33 +61,31 @@ class Settings {
     Set<CleanRisk>? rememberedRisks,
     bool? checkForUpdates,
     bool? confirmBeforeDelete,
-  }) =>
-      Settings(
-        defaultRoots: defaultRoots ?? this.defaultRoots,
-        maxScanDepth: maxScanDepth ?? this.maxScanDepth,
-        scanHiddenDirectories:
-            scanHiddenDirectories ?? this.scanHiddenDirectories,
-        cleanConcurrency: cleanConcurrency ?? this.cleanConcurrency,
-        stepTimeoutSeconds: stepTimeoutSeconds ?? this.stepTimeoutSeconds,
-        logLevel: logLevel ?? this.logLevel,
-        logRetentionFiles: logRetentionFiles ?? this.logRetentionFiles,
-        rememberedRisks: rememberedRisks ?? this.rememberedRisks,
-        checkForUpdates: checkForUpdates ?? this.checkForUpdates,
-        confirmBeforeDelete: confirmBeforeDelete ?? this.confirmBeforeDelete,
-      );
+  }) => Settings(
+    defaultRoots: defaultRoots ?? this.defaultRoots,
+    maxScanDepth: maxScanDepth ?? this.maxScanDepth,
+    scanHiddenDirectories: scanHiddenDirectories ?? this.scanHiddenDirectories,
+    cleanConcurrency: cleanConcurrency ?? this.cleanConcurrency,
+    stepTimeoutSeconds: stepTimeoutSeconds ?? this.stepTimeoutSeconds,
+    logLevel: logLevel ?? this.logLevel,
+    logRetentionFiles: logRetentionFiles ?? this.logRetentionFiles,
+    rememberedRisks: rememberedRisks ?? this.rememberedRisks,
+    checkForUpdates: checkForUpdates ?? this.checkForUpdates,
+    confirmBeforeDelete: confirmBeforeDelete ?? this.confirmBeforeDelete,
+  );
 
   Map<String, Object?> toJson() => {
-        'defaultRoots': defaultRoots,
-        'maxScanDepth': maxScanDepth,
-        'scanHiddenDirectories': scanHiddenDirectories,
-        'cleanConcurrency': cleanConcurrency,
-        'stepTimeoutSeconds': stepTimeoutSeconds,
-        'logLevel': logLevel.name,
-        'logRetentionFiles': logRetentionFiles,
-        'rememberedRisks': rememberedRisks.map((r) => r.name).toList(),
-        'checkForUpdates': checkForUpdates,
-        'confirmBeforeDelete': confirmBeforeDelete,
-      };
+    'defaultRoots': defaultRoots,
+    'maxScanDepth': maxScanDepth,
+    'scanHiddenDirectories': scanHiddenDirectories,
+    'cleanConcurrency': cleanConcurrency,
+    'stepTimeoutSeconds': stepTimeoutSeconds,
+    'logLevel': logLevel.name,
+    'logRetentionFiles': logRetentionFiles,
+    'rememberedRisks': rememberedRisks.map((r) => r.name).toList(),
+    'checkForUpdates': checkForUpdates,
+    'confirmBeforeDelete': confirmBeforeDelete,
+  };
 
   /// Rebuilds from stored JSON.
   ///
@@ -101,25 +99,32 @@ class Settings {
     return Settings(
       defaultRoots:
           read<List<Object?>>('defaultRoots')?.whereType<String>().toList() ??
-              fallback.defaultRoots,
-      maxScanDepth: read<int>('maxScanDepth')?.clamp(1, 64) ?? fallback.maxScanDepth,
+          fallback.defaultRoots,
+      maxScanDepth:
+          read<int>('maxScanDepth')?.clamp(1, 64) ?? fallback.maxScanDepth,
       scanHiddenDirectories:
           read<bool>('scanHiddenDirectories') ?? fallback.scanHiddenDirectories,
       cleanConcurrency:
-          read<int>('cleanConcurrency')?.clamp(1, 32) ?? fallback.cleanConcurrency,
-      stepTimeoutSeconds: read<int>('stepTimeoutSeconds')?.clamp(10, 3600) ??
+          read<int>('cleanConcurrency')?.clamp(1, 32) ??
+          fallback.cleanConcurrency,
+      stepTimeoutSeconds:
+          read<int>('stepTimeoutSeconds')?.clamp(10, 3600) ??
           fallback.stepTimeoutSeconds,
-      logLevel: _enumByName(LogLevel.values, read<String>('logLevel')) ??
+      logLevel:
+          _enumByName(LogLevel.values, read<String>('logLevel')) ??
           fallback.logLevel,
       logRetentionFiles:
-          read<int>('logRetentionFiles')?.clamp(0, 50) ?? fallback.logRetentionFiles,
-      rememberedRisks: read<List<Object?>>('rememberedRisks')
+          read<int>('logRetentionFiles')?.clamp(0, 50) ??
+          fallback.logRetentionFiles,
+      rememberedRisks:
+          read<List<Object?>>('rememberedRisks')
               ?.whereType<String>()
               .map((n) => _enumByName(CleanRisk.values, n))
               .nonNulls
               .toSet() ??
           fallback.rememberedRisks,
-      checkForUpdates: read<bool>('checkForUpdates') ?? fallback.checkForUpdates,
+      checkForUpdates:
+          read<bool>('checkForUpdates') ?? fallback.checkForUpdates,
       confirmBeforeDelete:
           read<bool>('confirmBeforeDelete') ?? fallback.confirmBeforeDelete,
     );

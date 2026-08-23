@@ -6,7 +6,10 @@ const pythonStack = StackDefinition(
   id: StackId.python,
   displayName: 'Python',
   markers: {'setup.py', 'pyproject.toml', 'requirements.txt', 'Pipfile'},
-  tool: ToolProbe(binary: 'python3', installUrl: 'https://www.python.org/downloads/'),
+  tool: ToolProbe(
+    binary: 'python3',
+    installUrl: 'https://www.python.org/downloads/',
+  ),
   // Only setuptools offers a clean, and only when setup.py exists. Everything
   // else in Python land is convention, handled by the artifact list.
   resolveCleanCommand: _resolvePython,
@@ -45,7 +48,10 @@ const elixirStack = StackDefinition(
   id: StackId.elixir,
   displayName: 'Elixir',
   markers: {'mix.exs'},
-  tool: ToolProbe(binary: 'mix', installUrl: 'https://elixir-lang.org/install.html'),
+  tool: ToolProbe(
+    binary: 'mix',
+    installUrl: 'https://elixir-lang.org/install.html',
+  ),
   cleanCommand: CleanCommand('mix', ['clean']),
   artifacts: [
     ArtifactPath('_build'),

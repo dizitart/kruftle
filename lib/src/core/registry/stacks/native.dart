@@ -9,8 +9,17 @@ const cmakeStack = StackDefinition(
   tool: ToolProbe(binary: 'cmake', installUrl: 'https://cmake.org/download/'),
   // Only meaningful once a build tree exists; the scanner skips stacks whose
   // artifacts are all absent, so this never runs on a pristine checkout.
-  cleanCommand: CleanCommand('cmake', ['--build', 'build', '--target', 'clean']),
-  artifacts: [ArtifactPath('build'), ArtifactPath('cmake-build-debug'), ArtifactPath('cmake-build-release')],
+  cleanCommand: CleanCommand('cmake', [
+    '--build',
+    'build',
+    '--target',
+    'clean',
+  ]),
+  artifacts: [
+    ArtifactPath('build'),
+    ArtifactPath('cmake-build-debug'),
+    ArtifactPath('cmake-build-release'),
+  ],
   priority: 5,
 );
 
@@ -30,7 +39,10 @@ const dotnetStack = StackDefinition(
   displayName: '.NET',
   markers: {'.csproj', '.fsproj', '.vbproj', '.sln'},
   matches: _isDotnetProject,
-  tool: ToolProbe(binary: 'dotnet', installUrl: 'https://dotnet.microsoft.com/download'),
+  tool: ToolProbe(
+    binary: 'dotnet',
+    installUrl: 'https://dotnet.microsoft.com/download',
+  ),
   cleanCommand: CleanCommand('dotnet', ['clean']),
   artifacts: [ArtifactPath('bin'), ArtifactPath('obj')],
   priority: 20,
@@ -38,18 +50,22 @@ const dotnetStack = StackDefinition(
 
 /// .NET project files are named after the project, so we match by extension.
 bool _isDotnetProject(DirListing listing) => listing.files.any(
-      (f) =>
-          f.endsWith('.csproj') ||
-          f.endsWith('.fsproj') ||
-          f.endsWith('.vbproj') ||
-          f.endsWith('.sln'),
-    );
+  (f) =>
+      f.endsWith('.csproj') ||
+      f.endsWith('.fsproj') ||
+      f.endsWith('.vbproj') ||
+      f.endsWith('.sln'),
+);
 
 const swiftStack = StackDefinition(
   id: StackId.swift,
   displayName: 'Swift Package',
   markers: {'Package.swift'},
-  tool: ToolProbe(binary: 'swift', versionArgs: ['--version'], installUrl: 'https://swift.org/install/'),
+  tool: ToolProbe(
+    binary: 'swift',
+    versionArgs: ['--version'],
+    installUrl: 'https://swift.org/install/',
+  ),
   cleanCommand: CleanCommand('swift', ['package', 'clean']),
   artifacts: [ArtifactPath('.build')],
   priority: 20,
@@ -62,10 +78,13 @@ const xcodeStack = StackDefinition(
   matches: _isXcodeProject,
   tool: ToolProbe(binary: 'xcodebuild', versionArgs: ['-version']),
   cleanCommand: CleanCommand('xcodebuild', ['clean']),
-  artifacts: [ArtifactPath('build'), ArtifactPath('DerivedData', risk: CleanRisk.cache)],
+  artifacts: [
+    ArtifactPath('build'),
+    ArtifactPath('DerivedData', risk: CleanRisk.cache),
+  ],
   priority: 15,
 );
 
 bool _isXcodeProject(DirListing listing) => listing.directories.any(
-      (d) => d.endsWith('.xcodeproj') || d.endsWith('.xcworkspace'),
-    );
+  (d) => d.endsWith('.xcodeproj') || d.endsWith('.xcworkspace'),
+);

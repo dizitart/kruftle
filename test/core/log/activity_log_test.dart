@@ -42,8 +42,11 @@ void main() {
     log.info('good');
     log.file.writeAsStringSync('{"time": "not final', mode: FileMode.append);
 
-    expect(log.readAll(), hasLength(1),
-        reason: 'a crash mid-write must not make the whole log unreadable');
+    expect(
+      log.readAll(),
+      hasLength(1),
+      reason: 'a crash mid-write must not make the whole log unreadable',
+    );
   });
 
   test('rotates once the file passes its size limit', () {
@@ -58,8 +61,11 @@ void main() {
     }
 
     expect(File('${small.file.path}.1').existsSync(), isTrue);
-    expect(File('${small.file.path}.3').existsSync(), isFalse,
-        reason: 'only keepRotations files are retained');
+    expect(
+      File('${small.file.path}.3').existsSync(),
+      isFalse,
+      reason: 'only keepRotations files are retained',
+    );
   });
 
   test('exports a readable plain-text copy', () {

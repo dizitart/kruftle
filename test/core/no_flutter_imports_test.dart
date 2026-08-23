@@ -16,7 +16,9 @@ void main() {
       if (entity is! File || !entity.path.endsWith('.dart')) continue;
       final lines = entity.readAsLinesSync();
       for (var i = 0; i < lines.length; i++) {
-        if (RegExp(r'''^\s*import\s+['"]package:flutter''').hasMatch(lines[i])) {
+        if (RegExp(
+          r'''^\s*import\s+['"]package:flutter''',
+        ).hasMatch(lines[i])) {
           offenders.add('${entity.path}:${i + 1}');
         }
       }
@@ -25,7 +27,8 @@ void main() {
     expect(
       offenders,
       isEmpty,
-      reason: 'lib/src/core must not depend on Flutter. Offending imports:\n'
+      reason:
+          'lib/src/core must not depend on Flutter. Offending imports:\n'
           '${offenders.join('\n')}',
     );
   });

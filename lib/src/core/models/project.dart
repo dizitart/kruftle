@@ -23,11 +23,11 @@ class ArtifactHit {
   final int? sizeBytes;
 
   ArtifactHit withSize(int bytes) => ArtifactHit(
-        absolutePath: absolutePath,
-        relative: relative,
-        risk: risk,
-        sizeBytes: bytes,
-      );
+    absolutePath: absolutePath,
+    relative: relative,
+    risk: risk,
+    sizeBytes: bytes,
+  );
 }
 
 /// One stack found in one project directory, with everything needed to clean
@@ -58,19 +58,17 @@ class StackMatch {
 
   final String? installUrl;
 
-  int get knownSizeBytes => artifacts.fold(
-        0,
-        (sum, a) => sum + (a.sizeBytes ?? 0),
-      );
+  int get knownSizeBytes =>
+      artifacts.fold(0, (sum, a) => sum + (a.sizeBytes ?? 0));
 
   StackMatch withArtifacts(List<ArtifactHit> updated) => StackMatch(
-        stackId: stackId,
-        displayName: displayName,
-        command: command,
-        artifacts: updated,
-        toolBinary: toolBinary,
-        installUrl: installUrl,
-      );
+    stackId: stackId,
+    displayName: displayName,
+    command: command,
+    artifacts: updated,
+    toolBinary: toolBinary,
+    installUrl: installUrl,
+  );
 }
 
 /// A directory the scanner identified as a project.
@@ -96,11 +94,11 @@ class DetectedProject {
   /// Sum of every measured artifact directory. This is the *estimate* shown
   /// before a run — the official clean tools decide for themselves what to
   /// remove, so the figure reported afterwards is measured separately.
-  int get estimatedBytes =>
-      stacks.fold(0, (sum, s) => sum + s.knownSizeBytes);
+  int get estimatedBytes => stacks.fold(0, (sum, s) => sum + s.knownSizeBytes);
 
-  List<ArtifactHit> get allArtifacts =>
-      [for (final s in stacks) ...s.artifacts];
+  List<ArtifactHit> get allArtifacts => [
+    for (final s in stacks) ...s.artifacts,
+  ];
 
   bool get hasArtifacts => stacks.any((s) => s.artifacts.isNotEmpty);
 
