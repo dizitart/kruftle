@@ -5,10 +5,10 @@
 // 'flutter create' template.
 
 // The application's name. By default this is also the title of the Flutter window.
-PRODUCT_NAME = kruftle
+PRODUCT_NAME = Kruftle
 
 // The application's bundle identifier
 PRODUCT_BUNDLE_IDENTIFIER = com.dizitart.kruftle
 
 // The copyright displayed in application information
-PRODUCT_COPYRIGHT = Copyright © 2026 com.dizitart. All rights reserved.
+PRODUCT_COPYRIGHT = Copyright © 2026 Dizitart. Licensed under the GNU GPL v3.

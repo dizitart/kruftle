@@ -32,7 +32,7 @@ class Sizer {
     Future<void> worker() async {
       while (queue.isNotEmpty) {
         final path = queue.removeAt(0);
-        final bytes = await Isolate.run(() => directorySizeSync(path));
+        final bytes = await _sizeOnIsolate(path);
         results[path] = bytes;
         onMeasured?.call(path, bytes);
       }
@@ -46,6 +46,16 @@ class Sizer {
     return results;
   }
 }
+
+/// Spawns the measurement isolate from a scope that holds nothing but a path.
+///
+/// This indirection is load-bearing. A closure sent to an isolate carries its
+/// entire enclosing context, so creating it inside the worker loop also tried
+/// to send the progress callback — and through it, whatever the caller had
+/// closed over. Dart rejects unsendable objects at runtime, not at compile
+/// time, so the failure surfaced as a scan that sat at 0% forever.
+Future<int> _sizeOnIsolate(String path) =>
+    Isolate.run(() => directorySizeSync(path));
 
 /// Total bytes of every regular file at or below [path].
 ///

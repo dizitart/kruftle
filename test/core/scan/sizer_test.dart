@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
@@ -88,6 +89,38 @@ void main() {
       final seen = <String, int>{};
       await Sizer().measureAll(paths, onMeasured: (path, b) => seen[path] = b);
 
+      expect(seen, hasLength(2));
+    });
+
+    test('measures when the progress callback closes over unsendable state',
+        () async {
+      // Regression. The isolate computation used to be created inside the
+      // worker loop, so it captured that whole scope — including onMeasured
+      // and, transitively, whatever the caller's callback referenced. Dart
+      // refuses to send a Completer or a StreamSubscription across a port, so
+      // in the real app every measurement threw into an unawaited future and
+      // the scan sat at 0% forever with no visible error.
+      //
+      // The callback here deliberately closes over exactly the kind of object
+      // that cannot cross an isolate boundary.
+      write('a/f.bin', 64);
+      write('b/f.bin', 64);
+      final paths = [p.join(tmp.path, 'a'), p.join(tmp.path, 'b')];
+
+      final unsendable = Completer<void>();
+      final seen = <String>[];
+
+      await Sizer().measureAll(
+        paths,
+        onMeasured: (path, _) {
+          seen.add(path);
+          if (seen.length == paths.length && !unsendable.isCompleted) {
+            unsendable.complete();
+          }
+        },
+      );
+
+      await unsendable.future;
       expect(seen, hasLength(2));
     });
 

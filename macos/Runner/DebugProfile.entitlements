@@ -2,11 +2,27 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<!-- Kruftle is not sandboxed, and cannot be.
+
+	     It exists to walk directories the user chooses anywhere on disk and to
+	     run their build tools (cargo, flutter, gradle) as subprocesses. The App
+	     Sandbox permits neither: file access would be limited to explicitly
+	     granted paths, and spawned tools would inherit a sandbox that stops
+	     them touching their own build output.
+
+	     This rules out Mac App Store distribution, which is the right trade for
+	     a developer utility shipped through GitHub Releases. -->
 	<key>com.apple.security.app-sandbox</key>
-	<true/>
+	<false/>
 	<key>com.apple.security.cs.allow-jit</key>
 	<true/>
+	<key>com.apple.security.cs.allow-unsigned-executable-memory</key>
+	<true/>
+	<key>com.apple.security.cs.disable-library-validation</key>
+	<true/>
 	<key>com.apple.security.network.server</key>
+	<true/>
+	<key>com.apple.security.network.client</key>
 	<true/>
 </dict>
 </plist>
