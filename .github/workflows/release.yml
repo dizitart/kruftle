@@ -88,8 +88,15 @@ jobs:
         shell: pwsh
         run: |
           choco install innosetup --no-progress -y
-          & "$env:ProgramFiles(x86)\Inno Setup 6\ISCC.exe" `
-            "/DAppVersion=${{ needs.version.outputs.version }}" `
+          # Brace syntax is required: PowerShell reads "$env:ProgramFiles(x86)"
+          # as $env:ProgramFiles followed by a literal (x86), which yields
+          # "C:\Program Files(x86)" with the space eaten.
+          $iscc = Join-Path ${env:ProgramFiles(x86)} 'Inno Setup 6\ISCC.exe'
+          if (-not (Test-Path $iscc)) {
+            $iscc = Join-Path $env:ProgramFiles 'Inno Setup 6\ISCC.exe'
+          }
+          if (-not (Test-Path $iscc)) { throw "ISCC.exe not found" }
+          & $iscc "/DAppVersion=${{ needs.version.outputs.version }}" `
             "/Odist" packaging\windows\kruftle.iss
 
       - uses: actions/upload-artifact@v4
