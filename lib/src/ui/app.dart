@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'global_caches_page.dart';
 import 'settings_page.dart';
 import 'state/app_state.dart';
 import 'state/update_controller.dart';
@@ -91,6 +92,13 @@ class _TitleBar extends StatelessWidget {
           ),
         ),
         const Spacer(),
+        IconButton(
+          onPressed: () => Navigator.of(context).push(
+            MaterialPageRoute<void>(builder: (_) => const GlobalCachesPage()),
+          ),
+          icon: const Icon(Icons.public_rounded, size: 18),
+          tooltip: 'Global SDK caches',
+        ),
         IconButton(
           onPressed: () => Navigator.of(
             context,

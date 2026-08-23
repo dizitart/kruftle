@@ -1,0 +1,33 @@
+name: Language or build tool support
+description: Ask for a stack Kruftle does not detect yet
+labels: [enhancement, stack-support]
+body:
+  - type: input
+    id: language
+    attributes:
+      label: Language or build tool
+      placeholder: Haskell / Stack
+    validations: { required: true }
+  - type: input
+    id: markers
+    attributes:
+      label: What file marks a project of this kind?
+      placeholder: stack.yaml
+    validations: { required: true }
+  - type: input
+    id: command
+    attributes:
+      label: The official clean command
+      placeholder: stack clean
+  - type: input
+    id: artifacts
+    attributes:
+      label: Where does it put build output?
+      description: Directory names relative to the project root.
+      placeholder: .stack-work
+    validations: { required: true }
+  - type: markdown
+    attributes:
+      value: >
+        Adding a stack is one file plus one list entry — see CONTRIBUTING.md if
+        you would like to send the PR yourself.

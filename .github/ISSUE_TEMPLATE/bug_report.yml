@@ -1,0 +1,44 @@
+name: Bug report
+description: Something Kruftle did that it should not have
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        If Kruftle deleted something it should not have, please say so in the
+        title — those get looked at first.
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+      description: What did you expect, and what did you get instead?
+    validations: { required: true }
+  - type: textarea
+    id: repro
+    attributes:
+      label: How to reproduce
+      description: The kind of project tree, which stacks, which options were ticked.
+      placeholder: |
+        1. Scanned ~/code
+        2. Ticked "Downloaded dependencies"
+        3. ...
+    validations: { required: true }
+  - type: input
+    id: version
+    attributes:
+      label: Kruftle version
+    validations: { required: true }
+  - type: dropdown
+    id: os
+    attributes:
+      label: Operating system
+      options: [macOS, Windows, Linux]
+    validations: { required: true }
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant log lines
+      description: >
+        Settings → Logging → Show opens the log directory. Redact any paths you
+        would rather not share.
+      render: text
