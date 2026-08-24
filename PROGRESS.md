@@ -14,9 +14,9 @@ check in §3 to confirm the tree is in the state this document claims.
 
 | | |
 |---|---|
-| **Current milestone** | M23 done — v0.2.0 ready to publish |
-| **Last updated** | 2026-08-24 |
-| **Build green?** | Yes — 503 tests, analyzer clean, formatter clean, CI green on all five build targets |
+| **Current milestone** | M25 and M26 done — background cleanups and interface polish, on top of the unpublished v0.2.0 |
+| **Last updated** | 2026-08-25 |
+| **Build green?** | Yes — 542 tests, analyzer clean, formatter clean |
 | **Repo** | https://github.com/dizitart/kruftle (public, GPL-3.0) |
 | **CI** | Green — analyze/test plus release builds on all three OSs |
 | **Released** | [v0.1.0](https://github.com/dizitart/kruftle/releases/tag/v0.1.0) — .dmg, .exe, .AppImage, .deb, checksums.txt |
@@ -56,8 +56,16 @@ Legend: `[ ]` not started · `[~]` in progress · `[x]` done & green
 - [x] **M23** Processor architectures — arm64 for Windows and Linux
 - [ ] **M24** Release & self-update — **needs the owner: it publishes**
 
+**v0.3.0** (see `PROJECT_PLAN.md` §5c)
+
+- [x] **M25** Background cleanups — launchd / systemd / Task Scheduler, headless run
+- [x] **M26** Interface polish — new mark, colophon, one dropdown, sorted caches
+
 ### What is left
 
+0. **Publishing M25/M26.** `pubspec` is still `0.2.0`, and the changelog test
+   ties its top entry to that, so neither has been bumped: the version and the
+   changelog entry belong to the release, which is the owner's to make.
 1. **The last mile of self-update.** Everything up to the hand-off is verified
    against the live API — `tool/check_update.dart 0.0.1 --download` finds the
    right asset per platform, downloads it and passes SHA-256. What has *not*
@@ -83,7 +91,7 @@ Run this first, every session. It is the definition of "the tree is healthy".
 cd /Volumes/External/codebase/kruftle && dart format --output=none --set-exit-if-changed lib test tool && flutter analyze --fatal-infos && flutter test
 ```
 
-Expected: formatter reports 0 changed, `No issues found!`, then 503 passing.
+Expected: formatter reports 0 changed, `No issues found!`, then 542 passing.
 
 `lib/l10n/app_localizations*.dart` is generated and committed. Regenerate it
 with `flutter gen-l10n` after editing any `.arb`; the analyzer will not warn if
@@ -93,6 +101,19 @@ To see it work against a real tree without launching the UI:
 
 ```bash
 dart run tool/smoke_scan.dart /Volumes/External/codebase
+```
+
+To look at every screen without running the app — any locale, either palette:
+
+```bash
+flutter test test/tools/shots.dart --dart-define=locale=de --dart-define=brightness=light
+```
+
+The PNGs land in `build/shots/`. Nothing is asserted and nothing is committed;
+it is there to be looked at. Regenerate the app icon's rasters with:
+
+```bash
+./tool/make_icons.sh
 ```
 
 ---
@@ -133,6 +154,89 @@ Newest first.
 
 **One layout bug the locale tests found** — the step rail overflowed for
 German and Russian labels. Fixed by widening it and making the label flexible.
+
+### Session 4 — 2026-08-25
+
+**Landed** — M25 (background cleanups) and M26 (interface polish).
+
+- **M25 Background service.** The v0.2.0 ceiling — "it cannot wake itself while
+  closed" — is gone. `core/schedule/background_service.dart` writes a launchd
+  LaunchAgent, a systemd **user** timer or a Task Scheduler entry from the same
+  `CleanupSchedule` the in-app reminder already used, and removes it again. No
+  daemon: all three platforms ship a scheduler that starts with the session, so
+  Kruftle registers a job and exits rather than idling for a week to do ten
+  minutes of work.
+- **The headless second entrypoint.** `main()` checks for `--background-clean`
+  or `KRUFTLE_BACKGROUND=1` and, when it finds either, runs
+  `src/background_run.dart` and exits without `runApp`, a window manager, a
+  locale or a widget tree. Two signals rather than one because argv does not
+  reach the Dart entrypoint on macOS and the environment is the awkward one to
+  set on Windows.
+- **Rail 7 with nobody watching.** An unattended run plans with
+  `Settings.rememberedRisks` and nothing else, so it runs each toolchain's own
+  clean command and deletes only what the user pre-selected — empty on a fresh
+  install. Verified both ways on a real build (see below).
+- **M26 Interface.** New app mark; version/licence/provenance moved out of the
+  About card into a colophon below it; one `KruftleDropdown` at all five call
+  sites; log levels read as prose in all ten locales; the title bar's buttons
+  pushed to the right edge; the global cache list sortable by size both ways.
+
+**Verified against real builds and real bytes, not only by test**
+
+- **The background run, end to end, from the release .app.**
+  `KRUFTLE_BACKGROUND=1 Kruftle.app/Contents/MacOS/Kruftle --background-clean`
+  against a scratch tree: **no window appeared**, it scanned, deleted
+  `__pycache__/` and `.pytest_cache/`, freed 430,080 bytes, left `main.py` and
+  `pyproject.toml` alone, wrote `lastRun` back so the in-app banner would not
+  double-fire, and exited 0.
+- **Rail 7, the negative case.** The same fixture with `rememberedRisks: []`
+  deleted **nothing** and reported `freedBytes: 0`.
+- **The guard.** With no schedule configured it declined and said so in the log
+  rather than cleaning anything.
+- **launchd for real.** `install()` wrote the plist, `launchctl bootstrap`
+  accepted it, `launchctl print` showed the program, the `--background-clean`
+  argument and `KRUFTLE_BACKGROUND => 1`, and `uninstall()` removed both the
+  job and the file with nothing left behind.
+- **Every screen, rendered.** `flutter test test/tools/shots.dart` — see below.
+
+**New: a darkroom instead of a person driving the app.** `test/tools/shots.dart`
+renders each screen offscreen to `build/shots/`, at a real window size, in any
+locale and either palette. It made the colophon, the rounded dropdown menu, the
+capitalised log levels, the right-aligned title bar and the sort control all
+checkable without a screen recording, and it caught nothing wrong in German
+(the long-label locale) or Arabic (RTL, including the new switch and its help
+paragraph). It is under `test/` so the analyzer treats its test-only APIs as
+such, and it does not end in `_test.dart` so the suite skips it.
+
+**Then driven by hand, on the release build, screen by screen.** Which is
+where the last three findings came from:
+
+1. **The About panel really was showing Flutter's logo**, and really is fixed:
+   assigning `NSApp.applicationIconImage` from the bundle's own `AppIcon` in
+   `applicationWillFinishLaunching` puts the new mark there. Opened and looked
+   at.
+2. **The registration banner lied when no folder had been chosen.** With
+   `runInBackground` on and no root, `isConfigured` is false, so nothing is
+   ever handed to the operating system — but the screen still said "Registered
+   with the system scheduler". The banner is now gated on `isConfigured` too,
+   with a test whose name says why. Nothing else on the screen was wrong; this
+   was found only by turning the switch on before picking the folder.
+3. **The tour undersold the feature it was introducing.** "Set it and forget
+   it" still promised a reminder and nothing more. `tourScheduleBody` now says
+   Kruftle can register with the operating system and run with its window
+   closed, in all ten languages.
+
+**The full lifecycle, on the real machine, through the real screen** — the
+switch wrote `~/Library/LaunchAgents/com.dizitart.kruftle.agent.plist` pointing
+at the running .app; `launchctl print` showed it loaded; changing the day from
+Monday to Friday re-registered it and `Weekday` went from 1 to 5 in both the
+file and launchd's live copy; turning the switch off removed both. Also driven:
+the whole wizard on a scratch tree (scan, review, the treemap, the deletion
+confirmation, the run, the report — `__pycache__` gone, `pyproject.toml`
+untouched), the global cache screen sorted both ways against real sizes
+(15.7 GiB down to 1.1, then back up), the profile editor's three validation
+errors with Save disabled, the seven tour pages, and every dropdown in light as
+well as dark.
 
 ### Session 3 — 2026-08-24
 
@@ -256,7 +360,13 @@ Append-only. Record *why*, so a future session does not undo it.
 | 2026-08-24 | Semantic colours (`freed`/`warn`/`danger`) come in light/dark pairs, reached through `context.freed` | The dark-tuned green measures 1.7:1 on the light surface — a swatch, not a signal. A contrast test asserts every pair against the surface it will actually sit on |
 | 2026-08-24 | A cleanup profile becomes a `StackDefinition`, not a parallel type | Everything downstream — scanner, planner, cleaner, all ten rails — then treats it identically to a built-in, and there is no second code path for a rail to be forgotten in |
 | 2026-08-24 | Tool status is keyed by binary name, not `StackId` | Several stacks share one binary (`make` serves Make and Autotools) and every custom profile shares `StackId.custom`, so an enum key collides |
-| 2026-08-24 | Scheduling is in-process; a missed run is offered at the next launch | Waking a closed app needs a launchd plist, a Task Scheduler entry and a systemd timer, each installed and removed by its own packager and kept in step with the app's own settings |
+| 2026-08-24 | ~~Scheduling is in-process; a missed run is offered at the next launch~~ | Waking a closed app needs a launchd plist, a Task Scheduler entry and a systemd timer, each installed and removed by its own packager and kept in step with the app's own settings — **superseded 2026-08-25, see below** |
+| 2026-08-25 | The app writes and removes the OS scheduler job itself, not the packager | Which is what dissolved the 2026-08-24 objection: the job is created from the same `CleanupSchedule` the screen edits, on the same save, so the two cannot drift; and an uninstall that never runs the app cannot leave one behind, because turning the switch off is what removes it |
+| 2026-08-25 | No resident daemon; the OS's own scheduler is the background service | launchd, Task Scheduler and systemd user timers all already start with the session and survive reboots. A process of our own would sit in login items, in the tray and in `ps` for a week to do ten minutes of work |
+| 2026-08-25 | An unattended run may only delete what was already pre-selected in Settings | Rail 7 says the user opts into raw deletion. Nobody is at the keyboard at 03:00 to be asked, so the background run honours the existing opt-in and cannot widen it. On a fresh install that set is empty, so an unattended run does clean commands only |
+| 2026-08-25 | Both `--background-clean` and `KRUFTLE_BACKGROUND=1` are set on every job | Neither signal survives everywhere: macOS's Flutter runner does not forward argv to the Dart entrypoint, and setting an environment variable through `schtasks` means wrapping the command in `cmd /c`. Setting both costs two lines and removes the per-platform special case |
+| 2026-08-25 | One `KruftleDropdown` rather than styling `DropdownButton` at each site | Five call sites that have to agree with each other. Its `style` is derived from the theme rather than built from a bare `TextStyle`, because the menu items inherit that style and nothing else |
+| 2026-08-25 | The screen shots come from a widget test, not a screen recorder | `test/tools/shots.dart` renders the real tree offscreen at a real size. It runs in any locale and either palette without a person, a window server or a video, and the fonts are loaded from the machine so the text is legible rather than the harness's blank boxes |
 | 2026-08-24 | Release notes are English only | Translating every line of every release for ever is not sustainable at this size, and stale translations are worse than English. The parser accepts a per-locale shape should that change |
 | 2026-08-24 | The core carries its own `kSupportedLocaleCodes` list | `Settings` must validate a stored locale but cannot import Flutter. A test asserts it equals the generated `L.supportedLocales`, so the copy cannot drift |
 
@@ -348,6 +458,29 @@ Hard-won. Read before debugging something that looks impossible.
 - **`pumpAndSettle` never returns against a repeating animation.** The tour
   and the scanning step both loop by design, so their tests use
   `pump(Duration)` instead. If a widget test hangs after M16, this is why.
+
+- **`toByteData` never completes inside a widget test.** PNG encoding runs on
+  the real event loop, which the tester's fake one does not advance, so the
+  future simply hangs and the whole file dies at the ten-minute suite timeout
+  with no error. Wrap the capture in `tester.runAsync`. This is why
+  `test/tools/shots.dart` looks the way it does.
+
+- **`flutter test` renders every unloaded font family as a blank box.** Which
+  makes an offscreen screenshot useless for reading and fine for measuring.
+  `FontLoader` fixes it, but only for families something actually asks for:
+  a widget whose `style` is a bare `TextStyle` with no family — as
+  `DropdownButton`'s menu items were — falls back to the placeholder even when
+  the theme has been patched, because `DefaultTextStyle` in the menu replaces
+  rather than merges.
+
+- **`Flexible` plus a following `Spacer` splits the free space in two.** Both
+  default to a flex of 1, so the title bar's buttons sat in the middle of the
+  bar rather than against its right edge. One flexible child is what pushes a
+  trailing group to the end.
+
+- **A `DropdownButton`'s menu is rounded by two pixels unless told otherwise.**
+  Next to cards rounded by ten, the hover highlight looks like it is
+  overflowing its own menu. `borderRadius:` on the button rounds the menu.
 
 - **Translated labels are longer than English ones.** German and Russian both
   overflowed the step rail, which had been sized to fit "Review". Any fixed-

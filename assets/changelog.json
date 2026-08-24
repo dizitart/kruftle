@@ -3,8 +3,9 @@
   "versions": [
     {
       "version": "0.2.0",
-      "date": "2026-08-24",
+      "date": "2026-08-25",
       "added": [
+        "Background cleanups. Kruftle can hand your schedule to your operating system's own scheduler — launchd on macOS, a systemd user timer on Linux, Task Scheduler on Windows — and the cleanup then runs at the time you chose whether or not Kruftle is open. No resident process and nothing in your login items: the job is registered when you turn the switch on and removed when you turn it off. An unattended run does each toolchain's own clean command, and deletes only the categories you have already pre-selected in Settings — it cannot widen its own permission while you are not watching.",
         "A radar sweep while scanning, a sweeping band while cleaning, and figures that count rather than jump — all of which stop when your system asks for reduced motion, or when you do.",
         "Ten languages: English, Español, Deutsch, Français, Português, Русский, 中文, 日本語, हिन्दी and العربية, including full right-to-left layout.",
         "A light theme, and a chooser for light, dark or whatever your desktop is set to.",
@@ -15,14 +16,21 @@
         "A before-and-after gauge of the volume's free space on the report.",
         "A short tour of the app on first run, replayable from Settings.",
         "This changelog, and the Privacy Policy and Terms of Service, readable inside the app.",
-        "Windows and Linux builds for arm64 alongside x64."
+        "Windows and Linux builds for arm64 alongside x64.",
+        "The global cache list sorts by size, largest or smallest first."
       ],
       "changed": [
-        "Sizes are now the space a directory actually occupies on disk, read from the operating system, rather than the sum of its files' lengths. It is the figure you get back, and it matches what Finder and df report. The old measurement is still available in Settings, and is used automatically on Windows."
+        "A new app icon.",
+        "Sizes are now the space a directory actually occupies on disk, read from the operating system, rather than the sum of its files' lengths. It is the figure you get back, and it matches what Finder and df report. The old measurement is still available in Settings, and is used automatically on Windows.",
+        "Version, licence and provenance have moved out of the About panel in Settings to a line of their own beneath it.",
+        "Every dropdown now looks like the rest of the app, and its menu is rounded to match the cards around it.",
+        "Log levels read as Debug, Info, Warning and Error rather than as the words the log file stores."
       ],
       "fixed": [
         "The step rail no longer overflows when a translated label is longer than the English one.",
-        "The accent colours are legible on a light background."
+        "The accent colours are legible on a light background.",
+        "The title bar's buttons sit against the right edge instead of halfway across it.",
+        "The macOS About panel shows Kruftle's icon rather than Flutter's."
       ]
     },
     {

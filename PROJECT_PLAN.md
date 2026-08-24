@@ -27,7 +27,7 @@ refactor.
 | Localisation | `gen-l10n` + ARB, ten locales | Flutter's own tooling. No `intl`-adjacent third party, no runtime string loader. |
 | Charts | `CustomPainter` | Two visualisations (a gauge and a treemap). A charting library is more code than both of them together. |
 | Native disk figures | `dart:ffi` direct to `statvfs` / `GetDiskFreeSpaceExW` | Three lines of binding per platform against a stable C ABI, versus a plugin with three native build files. Falls back to the Dart estimate whenever a symbol is missing. |
-| Scheduling | In-process while the app runs; missed runs offered at next launch | Waking a closed app means a launchd plist, a Task Scheduler entry and a systemd timer, each installed and uninstalled by the packager. Out of proportion for v0.2.0. Stated as a ceiling, not hidden. |
+| Scheduling | In-process while the app runs, **plus** an opt-in job in the OS's own scheduler | Superseded the v0.2.0 ceiling in M25. The job is written and removed by the app itself, not by the packager, so it stays in step with the settings that created it and an uninstall that never ran the app cannot leave one behind. No resident daemon: launchd, Task Scheduler and systemd user timers already start with the session and survive reboots. |
 
 ### Design principle that governs everything
 
@@ -323,7 +323,7 @@ for seconds; a clean runs for minutes. Motion is what makes that legible.
       running, and a missed run is offered at next launch. Waking a closed app
       needs a launchd plist / Task Scheduler entry / systemd timer per OS —
       three installers' worth of work for a developer tool the user opens on
-      purpose. Not in v0.2.0.
+      purpose. Not in v0.2.0. *(Lifted in M25.)*
 - **Verify:** `nextRunAfter` table-driven over month ends, DST and leap years;
   a due schedule fires exactly once; notifications are behind an injectable
   interface so tests do not need a notification centre.
@@ -365,6 +365,44 @@ for seconds; a clean runs for minutes. Motion is what makes that legible.
 - [ ] Ship v0.2.0 and verify an installed v0.1.0 updates itself to it — the
       one thing v0.1.0 could not prove, for want of a second release
 - **Verify:** by hand, on a real installed build.
+
+## 5c. v0.3.0 milestones
+
+### M25 — Background cleanups on all three desktops
+- [ ] `core/schedule/background_service.dart` — writes and removes a launchd
+      LaunchAgent, a systemd **user** timer, or a Task Scheduler entry, from
+      the same `CleanupSchedule` the in-app reminder uses
+- [ ] A headless second entrypoint: `--background-clean` /
+      `KRUFTLE_BACKGROUND=1` runs the scan-plan-clean-notify sequence and
+      exits without `runApp`. macOS additionally needs its nib window ordered
+      out, because it exists before Dart starts
+- [ ] The schedule screen owns the switch, and re-registers on **every** save,
+      not only when the switch is touched — a job left on last week's day is
+      worse than no job
+- [ ] **No resident daemon.** All three platforms already ship a scheduler that
+      starts with the session; a process that idles for a week to do ten
+      minutes of work is the trade this project exists to avoid
+- [ ] **Rail 7 holds with nobody watching:** an unattended run may only delete
+      the categories already pre-selected in Settings, which is empty on a
+      fresh install. It cannot widen its own permission
+- **Verify:** the generated plist, unit and `schtasks` argv asserted as text —
+  they fail silently and invisibly when wrong; the controller's install and
+  uninstall behind an injectable service so no test touches `launchctl`; a run
+  driven by hand on a real installed build.
+
+### M26 — Interface polish
+- [ ] The app mark redrawn; the previous one kept as `kruftle-legacy.svg`, and
+      every raster regenerated from the one SVG by `tool/make_icons.sh`
+- [ ] Version, licence and provenance move out of the About card into a
+      colophon below it
+- [ ] One styled dropdown, used at every call site, with a menu radius that
+      matches the cards
+- [ ] Log levels read as prose in all ten locales rather than as enum constants
+- [ ] The title bar's buttons sit against the right edge
+- [ ] The global cache list sorts by size, both ways
+- **Verify:** the colophon's position asserted rather than its existence; the
+  ordering extracted as a pure function and table-tested; the rest by eye,
+  against the running app.
 
 ## 6. Definition of done
 
