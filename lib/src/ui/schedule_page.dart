@@ -9,6 +9,7 @@ import '../../l10n/app_localizations.dart';
 import '../core/schedule/schedule.dart';
 import 'state/schedule_controller.dart';
 import 'theme.dart';
+import 'widgets/common.dart';
 
 class SchedulePage extends ConsumerWidget {
   const SchedulePage({super.key});
@@ -16,7 +17,8 @@ class SchedulePage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l = L.of(context);
-    final schedule = ref.watch(scheduleProvider).schedule;
+    final state = ref.watch(scheduleProvider);
+    final schedule = state.schedule;
     final controller = ref.read(scheduleProvider.notifier);
 
     return Scaffold(
@@ -59,79 +61,44 @@ class SchedulePage extends ConsumerWidget {
                   children: [
                     _Row(
                       label: l.scheduleFrequency,
-                      trailing: DropdownButton<ScheduleFrequency>(
+                      trailing: KruftleDropdown<ScheduleFrequency>(
                         value: schedule.frequency,
-                        underline: const SizedBox.shrink(),
-                        style: TextStyle(
-                          fontSize: 13,
-                          color: context.colors.onSurface,
-                        ),
-                        items: [
-                          DropdownMenuItem(
-                            value: ScheduleFrequency.daily,
-                            child: Text(l.scheduleDaily),
-                          ),
-                          DropdownMenuItem(
-                            value: ScheduleFrequency.weekly,
-                            child: Text(l.scheduleWeekly),
-                          ),
-                          DropdownMenuItem(
-                            value: ScheduleFrequency.monthly,
-                            child: Text(l.scheduleMonthly),
-                          ),
-                        ],
-                        onChanged: (v) => v == null
-                            ? null
-                            : controller.update(
-                                (s) => s.copyWith(frequency: v),
-                              ),
+                        items: {
+                          ScheduleFrequency.daily: l.scheduleDaily,
+                          ScheduleFrequency.weekly: l.scheduleWeekly,
+                          ScheduleFrequency.monthly: l.scheduleMonthly,
+                        },
+                        onChanged: (v) =>
+                            controller.update((s) => s.copyWith(frequency: v)),
                       ),
                     ),
 
                     if (schedule.frequency == ScheduleFrequency.weekly)
                       _Row(
                         label: l.scheduleDayOfWeek,
-                        trailing: DropdownButton<int>(
+                        trailing: KruftleDropdown<int>(
                           value: schedule.dayOfWeek,
-                          underline: const SizedBox.shrink(),
-                          style: TextStyle(
-                            fontSize: 13,
-                            color: context.colors.onSurface,
-                          ),
-                          items: [
+                          items: {
                             for (var day = 1; day <= 7; day++)
-                              DropdownMenuItem(
-                                value: day,
-                                child: Text(weekdayName(context, day)),
-                              ),
-                          ],
-                          onChanged: (v) => v == null
-                              ? null
-                              : controller.update(
-                                  (s) => s.copyWith(dayOfWeek: v),
-                                ),
+                              day: weekdayName(context, day),
+                          },
+                          onChanged: (v) => controller.update(
+                            (s) => s.copyWith(dayOfWeek: v),
+                          ),
                         ),
                       ),
 
                     if (schedule.frequency == ScheduleFrequency.monthly)
                       _Row(
                         label: l.scheduleDayOfMonth,
-                        trailing: DropdownButton<int>(
+                        trailing: KruftleDropdown<int>(
                           value: schedule.dayOfMonth,
-                          underline: const SizedBox.shrink(),
-                          style: TextStyle(
-                            fontSize: 13,
-                            color: context.colors.onSurface,
+                          items: {
+                            for (var day = 1; day <= 31; day++) day: '$day',
+                          },
+                          onChanged: (v) => controller.update(
+                            (s) => s.copyWith(dayOfMonth: v),
                           ),
-                          items: [
-                            for (var day = 1; day <= 31; day++)
-                              DropdownMenuItem(value: day, child: Text('$day')),
-                          ],
-                          onChanged: (v) => v == null
-                              ? null
-                              : controller.update(
-                                  (s) => s.copyWith(dayOfMonth: v),
-                                ),
                         ),
                       ),
 
@@ -189,10 +156,44 @@ class SchedulePage extends ConsumerWidget {
                         ),
                       ),
                     ),
+
+                    _Row(
+                      label: l.scheduleBackground,
+                      help: l.scheduleBackgroundHelp,
+                      trailing: Switch(
+                        value: schedule.runInBackground,
+                        onChanged: (v) => controller.update(
+                          (s) => s.copyWith(runInBackground: v),
+                        ),
+                      ),
+                    ),
                   ],
                 ),
               ),
             ),
+
+            // Whether the operating system actually took the job. Said out
+            // loud either way: the whole point of the switch is that nobody is
+            // watching when it fires, so "it is registered" is the only
+            // reassurance there can be, and a silent refusal would look
+            // exactly like success until the disk filled up.
+            //
+            // `isConfigured` as well as the switch, because a schedule with no
+            // folder is never registered — claiming it was would be the one
+            // lie this banner exists to prevent. The empty folder row above is
+            // its own explanation.
+            if (schedule.runInBackground && schedule.isConfigured) ...[
+              const SizedBox(height: 12),
+              NoticeBanner(
+                message: state.backgroundFailed
+                    ? l.scheduleBackgroundFailed
+                    : l.scheduleBackgroundActive,
+                icon: state.backgroundFailed
+                    ? Icons.error_outline_rounded
+                    : Icons.event_available_rounded,
+                color: state.backgroundFailed ? context.warn : context.freed,
+              ),
+            ],
 
             const SizedBox(height: 18),
             Text(

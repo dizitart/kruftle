@@ -28,19 +28,17 @@ final sharedPreferencesProvider = Provider<SharedPreferences>(
 /// nothing" rather than as an error.
 final appVersionProvider = Provider<String?>((_) => null);
 
-const _settingsKey = 'kruftle.settings.v1';
-
-/// Profiles are stored under their own key rather than inside `Settings`.
-///
-/// They are exported and shared as a file, so they already have their own
-/// serialisation with its own format marker; nesting that inside the settings
-/// blob would mean two encodings of the same thing.
-const _profilesKey = 'kruftle.profiles.v1';
+// Profiles are stored under their own key rather than inside `Settings`: they
+// are exported and shared as a file, so they already have their own
+// serialisation with its own format marker, and nesting that inside the
+// settings blob would mean two encodings of the same thing. Both keys live on
+// the types they belong to, in the core, so the headless background run can
+// read them without importing this layer.
 
 class SettingsController extends Notifier<Settings> {
   @override
   Settings build() => Settings.decode(
-    ref.read(sharedPreferencesProvider).getString(_settingsKey),
+    ref.read(sharedPreferencesProvider).getString(Settings.storageKey),
   );
 
   Future<void> save(Settings updated) async {
@@ -48,7 +46,7 @@ class SettingsController extends Notifier<Settings> {
     ref.read(activityLogProvider).minimumLevel = updated.logLevel;
     await ref
         .read(sharedPreferencesProvider)
-        .setString(_settingsKey, updated.encode());
+        .setString(Settings.storageKey, updated.encode());
   }
 
   Future<void> update(Settings Function(Settings) change) =>
@@ -74,14 +72,14 @@ final settingsProvider = NotifierProvider<SettingsController, Settings>(
 class ProfilesController extends Notifier<ProfileSet> {
   @override
   ProfileSet build() => ProfileSet.decodeOrEmpty(
-    ref.read(sharedPreferencesProvider).getString(_profilesKey),
+    ref.read(sharedPreferencesProvider).getString(ProfileSet.storageKey),
   );
 
   Future<void> save(ProfileSet updated) async {
     state = updated;
     await ref
         .read(sharedPreferencesProvider)
-        .setString(_profilesKey, updated.encode());
+        .setString(ProfileSet.storageKey, updated.encode());
   }
 
   Future<void> put(CleanupProfile profile) => save(state.withProfile(profile));

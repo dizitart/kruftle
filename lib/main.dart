@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/date_symbol_data_local.dart';
@@ -8,11 +10,24 @@ import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:window_manager/window_manager.dart';
 
+import 'src/background_run.dart';
+import 'src/core/schedule/background_service.dart';
 import 'src/ui/app.dart';
 import 'src/ui/state/app_state.dart';
 
-Future<void> main() async {
+Future<void> main(List<String> args) async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Started by the operating system's scheduler rather than by a person: do
+  // the cleanup and quit, without a window manager, a locale, a version, or a
+  // widget tree. Both signals are checked because only one of them survives
+  // the trip on any given platform — see `BackgroundService`.
+  if (BackgroundService.isBackgroundRun ||
+      args.contains(BackgroundService.flag)) {
+    await runBackgroundCleanup();
+    exit(0);
+  }
+
   await windowManager.ensureInitialized();
 
   // `DateFormat` refuses any locale but the system's until the symbols are

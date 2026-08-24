@@ -4,11 +4,10 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/schedule/background_service.dart';
 import '../../core/schedule/notifier.dart';
 import '../../core/schedule/schedule.dart';
 import 'app_state.dart';
-
-const _scheduleKey = 'kruftle.schedule.v1';
 
 /// Injectable so tests do not need a notification centre, and so a fake clock
 /// can be supplied.
@@ -18,9 +17,18 @@ final desktopNotifierProvider = Provider<DesktopNotifier>(
 
 final clockProvider = Provider<DateTime Function()>((_) => DateTime.now);
 
+/// Injectable so a test never touches launchd, systemd or Task Scheduler.
+final backgroundServiceProvider = Provider<BackgroundService>(
+  (_) => const BackgroundService(),
+);
+
 /// Everything on screen about the schedule.
 class ScheduleState {
-  const ScheduleState({required this.schedule, this.dueSince});
+  const ScheduleState({
+    required this.schedule,
+    this.dueSince,
+    this.backgroundFailed = false,
+  });
 
   final CleanupSchedule schedule;
 
@@ -28,15 +36,22 @@ class ScheduleState {
   /// Null means nothing to show.
   final DateTime? dueSince;
 
+  /// Set when the user asked for background runs and the operating system
+  /// would not take the job. The switch stays where they put it and the screen
+  /// says why, rather than flicking back and leaving them to guess.
+  final bool backgroundFailed;
+
   bool get isDue => dueSince != null;
 
   ScheduleState copyWith({
     CleanupSchedule? schedule,
     DateTime? dueSince,
     bool clearDue = false,
+    bool? backgroundFailed,
   }) => ScheduleState(
     schedule: schedule ?? this.schedule,
     dueSince: clearDue ? null : dueSince ?? this.dueSince,
+    backgroundFailed: backgroundFailed ?? this.backgroundFailed,
   );
 }
 
@@ -59,7 +74,7 @@ class ScheduleController extends Notifier<ScheduleState> {
     ref.onDispose(() => _ticker?.cancel());
 
     final schedule = CleanupSchedule.decode(
-      ref.read(sharedPreferencesProvider).getString(_scheduleKey),
+      ref.read(sharedPreferencesProvider).getString(CleanupSchedule.storageKey),
     );
     _ticker = Timer.periodic(tickInterval, (_) => check());
 
@@ -95,10 +110,33 @@ class ScheduleController extends Notifier<ScheduleState> {
     state = ScheduleState(
       schedule: started,
       dueSince: started.isDue(_now()) ? state.dueSince : null,
+      backgroundFailed: state.backgroundFailed,
     );
     await ref
         .read(sharedPreferencesProvider)
-        .setString(_scheduleKey, started.encode());
+        .setString(CleanupSchedule.storageKey, started.encode());
+
+    await _syncBackgroundJob(started);
+  }
+
+  /// Keeps the operating system's copy of the schedule in step with ours.
+  ///
+  /// Called on every save rather than only when the switch is touched, because
+  /// changing the day or the folder changes what the OS should be running and
+  /// a job left on last week's time is worse than no job. Re-registering is
+  /// idempotent on all three platforms.
+  Future<void> _syncBackgroundJob(CleanupSchedule schedule) async {
+    final service = ref.read(backgroundServiceProvider);
+    final wanted = schedule.isConfigured && schedule.runInBackground;
+
+    if (!wanted) {
+      await service.uninstall();
+      state = state.copyWith(backgroundFailed: false);
+      return;
+    }
+
+    final installed = await service.install(schedule);
+    state = state.copyWith(backgroundFailed: !installed);
   }
 
   Future<void> update(CleanupSchedule Function(CleanupSchedule) change) =>

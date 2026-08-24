@@ -2,6 +2,7 @@
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:kruftle/src/core/schedule/background_service.dart';
 import 'package:kruftle/src/core/schedule/notifier.dart';
 import 'package:kruftle/src/core/schedule/schedule.dart';
 import 'package:kruftle/src/ui/state/app_state.dart';
@@ -20,9 +21,34 @@ class FakeClock {
   void set(DateTime to) => _now = to;
 }
 
+/// Records what would have been handed to launchd, systemd or Task Scheduler.
+///
+/// Without this the controller shells out to the real `launchctl` on every
+/// save, which a unit test has no business doing to the machine running it.
+class RecordingBackgroundService implements BackgroundService {
+  final installed = <CleanupSchedule>[];
+  var uninstalls = 0;
+
+  /// Set to make the platform refuse, which is the case the screen reports.
+  var refuse = false;
+
+  @override
+  Future<bool> install(CleanupSchedule schedule) async {
+    installed.add(schedule);
+    return !refuse;
+  }
+
+  @override
+  Future<void> uninstall() async => uninstalls++;
+
+  @override
+  Future<bool> isInstalled() async => installed.isNotEmpty && !refuse;
+}
+
 Future<(ProviderContainer, FakeClock, RecordingNotifier)> harness({
   CleanupSchedule? stored,
   DateTime? now,
+  RecordingBackgroundService? background,
 }) async {
   SharedPreferences.setMockInitialValues({
     if (stored != null) 'kruftle.schedule.v1': stored.encode(),
@@ -37,6 +63,9 @@ Future<(ProviderContainer, FakeClock, RecordingNotifier)> harness({
       appSupportDirectoryProvider.overrideWithValue('/tmp/kruftle-test'),
       clockProvider.overrideWithValue(clock.call),
       desktopNotifierProvider.overrideWithValue(notifier),
+      backgroundServiceProvider.overrideWithValue(
+        background ?? RecordingBackgroundService(),
+      ),
     ],
   );
   addTearDown(container.dispose);
@@ -52,6 +81,8 @@ const _weekly = CleanupSchedule(
 );
 
 void main() {
+  group('background runs', _backgroundTests);
+
   test('nothing is due on a fresh install', () async {
     final (container, _, notifier) = await harness();
 
@@ -222,5 +253,104 @@ void main() {
     expect(restored.dayOfWeek, DateTime.friday);
     expect(restored.hour, 18);
     expect(restored.root, '/work');
+  });
+}
+
+/// Handing the schedule to the operating system.
+///
+/// The controller is what keeps the OS's copy in step with the user's, and
+/// getting that wrong is invisible: a job left on last week's time still exists
+/// and still reports as installed, it simply fires at the wrong moment.
+void _backgroundTests() {
+  test('nothing is registered until the user asks for it', () async {
+    final background = RecordingBackgroundService();
+    final (container, _, _) = await harness(background: background);
+
+    await container
+        .read(scheduleProvider.notifier)
+        .save(_weekly.copyWith(lastRun: DateTime(2026, 8, 24)));
+
+    expect(background.installed, isEmpty);
+    expect(background.uninstalls, 1, reason: 'off means make sure it is off');
+  });
+
+  test('turning it on registers the schedule that was saved', () async {
+    final background = RecordingBackgroundService();
+    final (container, _, _) = await harness(background: background);
+
+    await container
+        .read(scheduleProvider.notifier)
+        .save(
+          _weekly.copyWith(runInBackground: true, dayOfWeek: DateTime.friday),
+        );
+
+    expect(background.installed, hasLength(1));
+    expect(background.installed.single.dayOfWeek, DateTime.friday);
+    expect(container.read(scheduleProvider).backgroundFailed, isFalse);
+  });
+
+  test('editing the schedule re-registers it', () async {
+    // The bug this stops: change the day, and the OS keeps firing on the old
+    // one for ever because only the switch was wired to the installer.
+    final background = RecordingBackgroundService();
+    final (container, _, _) = await harness(background: background);
+    final controller = container.read(scheduleProvider.notifier);
+
+    await controller.save(_weekly.copyWith(runInBackground: true));
+    await controller.update((s) => s.copyWith(hour: 4));
+
+    expect(background.installed, hasLength(2));
+    expect(background.installed.last.hour, 4);
+  });
+
+  test('turning it off removes the job', () async {
+    final background = RecordingBackgroundService();
+    final (container, _, _) = await harness(background: background);
+    final controller = container.read(scheduleProvider.notifier);
+
+    await controller.save(_weekly.copyWith(runInBackground: true));
+    final before = background.uninstalls;
+    await controller.update((s) => s.copyWith(runInBackground: false));
+
+    expect(background.uninstalls, before + 1);
+  });
+
+  test('disabling the schedule removes the job too', () async {
+    // Otherwise a switched-off schedule keeps cleaning in the background,
+    // which is the worst failure this feature has available to it.
+    final background = RecordingBackgroundService();
+    final (container, _, _) = await harness(background: background);
+    final controller = container.read(scheduleProvider.notifier);
+
+    await controller.save(_weekly.copyWith(runInBackground: true));
+    final before = background.uninstalls;
+    await controller.update((s) => s.copyWith(enabled: false));
+
+    expect(background.uninstalls, before + 1);
+  });
+
+  test('a refusal is reported rather than swallowed', () async {
+    final background = RecordingBackgroundService()..refuse = true;
+    final (container, _, _) = await harness(background: background);
+
+    await container
+        .read(scheduleProvider.notifier)
+        .save(_weekly.copyWith(runInBackground: true));
+
+    expect(container.read(scheduleProvider).backgroundFailed, isTrue);
+    // The user's choice is left where they put it: the screen explains, and
+    // the in-app reminder still works.
+    expect(container.read(scheduleProvider).schedule.runInBackground, isTrue);
+  });
+
+  test('the refusal clears once it is switched off again', () async {
+    final background = RecordingBackgroundService()..refuse = true;
+    final (container, _, _) = await harness(background: background);
+    final controller = container.read(scheduleProvider.notifier);
+
+    await controller.save(_weekly.copyWith(runInBackground: true));
+    await controller.update((s) => s.copyWith(runInBackground: false));
+
+    expect(container.read(scheduleProvider).backgroundFailed, isFalse);
   });
 }

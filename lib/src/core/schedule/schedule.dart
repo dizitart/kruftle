@@ -6,15 +6,16 @@ enum ScheduleFrequency { daily, weekly, monthly }
 
 /// A standing reminder to clean up.
 ///
-/// **What this is not.** It does not wake a closed Kruftle. Doing that means a
-/// launchd plist on macOS, a Task Scheduler entry on Windows and a systemd
-/// timer on Linux, each of which has to be installed by the packager,
-/// uninstalled cleanly, and kept in step with the app's own settings — three
-/// installers' worth of moving parts for a developer tool the user opens on
-/// purpose. So: the schedule is checked while Kruftle runs, and a run that was
-/// missed while it was closed is offered at the next launch. That is stated
-/// here, in the settings screen, and in `PROJECT_PLAN.md` §1, rather than
-/// being left for someone to discover.
+/// **Two ways it fires.** While Kruftle is open, a timer checks whether a run
+/// is owed and raises a banner; a run missed while it was closed is offered at
+/// the next launch. With [runInBackground] on, the schedule is also handed to
+/// the operating system's own scheduler, which starts Kruftle headless at the
+/// appointed minute whether or not anyone has opened it — see
+/// `BackgroundService`, which holds the reasoning and the platform detail.
+///
+/// The in-app path is not redundant when the background one is on: it is what
+/// still works if the OS refuses the registration, and it is the only one on a
+/// platform Kruftle has not taught itself to register with.
 class CleanupSchedule {
   const CleanupSchedule({
     this.enabled = false,
@@ -26,7 +27,13 @@ class CleanupSchedule {
     this.root,
     this.lastRun,
     this.notifyOnFinish = true,
+    this.runInBackground = false,
   });
+
+  /// Where the schedule is kept. Beside the type it describes rather than in
+  /// the controller, because the headless background run reads it too and must
+  /// not have to import the UI layer to find the key.
+  static const storageKey = 'kruftle.schedule.v1';
 
   final bool enabled;
   final ScheduleFrequency frequency;
@@ -54,6 +61,10 @@ class CleanupSchedule {
   final DateTime? lastRun;
 
   final bool notifyOnFinish;
+
+  /// Register with the operating system's scheduler, so a cleanup happens with
+  /// Kruftle closed. Off by default: an unattended run is a thing to opt into.
+  final bool runInBackground;
 
   bool get isConfigured => enabled && (root?.isNotEmpty ?? false);
 
@@ -131,6 +142,7 @@ class CleanupSchedule {
     String? root,
     DateTime? lastRun,
     bool? notifyOnFinish,
+    bool? runInBackground,
   }) => CleanupSchedule(
     enabled: enabled ?? this.enabled,
     frequency: frequency ?? this.frequency,
@@ -141,6 +153,7 @@ class CleanupSchedule {
     root: root ?? this.root,
     lastRun: lastRun ?? this.lastRun,
     notifyOnFinish: notifyOnFinish ?? this.notifyOnFinish,
+    runInBackground: runInBackground ?? this.runInBackground,
   );
 
   Map<String, Object?> toJson() => {
@@ -153,6 +166,7 @@ class CleanupSchedule {
     'root': root,
     'lastRun': lastRun?.toIso8601String(),
     'notifyOnFinish': notifyOnFinish,
+    'runInBackground': runInBackground,
   };
 
   factory CleanupSchedule.fromJson(Map<String, Object?> json) {
@@ -175,6 +189,8 @@ class CleanupSchedule {
       root: read<String>('root'),
       lastRun: DateTime.tryParse(read<String>('lastRun') ?? ''),
       notifyOnFinish: read<bool>('notifyOnFinish') ?? fallback.notifyOnFinish,
+      runInBackground:
+          read<bool>('runInBackground') ?? fallback.runInBackground,
     );
   }
 

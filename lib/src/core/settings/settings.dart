@@ -54,6 +54,10 @@ class Settings {
     this.lastSeenVersion,
   });
 
+  /// Where the settings blob is kept. Beside the type rather than in the
+  /// controller, because the headless background run reads it too.
+  static const storageKey = 'kruftle.settings.v1';
+
   /// Directories offered on the first wizard step.
   final List<String> defaultRoots;
 

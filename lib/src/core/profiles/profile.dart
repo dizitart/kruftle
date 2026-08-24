@@ -277,6 +277,11 @@ class ProfileSet {
 
   static const empty = ProfileSet([]);
 
+  /// Where the set is kept. Beside the type rather than in the controller,
+  /// because the headless background run has to build the same registry the
+  /// UI would and must not import the UI layer to find the key.
+  static const storageKey = 'kruftle.profiles.v1';
+
   /// The format marker in an export file, so an import can tell a Kruftle
   /// profile export from any other JSON the user happens to pick.
   static const formatKey = 'kruftle.profiles';
