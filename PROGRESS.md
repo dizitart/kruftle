@@ -16,7 +16,7 @@ check in §3 to confirm the tree is in the state this document claims.
 |---|---|
 | **Current milestone** | M23 done — v0.2.0 ready to publish |
 | **Last updated** | 2026-08-24 |
-| **Build green?** | Yes — 502 tests, analyzer clean, formatter clean |
+| **Build green?** | Yes — 503 tests, analyzer clean, formatter clean, CI green on all five build targets |
 | **Repo** | https://github.com/dizitart/kruftle (public, GPL-3.0) |
 | **CI** | Green — analyze/test plus release builds on all three OSs |
 | **Released** | [v0.1.0](https://github.com/dizitart/kruftle/releases/tag/v0.1.0) — .dmg, .exe, .AppImage, .deb, checksums.txt |
@@ -83,7 +83,7 @@ Run this first, every session. It is the definition of "the tree is healthy".
 cd /Volumes/External/codebase/kruftle && dart format --output=none --set-exit-if-changed lib test tool && flutter analyze --fatal-infos && flutter test
 ```
 
-Expected: formatter reports 0 changed, `No issues found!`, then 502 passing.
+Expected: formatter reports 0 changed, `No issues found!`, then 503 passing.
 
 `lib/l10n/app_localizations*.dart` is generated and committed. Regenerate it
 with `flutter gen-l10n` after editing any `.arb`; the analyzer will not warn if
@@ -160,7 +160,9 @@ release itself.
   Policy does not name them.
 - **M23 Architectures.** The updater picks by processor via `Abi.current()`;
   a universal asset (the macOS .dmg) is accepted by both. Release and CI build
-  Windows arm64 and Linux arm64 on native runners.
+  Windows arm64 and Linux arm64 on native runners — which needed the SDK
+  cloned from git rather than installed by `flutter-action`, for the reason
+  in §6.
 
 **Verified by hand** — the app was driven through the whole of it:
 
@@ -322,6 +324,20 @@ Hard-won. Read before debugging something that looks impossible.
   edits in this session produced code the formatter then rewrote. Run
   `dart format lib test tool` before the analyzer, not after, or the
   `--set-exit-if-changed` check in §3 fails on work that is otherwise fine.
+
+- **Flutter ships no arm64 SDK for Windows or Linux.** Only macOS gets both
+  in the release manifest, so `subosito/flutter-action` fails outright on an
+  arm64 Windows or Linux runner with "Unable to determine Flutter version".
+  The fix is to clone the SDK at the pinned tag and let it bootstrap its own
+  Dart SDK and engine artifacts — both `dartsdk-linux-arm64` and
+  `dartsdk-windows-arm64` do exist. Verified: all five build jobs green,
+  including both arm64 ones.
+
+- **An empty directory does not cost zero bytes.** It costs nothing on APFS
+  and a whole 4 KiB block on ext4, so a test asserting zero passes on a Mac
+  and fails the moment CI runs it on Linux. Anything asserting an exact byte
+  count belongs in `SizeMode.apparent`; on-disk assertions should compare
+  against `du`, which is the only claim that mode makes.
 
 - **A `ListView` gives its children a tight cross-axis width.** So a
   `ConstrainedBox(maxWidth:)` inside one does nothing at all — it cannot
