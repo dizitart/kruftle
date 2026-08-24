@@ -57,6 +57,17 @@ jobs:
         # macOS reporting it as damaged rather than merely unverified.
         run: codesign --force --deep --sign - build/macos/Build/Products/Release/Kruftle.app
 
+      - name: Check the bundle is universal
+        # The .dmg carries one bundle for both processors, which is why its
+        # name mentions no architecture and why the updater treats an
+        # unlabelled asset as universal. If this ever stopped being true the
+        # asset would silently become wrong for half of macOS.
+        run: |
+          BINARY=build/macos/Build/Products/Release/Kruftle.app/Contents/MacOS/Kruftle
+          lipo -archs "$BINARY"
+          lipo -archs "$BINARY" | grep -q arm64
+          lipo -archs "$BINARY" | grep -q x86_64
+
       - name: Package .dmg
         run: |
           VERSION=${{ needs.version.outputs.version }}
@@ -70,9 +81,18 @@ jobs:
         with: { name: macos, path: dist/*.dmg }
 
   windows:
-    name: Windows
+    name: Windows ${{ matrix.arch }}
     needs: version
-    runs-on: windows-latest
+    # `windows-11-arm` is a native arm64 runner, so the arm64 build is a real
+    # build rather than a cross-compile: Flutter's Windows desktop target does
+    # not cross-compile, and neither does Inno Setup's output.
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { arch: x64, runner: windows-latest }
+          - { arch: arm64, runner: windows-11-arm }
     steps:
       - uses: actions/checkout@v4
       - uses: subosito/flutter-action@v2
@@ -97,15 +117,27 @@ jobs:
           }
           if (-not (Test-Path $iscc)) { throw "ISCC.exe not found" }
           & $iscc "/DAppVersion=${{ needs.version.outputs.version }}" `
+            "/DTargetArch=${{ matrix.arch }}" `
             "/Odist" packaging\windows\kruftle.iss
 
       - uses: actions/upload-artifact@v4
-        with: { name: windows, path: dist/*.exe }
+        with:
+          name: windows-${{ matrix.arch }}
+          path: dist/*.exe
 
   linux:
-    name: Linux
+    name: Linux ${{ matrix.arch }}
     needs: version
-    runs-on: ubuntu-22.04
+    # Native runners for both, for the same reason as Windows: Flutter's Linux
+    # desktop target builds for the host, and appimagetool needs to run the
+    # binaries it is packaging.
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { arch: x64, runner: ubuntu-22.04 }
+          - { arch: arm64, runner: ubuntu-22.04-arm }
     steps:
       - uses: actions/checkout@v4
       - uses: subosito/flutter-action@v2
@@ -122,10 +154,12 @@ jobs:
       - name: Build
         run: flutter build linux --release --build-name=${{ needs.version.outputs.version }} --build-number=${{ github.run_number }}
       - name: Package AppImage and deb
-        run: packaging/linux/build-packages.sh ${{ needs.version.outputs.version }}
+        run: |
+          packaging/linux/build-packages.sh \
+            ${{ needs.version.outputs.version }} ${{ matrix.arch }}
       - uses: actions/upload-artifact@v4
         with:
-          name: linux
+          name: linux-${{ matrix.arch }}
           path: |
             dist/*.AppImage
             dist/*.deb

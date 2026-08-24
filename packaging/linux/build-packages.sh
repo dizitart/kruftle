@@ -1,11 +1,24 @@
 #!/usr/bin/env bash
 # Packages the Linux release bundle as an AppImage and a .deb.
-# Usage: build-packages.sh <version>
+# Usage: build-packages.sh <version> [arch]
+#
+# `arch` is the Flutter target: x64 (default) or arm64. It picks the bundle
+# directory, the appimagetool build, and the names both packages are given —
+# each ecosystem has its own spelling for the same processor, which is why
+# there are three variables rather than one.
 set -euo pipefail
 
-VERSION="${1:?usage: build-packages.sh <version>}"
+VERSION="${1:?usage: build-packages.sh <version> [arch]}"
+ARCH="${2:-x64}"
+
+case "$ARCH" in
+  x64)   BUNDLE_ARCH=x64;   APPIMAGE_ARCH=x86_64;  DEB_ARCH=amd64 ;;
+  arm64) BUNDLE_ARCH=arm64; APPIMAGE_ARCH=aarch64; DEB_ARCH=arm64 ;;
+  *) echo "unknown arch: $ARCH (expected x64 or arm64)" >&2; exit 2 ;;
+esac
+
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
-BUNDLE="$ROOT/build/linux/x64/release/bundle"
+BUNDLE="$ROOT/build/linux/$BUNDLE_ARCH/release/bundle"
 OUT="$ROOT/dist"
 mkdir -p "$OUT"
 
@@ -45,12 +58,12 @@ chmod +x "$APPDIR/AppRun"
 APPIMAGETOOL="$OUT/appimagetool"
 if [ ! -x "$APPIMAGETOOL" ]; then
   curl -fsSL -o "$APPIMAGETOOL" \
-    "https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-x86_64.AppImage"
+    "https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-$APPIMAGE_ARCH.AppImage"
   chmod +x "$APPIMAGETOOL"
 fi
 # CI containers have no FUSE, so run appimagetool from its extracted contents.
-ARCH=x86_64 "$APPIMAGETOOL" --appimage-extract-and-run \
-  "$APPDIR" "$OUT/Kruftle-$VERSION-x86_64.AppImage"
+ARCH="$APPIMAGE_ARCH" "$APPIMAGETOOL" --appimage-extract-and-run \
+  "$APPDIR" "$OUT/Kruftle-$VERSION-$APPIMAGE_ARCH.AppImage"
 
 # ---------------------------------------------------------------------- deb
 DEBDIR="$OUT/deb"
@@ -62,7 +75,7 @@ Package: kruftle
 Version: $VERSION
 Section: devel
 Priority: optional
-Architecture: amd64
+Architecture: $DEB_ARCH
 Depends: libgtk-3-0, libblkid1, liblzma5
 Maintainer: Dizitart <https://github.com/dizitart>
 Homepage: https://github.com/dizitart/kruftle
@@ -71,7 +84,8 @@ Description: Reclaim disk space from build artifacts
  tooling, and reclaims disk space by running that toolchain's own clean
  command. Raw deletion is a last resort, allow-listed and confirmed.
 CONTROL
-dpkg-deb --build --root-owner-group "$DEBDIR" "$OUT/Kruftle-$VERSION-amd64.deb"
+dpkg-deb --build --root-owner-group "$DEBDIR" \
+  "$OUT/Kruftle-$VERSION-$DEB_ARCH.deb"
 
 rm -rf "$APPDIR" "$DEBDIR" "$APPIMAGETOOL"
 ls -la "$OUT"

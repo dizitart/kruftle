@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import 'dart:convert';
+import 'dart:ffi' show Abi;
 import 'dart:io';
 
 import 'package:crypto/crypto.dart';
@@ -57,9 +58,11 @@ class Updater {
     this.includePreReleases = false,
     bool? windows,
     bool? macOS,
+    String? architecture,
   }) : _client = client ?? http.Client(),
        _windows = windows ?? Platform.isWindows,
-       _macOS = macOS ?? Platform.isMacOS;
+       _macOS = macOS ?? Platform.isMacOS,
+       _architecture = architecture ?? currentArchitecture();
 
   final Version currentVersion;
   final String repository;
@@ -67,6 +70,23 @@ class Updater {
   final http.Client _client;
   final bool _windows;
   final bool _macOS;
+  final String _architecture;
+
+  /// The processor this build is running on, as it appears in an asset name:
+  /// `arm64` or `x64`.
+  ///
+  /// From `Abi.current()`, which the VM already knows — no parsing of
+  /// `Platform.version`, and no shelling out to `uname`. An unrecognised ABI
+  /// reports `x64`, which is the overwhelmingly common case and the one whose
+  /// asset is most likely to exist.
+  static String currentArchitecture() {
+    final abi = Abi.current().toString();
+    if (abi.contains('arm64')) return 'arm64';
+    if (abi.contains('arm')) return 'arm';
+    if (abi.contains('ia32')) return 'ia32';
+    if (abi.contains('riscv64')) return 'riscv64';
+    return 'x64';
+  }
 
   Uri get _releasesUrl =>
       Uri.https('api.github.com', '/repos/$repository/releases');
@@ -77,6 +97,69 @@ class Updater {
       : _macOS
       ? '.dmg'
       : '.AppImage';
+
+  /// The names this architecture answers to in a release asset.
+  ///
+  /// One processor goes by several names depending on who packaged it —
+  /// `x86_64` and `amd64` and `x64` are the same thing, and `aarch64` is
+  /// `arm64`. Matching all of them means the release workflow can name assets
+  /// whatever its packaging tools naturally produce.
+  List<String> get _architectureAliases => switch (_architecture) {
+    'arm64' => const ['arm64', 'aarch64'],
+    'arm' => const ['armhf', 'armv7', 'arm'],
+    'ia32' => const ['i386', 'x86', 'ia32'],
+    'riscv64' => const ['riscv64'],
+    _ => const ['x64', 'x86_64', 'amd64'],
+  };
+
+  /// Picks the installer for this platform *and* processor.
+  ///
+  /// A universal or unlabelled asset — which is what the macOS .dmg is, since
+  /// it carries both architectures in one bundle — is accepted by any
+  /// processor. An asset labelled for a different processor is not: offering
+  /// an arm64 machine an x64 build is worse than offering it nothing, because
+  /// it looks like it worked until it does not run.
+  Map<String, Object?> selectAsset(List<Map<String, Object?>> assets) {
+    final candidates = assets
+        .where((a) => (a['name'] as String? ?? '').endsWith(_assetSuffix))
+        .toList();
+    if (candidates.isEmpty) return const {};
+
+    bool mentions(String name, Iterable<String> words) {
+      final lower = name.toLowerCase();
+      return words.any(lower.contains);
+    }
+
+    // Every architecture name any of our assets could carry, so an asset can
+    // be told apart from one that simply does not mention a processor.
+    const everyAlias = [
+      'arm64',
+      'aarch64',
+      'armhf',
+      'armv7',
+      'i386',
+      'ia32',
+      'riscv64',
+      'x64',
+      'x86_64',
+      'amd64',
+    ];
+
+    final aliases = _architectureAliases;
+    final exact = candidates
+        .where((a) => mentions(a['name']! as String, aliases))
+        .toList();
+    if (exact.isNotEmpty) return exact.first;
+
+    // No asset names this processor. An unlabelled one is universal — take it.
+    final unlabelled = candidates
+        .where((a) => !mentions(a['name']! as String, everyAlias))
+        .toList();
+    if (unlabelled.isNotEmpty) return unlabelled.first;
+
+    // Everything on offer is for some other processor.
+    return const {};
+  }
 
   /// Null when already up to date, or when the check simply could not be made.
   ///
@@ -109,10 +192,7 @@ class Updater {
       final assets = (release['assets'] as List<dynamic>? ?? const [])
           .cast<Map<String, Object?>>();
 
-      final installer = assets.firstWhere(
-        (a) => (a['name'] as String? ?? '').endsWith(_assetSuffix),
-        orElse: () => const {},
-      );
+      final installer = selectAsset(assets);
       if (installer.isEmpty) continue;
 
       final checksums = await _fetchChecksums(assets);

@@ -151,6 +151,10 @@ void main() {
       ];
       final checksums = assets.map((a) => '$digest  $a').join('\n');
 
+      // The architecture is pinned rather than inherited from whatever
+      // machine runs the tests: asset selection is architecture-aware now, and
+      // a test whose result depends on the build host is not a test.
+      // `test/core/update/architecture_test.dart` covers that dimension.
       Future<String?> assetFor({
         required bool windows,
         required bool mac,
@@ -160,6 +164,7 @@ void main() {
           client: clientFor(releasesJson(assets: assets), checksums: checksums),
           windows: windows,
           macOS: mac,
+          architecture: 'x64',
         ).check();
         return update?.assetName;
       }

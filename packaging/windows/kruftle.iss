@@ -1,8 +1,15 @@
 ; Inno Setup script for Kruftle.
-; Version is supplied by CI: iscc /DAppVersion=1.2.3 kruftle.iss
+; CI supplies both values:
+;   iscc /DAppVersion=1.2.3 /DTargetArch=x64 kruftle.iss
+; TargetArch is the Flutter target directory name — x64 or arm64 — and picks
+; both the build output to package and what the installer says it supports.
 
 #ifndef AppVersion
   #define AppVersion "0.0.0"
+#endif
+
+#ifndef TargetArch
+  #define TargetArch "x64"
 #endif
 
 #define AppName "Kruftle"
@@ -22,13 +29,21 @@ DefaultDirName={autopf}\{#AppName}
 DefaultGroupName={#AppName}
 DisableProgramGroupPage=yes
 LicenseFile=..\..\LICENSE
-OutputBaseFilename=Kruftle-{#AppVersion}-windows-setup
+OutputBaseFilename=Kruftle-{#AppVersion}-windows-{#TargetArch}-setup
 SetupIconFile=..\..\windows\runner\resources\app_icon.ico
 Compression=lzma2/max
 SolidCompression=yes
 WizardStyle=modern
+; An arm64 installer refuses to run on x64; the x64 one is accepted on arm64
+; too, because Windows emulates it — but the arm64 build is the one an arm64
+; machine should be offered, and the updater picks by processor.
+#if TargetArch == "arm64"
+ArchitecturesAllowed=arm64
+ArchitecturesInstallIn64BitMode=arm64
+#else
 ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
+#endif
 ; Per-user install needs no elevation; the app writes nothing outside its own
 ; data directory.
 PrivilegesRequiredOverridesAllowed=dialog
@@ -40,7 +55,7 @@ Name: "english"; MessagesFile: "compiler:Default.isl"
 Name: "desktopicon"; Description: "Create a &desktop shortcut"; GroupDescription: "Additional shortcuts:"
 
 [Files]
-Source: "..\..\build\windows\x64\runner\Release\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "..\..\build\windows\{#TargetArch}\runner\Release\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 
 [Icons]
 Name: "{group}\{#AppName}"; Filename: "{app}\{#AppExeName}"

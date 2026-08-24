@@ -45,9 +45,13 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - { os: macos-latest,   name: macOS,   target: macos }
-          - { os: windows-latest, name: Windows, target: windows }
-          - { os: ubuntu-latest,  name: Linux,   target: linux }
+          # macOS is one build for both processors — the bundle is universal,
+          # which the release workflow asserts with `lipo`.
+          - { os: macos-latest,      name: macOS,         target: macos }
+          - { os: windows-latest,    name: Windows x64,   target: windows }
+          - { os: windows-11-arm,    name: Windows arm64, target: windows }
+          - { os: ubuntu-latest,     name: Linux x64,     target: linux }
+          - { os: ubuntu-22.04-arm,  name: Linux arm64,   target: linux }
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
