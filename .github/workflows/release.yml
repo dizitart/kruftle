@@ -42,11 +42,35 @@ jobs:
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
+      # Flutter publishes an arm64 SDK archive for macOS only -- the Windows
+      # and Linux release manifests list x64 alone -- so `flutter-action`
+      # cannot install one on an arm64 runner for those platforms. There the
+      # SDK is cloned at the pinned tag instead; it bootstraps its own Dart
+      # SDK and engine artifacts on first run.
       - uses: subosito/flutter-action@v2
+        if: runner.arch != 'ARM64' || runner.os == 'macOS'
         with:
           flutter-version: ${{ env.FLUTTER_VERSION }}
           channel: stable
           cache: true
+
+      - name: Install Flutter from source (Linux arm64)
+        if: runner.arch == 'ARM64' && runner.os == 'Linux'
+        run: |
+          git clone --depth 1 -b "$FLUTTER_VERSION" \
+            https://github.com/flutter/flutter.git "$HOME/flutter"
+          echo "$HOME/flutter/bin" >> "$GITHUB_PATH"
+
+      - name: Install Flutter from source (Windows arm64)
+        if: runner.arch == 'ARM64' && runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          git clone --depth 1 -b $env:FLUTTER_VERSION `
+            https://github.com/flutter/flutter.git C:\flutter
+          Add-Content $env:GITHUB_PATH 'C:\flutter\bin'
+
+      - name: Show the toolchain in use
+        run: flutter --version
       - run: flutter pub get
       - name: Build
         run: flutter build macos --release --build-name=${{ needs.version.outputs.version }} --build-number=${{ github.run_number }}
@@ -95,11 +119,35 @@ jobs:
           - { arch: arm64, runner: windows-11-arm }
     steps:
       - uses: actions/checkout@v4
+      # Flutter publishes an arm64 SDK archive for macOS only -- the Windows
+      # and Linux release manifests list x64 alone -- so `flutter-action`
+      # cannot install one on an arm64 runner for those platforms. There the
+      # SDK is cloned at the pinned tag instead; it bootstraps its own Dart
+      # SDK and engine artifacts on first run.
       - uses: subosito/flutter-action@v2
+        if: runner.arch != 'ARM64' || runner.os == 'macOS'
         with:
           flutter-version: ${{ env.FLUTTER_VERSION }}
           channel: stable
           cache: true
+
+      - name: Install Flutter from source (Linux arm64)
+        if: runner.arch == 'ARM64' && runner.os == 'Linux'
+        run: |
+          git clone --depth 1 -b "$FLUTTER_VERSION" \
+            https://github.com/flutter/flutter.git "$HOME/flutter"
+          echo "$HOME/flutter/bin" >> "$GITHUB_PATH"
+
+      - name: Install Flutter from source (Windows arm64)
+        if: runner.arch == 'ARM64' && runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          git clone --depth 1 -b $env:FLUTTER_VERSION `
+            https://github.com/flutter/flutter.git C:\flutter
+          Add-Content $env:GITHUB_PATH 'C:\flutter\bin'
+
+      - name: Show the toolchain in use
+        run: flutter --version
       - run: flutter pub get
       - name: Build
         run: flutter build windows --release --build-name=${{ needs.version.outputs.version }} --build-number=${{ github.run_number }}
@@ -140,11 +188,35 @@ jobs:
           - { arch: arm64, runner: ubuntu-22.04-arm }
     steps:
       - uses: actions/checkout@v4
+      # Flutter publishes an arm64 SDK archive for macOS only -- the Windows
+      # and Linux release manifests list x64 alone -- so `flutter-action`
+      # cannot install one on an arm64 runner for those platforms. There the
+      # SDK is cloned at the pinned tag instead; it bootstraps its own Dart
+      # SDK and engine artifacts on first run.
       - uses: subosito/flutter-action@v2
+        if: runner.arch != 'ARM64' || runner.os == 'macOS'
         with:
           flutter-version: ${{ env.FLUTTER_VERSION }}
           channel: stable
           cache: true
+
+      - name: Install Flutter from source (Linux arm64)
+        if: runner.arch == 'ARM64' && runner.os == 'Linux'
+        run: |
+          git clone --depth 1 -b "$FLUTTER_VERSION" \
+            https://github.com/flutter/flutter.git "$HOME/flutter"
+          echo "$HOME/flutter/bin" >> "$GITHUB_PATH"
+
+      - name: Install Flutter from source (Windows arm64)
+        if: runner.arch == 'ARM64' && runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          git clone --depth 1 -b $env:FLUTTER_VERSION `
+            https://github.com/flutter/flutter.git C:\flutter
+          Add-Content $env:GITHUB_PATH 'C:\flutter\bin'
+
+      - name: Show the toolchain in use
+        run: flutter --version
       - name: Install build dependencies
         run: |
           sudo apt-get update
