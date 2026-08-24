@@ -14,12 +14,12 @@ check in §3 to confirm the tree is in the state this document claims.
 
 | | |
 |---|---|
-| **Current milestone** | M25 and M26 done — background cleanups and interface polish, on top of the unpublished v0.2.0 |
+| **Current milestone** | M24, M25 and M26 done — **v0.2.0 is published**, and self-update is proved |
 | **Last updated** | 2026-08-25 |
-| **Build green?** | Yes — 542 tests, analyzer clean, formatter clean |
+| **Build green?** | Yes — 554 tests, analyzer clean, formatter clean, all five release targets green |
 | **Repo** | https://github.com/dizitart/kruftle (public, GPL-3.0) |
 | **CI** | Green — analyze/test plus release builds on all three OSs |
-| **Released** | [v0.1.0](https://github.com/dizitart/kruftle/releases/tag/v0.1.0) — .dmg, .exe, .AppImage, .deb, checksums.txt |
+| **Released** | [v0.2.0](https://github.com/dizitart/kruftle/releases/tag/v0.2.0) — .dmg, two .exe, two .AppImage, two .deb, checksums.txt |
 
 ---
 
@@ -54,7 +54,7 @@ Legend: `[ ]` not started · `[~]` in progress · `[x]` done & green
 - [x] **M21** Changelog — shipped as an asset, "what's new" after an update
 - [x] **M22** Privacy Policy & Terms — in-app, with a test that keeps them true
 - [x] **M23** Processor architectures — arm64 for Windows and Linux
-- [ ] **M24** Release & self-update — **needs the owner: it publishes**
+- [x] **M24** Release & self-update — published, and an installed v0.1.0 updated itself
 
 **v0.3.0** (see `PROJECT_PLAN.md` §5c)
 
@@ -63,22 +63,21 @@ Legend: `[ ]` not started · `[~]` in progress · `[x]` done & green
 
 ### What is left
 
-0. **Publishing M25/M26.** `pubspec` is still `0.2.0`, and the changelog test
-   ties its top entry to that, so neither has been bumped: the version and the
-   changelog entry belong to the release, which is the owner's to make.
-1. **The last mile of self-update.** Everything up to the hand-off is verified
-   against the live API — `tool/check_update.dart 0.0.1 --download` finds the
-   right asset per platform, downloads it and passes SHA-256. What has *not*
-   been exercised is `Updater.install`: opening the .dmg, running the .exe
-   silently, replacing the AppImage in place. That needs an installed older
-   build and a second release. Publish `v0.1.1` and try it from an installed
-   `v0.1.0`.
-2. **Visual check of the global caches screen** — its logic has 18 tests, but
-   the screen itself has never been looked at (the session that built it ended
-   with the machine locked). Run the app, click the globe icon in the title bar.
-3. **Windows and Linux run-throughs** — only macOS has been driven by hand.
-   Worth checking: PATH probing without a login shell on Windows, and the
-   `\\?\` long-path case noted in §6.
+1. **`Updater.install` on Windows and Linux.** The macOS half is now proved
+   end to end — see session 5 — but running the `.exe` silently and replacing
+   a running AppImage in place have still never happened. Both need a machine
+   of that kind with an older build installed on it.
+2. **Windows and Linux run-throughs generally** — only macOS has been driven
+   by hand. Worth checking: PATH probing without a login shell on Windows, the
+   `\\?\` long-path case noted in §6, and the background job on both — the
+   generated unit, argv and plist are asserted against each other in
+   `background_service_test.dart`, but only launchd has actually been asked to
+   load one.
+3. **v0.1.0 users on Windows cannot auto-update correctly.** The updater that
+   shipped in v0.1.0 takes the *first* asset ending in `.exe`, and v0.2.0
+   publishes two — x64 and arm64. Half of them will be offered the wrong one.
+   Nothing can be done to the released v0.1.0; v0.2.0's updater picks by
+   processor, so this ends with v0.2.0. Worth a line in the release notes.
 4. ~~Tier-2 stacks~~ — done in M15.
 
 ---
@@ -91,7 +90,7 @@ Run this first, every session. It is the definition of "the tree is healthy".
 cd /Volumes/External/codebase/kruftle && dart format --output=none --set-exit-if-changed lib test tool && flutter analyze --fatal-infos && flutter test
 ```
 
-Expected: formatter reports 0 changed, `No issues found!`, then 542 passing.
+Expected: formatter reports 0 changed, `No issues found!`, then 554 passing.
 
 `lib/l10n/app_localizations*.dart` is generated and committed. Regenerate it
 with `flutter gen-l10n` after editing any `.arb`; the analyzer will not warn if
@@ -154,6 +153,58 @@ Newest first.
 
 **One layout bug the locale tests found** — the step rail overflowed for
 German and Russian labels. Fixed by widening it and making the label flexible.
+
+### Session 5 — 2026-08-25
+
+**Landed** — M24. v0.2.0 is published, and the one thing v0.1.0 could never
+prove is proved.
+
+- **The release.** Tag `v0.2.0`, all five build jobs green on the first run,
+  seven assets and `checksums.txt`:
+  `Kruftle-0.2.0-macos.dmg` (universal), `-windows-x64-setup.exe`,
+  `-windows-arm64-setup.exe`, `-x86_64.AppImage`, `-aarch64.AppImage`,
+  `-amd64.deb`, `-arm64.deb`.
+- **Self-update, end to end, from the real thing.** The released `v0.1.0` .dmg
+  was mounted and run. It found 0.2.0 unprompted, said "Kruftle 0.2.0 is
+  available (22.1 MiB)", downloaded it, verified the SHA-256 against the
+  release's `checksums.txt`, and opened the installer — which mounted, and
+  contained Kruftle 0.2.0. `tool/check_update.dart 0.1.0 --download` did the
+  same for all three platforms' assets in one go, each one verified.
+- **The About panel, from the shipped artifact.** The app was copied out of
+  the published .dmg and run: version 0.2.0 (3), Kruftle's mark, not
+  Flutter's.
+- **The background job, fired by launchd, from the published build.** Turning
+  the switch on wrote a LaunchAgent pointing at the .app inside the .dmg;
+  `launchctl kickstart` ran it; with nothing pre-selected it deleted nothing
+  and reported `freedBytes: 0`, and with **Tool caches** ticked it deleted
+  `__pycache__/`, freed 204,800 bytes and left the source alone. Switching it
+  off removed both the plist and the loaded job.
+
+**Two cross-platform bugs found by reading the Linux and Windows paths again**
+rather than by running them, since neither can be run here:
+
+1. **The AppImage would have registered a path that stops existing.** The
+   payload is mounted on a FUSE filesystem under `/tmp/.mount_XXXXXX` and
+   unmounted the instant the process exits, so `Platform.resolvedExecutable`
+   names something that is gone long before the timer fires. The job is now
+   pointed at `$APPIMAGE`, which is the `.AppImage` itself.
+2. **The systemd units ignored `XDG_CONFIG_HOME`.** A user who has moved their
+   config directory has moved it for systemd too; writing to a hard-coded
+   `~/.config` would have put the units somewhere systemd never looks.
+
+And a test group that pins the three job formats against *each other* — every
+weekday, the same executable and flag, the same minute, and midnight. A
+weekday that is Thursday on macOS and Wednesday on Linux is the kind of bug
+nobody reports, because nobody is watching at 03:05 to see which day it ran.
+
+**The About panel, again.** It was reported as still showing Flutter's icon.
+It was not: the report came from a `flutter run` session, which hot-reloads
+the Dart-side title-bar image while leaving the app bundle and the Swift
+delegate as they were. A debug build of the tree at that moment already
+resolved the right icon — checked by having the delegate write
+`NSApp.applicationIconImage` to a PNG. The delegate now assigns the icon at
+both ends of launching and falls back to `AppIcon.icns` if the asset
+catalogue lookup fails, which is the case an incremental build actually hits.
 
 ### Session 4 — 2026-08-25
 
@@ -291,7 +342,7 @@ renderer, both now covered by `test/ui/document_test.dart`:
    `ConstrainedBox` limiting the text to a readable measure did nothing and
    the legal documents ran the full width of the window.
 
-**Next session picks up at** — M24. It is the only one left, and it publishes:
+**Next session picked up at** — M24, in session 5. It publishes:
 tag `v0.2.0`, let the release workflow build all six assets, then install
 v0.1.0 from the existing release and check it offers and applies the update.
 That last part is the thing v0.1.0 never got to prove.
@@ -448,6 +499,19 @@ Hard-won. Read before debugging something that looks impossible.
   and fails the moment CI runs it on Linux. Anything asserting an exact byte
   count belongs in `SizeMode.apparent`; on-disk assertions should compare
   against `du`, which is the only claim that mode makes.
+
+- **Inside an AppImage, `Platform.resolvedExecutable` has a shelf life.** The
+  payload is mounted under `/tmp/.mount_XXXXXX` and unmounted the moment the
+  process exits, so any path written down for later — a systemd unit, a
+  desktop entry, a config file — is dead on arrival. `$APPIMAGE` is the one
+  that survives. `BackgroundService.executablePath` is the only place this is
+  handled.
+
+- **A `flutter run` session hot-reloads Dart assets but not the app bundle.**
+  So an icon shown by `Image.asset` updates while the Dock tile, the About
+  panel and anything in the Swift or asset-catalogue side stay as they were at
+  the last native build. Two apparently contradictory icons in one screenshot
+  is the tell, and the answer is a real rebuild, not a hunt through AppKit.
 
 - **A `ListView` gives its children a tight cross-axis width.** So a
   `ConstrainedBox(maxWidth:)` inside one does nothing at all — it cannot
