@@ -220,6 +220,82 @@ void main() {
     });
   });
 
+  group('the three platforms agree', () {
+    // The point of this group: the same schedule must mean the same thing on
+    // every desktop. A weekday that is Thursday on macOS and Wednesday on
+    // Linux is the kind of bug nobody reports, because nobody is watching at
+    // 03:05 to see which day it ran.
+    test('every weekday lands on the same day in all three job formats', () {
+      const systemd = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+      const windows = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'];
+
+      for (var day = DateTime.monday; day <= DateTime.sunday; day++) {
+        final schedule = weekly.copyWith(dayOfWeek: day);
+
+        expect(
+          BackgroundService.onCalendar(schedule),
+          startsWith(systemd[day - 1]),
+          reason: 'systemd disagrees about day $day',
+        );
+        expect(
+          BackgroundService.schtasksArguments(schedule, 'k.exe'),
+          containsAllInOrder(['/D', windows[day - 1]]),
+          reason: 'Task Scheduler disagrees about day $day',
+        );
+        expect(
+          BackgroundService.launchAgentPlist(schedule, '/k'),
+          contains('<key>Weekday</key>\n      <integer>$day</integer>'),
+          reason: 'launchd disagrees about day $day',
+        );
+      }
+    });
+
+    test('all three run the same executable with the same flag', () {
+      const exe = '/opt/kruftle/kruftle';
+      expect(BackgroundService.launchAgentPlist(daily, exe), contains(exe));
+      expect(BackgroundService.systemdService(exe), contains(exe));
+      expect(
+        BackgroundService.schtasksArguments(daily, exe).join(' '),
+        contains(exe),
+      );
+
+      for (final job in [
+        BackgroundService.launchAgentPlist(daily, exe),
+        BackgroundService.systemdService(exe),
+        BackgroundService.schtasksArguments(daily, exe).join(' '),
+      ]) {
+        expect(job, contains(BackgroundService.flag));
+      }
+    });
+
+    test('all three fire at the same minute', () {
+      final at = daily.copyWith(hour: 7, minute: 45);
+      expect(BackgroundService.onCalendar(at), contains('07:45:00'));
+      expect(
+        BackgroundService.schtasksArguments(at, 'k.exe'),
+        containsAllInOrder(['/ST', '07:45']),
+      );
+      final plist = BackgroundService.launchAgentPlist(at, '/k');
+      expect(plist, contains('<key>Hour</key>\n      <integer>7</integer>'));
+      expect(plist, contains('<key>Minute</key>\n      <integer>45</integer>'));
+    });
+
+    test('midnight is not mistaken for "unset" anywhere', () {
+      // Zero is falsy in enough languages that it is worth pinning: a job at
+      // 00:00 must be a job at midnight, not a job with no time.
+      final midnight = daily.copyWith(hour: 0, minute: 0);
+      expect(BackgroundService.onCalendar(midnight), contains('00:00:00'));
+      expect(
+        BackgroundService.schtasksArguments(midnight, 'k.exe'),
+        containsAllInOrder(['/ST', '00:00']),
+      );
+      expect(
+        BackgroundService.launchAgentPlist(midnight, '/k'),
+        contains('<key>Hour</key>\n      <integer>0</integer>'),
+      );
+    });
+  });
+
   group('installing', () {
     test('a schedule with no folder is refused before anything is written', () {
       // `isConfigured` is false without a root, and a job that scans nothing
