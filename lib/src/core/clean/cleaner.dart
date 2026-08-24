@@ -3,6 +3,7 @@
 import 'dart:async';
 import 'dart:io';
 
+import '../disk/native_disk.dart';
 import '../models/clean.dart';
 import '../models/project.dart';
 import '../models/stack.dart';
@@ -30,7 +31,7 @@ class CleanPlanner {
   Future<CleanPlan> plan({
     required String scanRoot,
     required List<DetectedProject> projects,
-    required Map<StackId, ToolStatus> toolStatus,
+    required Map<String, ToolStatus> toolStatus,
     AllowedRisks allowedRisks = const {},
   }) async {
     final steps = <CleanStep>[];
@@ -43,7 +44,7 @@ class CleanPlanner {
       );
 
       for (final stack in project.stacks) {
-        final toolReady = toolStatus[stack.stackId] == ToolStatus.available;
+        final toolReady = toolStatus[stack.toolBinary] == ToolStatus.available;
         final hasCommand = stack.command != null && toolReady;
 
         if (hasCommand) {
@@ -120,13 +121,16 @@ class Cleaner {
   Cleaner({
     ProcessRunner? runner,
     Sizer? sizer,
+    NativeDisk? disk,
     this.concurrency = 4,
     this.stepTimeout = const Duration(minutes: 5),
   }) : _runner = runner ?? SystemProcessRunner(),
-       _sizer = sizer ?? Sizer();
+       _sizer = sizer ?? Sizer(),
+       _disk = disk ?? NativeDisk.shared;
 
   final ProcessRunner _runner;
   final Sizer _sizer;
+  final NativeDisk _disk;
 
   /// How many projects are cleaned at once. Steps *within* a project stay
   /// sequential: two build tools writing the same directory is how you corrupt
@@ -169,6 +173,10 @@ class Cleaner {
     final targets = plan.touchedArtifacts.keys.toList();
     final before = await _sizer.measureAll(targets);
     final estimated = before.values.fold(0, (a, b) => a + b);
+
+    // The volume's own figure, either side of the run. Cheap — one syscall —
+    // and it is the number the user will go and check in Finder afterwards.
+    final volumeBefore = _disk.spaceFor(plan.scanRoot);
 
     // Group by project so each project's steps stay ordered, while different
     // projects proceed in parallel.
@@ -232,6 +240,8 @@ class Cleaner {
         estimatedBytes: estimated,
         duration: stopwatch.elapsed,
         cancelled: _cancelled,
+        volumeBefore: volumeBefore,
+        volumeAfter: _disk.spaceFor(plan.scanRoot),
       ),
     );
   }

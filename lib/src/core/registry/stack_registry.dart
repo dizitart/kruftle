@@ -2,10 +2,13 @@
 
 import '../models/stack.dart';
 import 'stacks/dartlang.dart';
+import 'stacks/functional.dart';
 import 'stacks/jvm.dart';
 import 'stacks/native.dart';
+import 'stacks/native_extra.dart';
 import 'stacks/scripting.dart';
 import 'stacks/systems.dart';
+import 'stacks/systems_extra.dart';
 import 'stacks/web.dart';
 
 /// Every stack Kruftle can detect and clean.
@@ -31,11 +34,48 @@ const List<StackDefinition> kStacks = [
   dotnetStack,
   swiftStack,
   xcodeStack,
+
+  // Tier 2.
+  bazelStack,
+  mesonStack,
+  ninjaStack,
+  autotoolsStack,
+  conanStack,
+  vcpkgStack,
+  platformioStack,
+  haskellStack,
+  cabalStack,
+  sbtStack,
+  clojureStack,
+  erlangStack,
+  ocamlStack,
+  gleamStack,
+  nimStack,
+  crystalStack,
+  dlangStack,
+  fortranStack,
+  adaStack,
+  denoStack,
+  composerStack,
+  terraformStack,
+  unityStack,
+  juliaStack,
+  rlangStack,
+  perlStack,
 ];
 
 /// Looks up stack definitions and matches directories against them.
 class StackRegistry {
   const StackRegistry([this.stacks = kStacks]);
+
+  /// The built-ins plus the user's own profiles.
+  ///
+  /// Custom profiles are appended as ordinary [StackDefinition]s, so nothing
+  /// downstream — detection, planning, the safety rails — has any idea which
+  /// is which. That is deliberate: a separate path for user stacks would be a
+  /// second place for a rail to be forgotten.
+  factory StackRegistry.withCustom(List<StackDefinition> custom) =>
+      StackRegistry([...kStacks, ...custom]);
 
   final List<StackDefinition> stacks;
 

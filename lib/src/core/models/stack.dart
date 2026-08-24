@@ -23,6 +23,40 @@ enum StackId {
   zig,
   elixir,
   ruby,
+
+  // Tier 2, added in v0.2.0. Same mechanism, same data class — see
+  // PROJECT_PLAN.md §3.
+  bazel,
+  meson,
+  ninja,
+  autotools,
+  conan,
+  vcpkg,
+  platformio,
+  haskell,
+  cabal,
+  sbt,
+  clojure,
+  erlang,
+  ocaml,
+  gleam,
+  nim,
+  crystal,
+  dlang,
+  fortran,
+  ada,
+  deno,
+  composer,
+  terraform,
+  unity,
+  julia,
+  rlang,
+  perl,
+
+  /// Every user-defined profile. Profiles are told apart by display name, not
+  /// by id — see `core/profiles/profile.dart`. Nothing downstream keys off
+  /// the id, so one shared value is enough.
+  custom,
 }
 
 /// What kind of data an artifact path holds, which decides how dangerous it is

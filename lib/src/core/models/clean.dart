@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import '../clean/safety.dart';
+import '../disk/native_disk.dart';
 import 'project.dart';
 import 'stack.dart';
 
@@ -154,6 +155,8 @@ class CleanReport {
     required this.estimatedBytes,
     required this.duration,
     required this.cancelled,
+    this.volumeBefore,
+    this.volumeAfter,
   });
 
   final List<StepOutcome> outcomes;
@@ -165,6 +168,28 @@ class CleanReport {
   final int estimatedBytes;
   final Duration duration;
   final bool cancelled;
+
+  /// Free space on the volume holding the scan root, read straight from the
+  /// operating system either side of the run.
+  ///
+  /// Reported alongside [bytesFreed] rather than instead of it, because they
+  /// answer different questions and can legitimately disagree: `bytesFreed` is
+  /// what Kruftle removed, while these two also move with whatever else the
+  /// machine was doing at the time. Null when the platform has no binding for
+  /// the call.
+  final DiskSpace? volumeBefore;
+  final DiskSpace? volumeAfter;
+
+  /// What the volume gained, by the operating system's own reckoning. Never
+  /// negative: another process writing during the run is not a loss Kruftle
+  /// should claim.
+  int? get volumeGained {
+    final before = volumeBefore;
+    final after = volumeAfter;
+    if (before == null || after == null) return null;
+    final gained = after.availableBytes - before.availableBytes;
+    return gained < 0 ? 0 : gained;
+  }
 
   Iterable<StepOutcome> get problems => outcomes.where((o) => o.isProblem);
 

@@ -89,12 +89,13 @@ void main() {
     );
   }
 
-  const available = {StackId.rust: ToolStatus.available};
-  const missing = {StackId.rust: ToolStatus.missing};
+  // Keyed by binary name, which is what is actually probed.
+  const available = {'cargo': ToolStatus.available};
+  const missing = {'cargo': ToolStatus.missing};
 
   Future<CleanPlan> planFor(
     List<DetectedProject> projects, {
-    Map<StackId, ToolStatus> tools = available,
+    Map<String, ToolStatus> tools = available,
     AllowedRisks risks = const {},
   }) => const CleanPlanner().plan(
     scanRoot: root,

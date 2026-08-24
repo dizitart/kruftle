@@ -10,15 +10,68 @@ import '../models/stack.dart';
 import '../registry/stack_registry.dart';
 import 'toolchain.dart';
 
+/// Turns a user-typed glob into a regular expression, or null when it is not
+/// usable.
+///
+/// Supports the three forms people actually type: `*` for a path segment,
+/// `**` for any number of segments, and `?` for one character. Everything else
+/// is escaped, so a pattern with a `.` or a `(` in it means the literal
+/// character rather than quietly becoming a regex metacharacter.
+///
+/// A pattern that will not compile is dropped rather than raised: an exclude
+/// list is a convenience, and one bad line should not stop a scan.
+RegExp? compileGlob(String pattern) {
+  final trimmed = pattern.trim();
+  if (trimmed.isEmpty) return null;
+
+  final buffer = StringBuffer();
+  for (var i = 0; i < trimmed.length; i++) {
+    final char = trimmed[i];
+    if (char == '*') {
+      if (i + 1 < trimmed.length && trimmed[i + 1] == '*') {
+        buffer.write('.*');
+        i++;
+      } else {
+        buffer.write('[^/\\\\]*');
+      }
+    } else if (char == '?') {
+      buffer.write('[^/\\\\]');
+    } else if (char == '/' || char == r'\') {
+      // A pattern is written with forward slashes whatever platform it will
+      // run on — an exclude list is the sort of thing people paste between
+      // machines — so either separator in the pattern matches either on disk.
+      buffer.write('[/\\\\]');
+    } else {
+      buffer.write(RegExp.escape(char));
+    }
+  }
+
+  try {
+    // Anchored at the end only: a pattern names a path suffix, so
+    // `**/vendor/**` and `vendor` both do what a person expects.
+    return RegExp('(^|/|\\\\)?$buffer\$');
+  } on FormatException {
+    return null;
+  }
+}
+
 /// What the user asked us to scan.
 class ScanRequest {
   const ScanRequest({
     required this.root,
     this.maxDepth = 12,
     this.followHiddenDirectories = false,
+    this.excludeGlobs = const [],
   });
 
   final String root;
+
+  /// Paths never entered, whichever stack might have claimed them.
+  ///
+  /// Only ever *reduces* what is scanned, so it cannot be used to reach
+  /// somewhere the rails would otherwise refuse — the worst a bad pattern can
+  /// do is hide a project the user wanted to find.
+  final List<String> excludeGlobs;
 
   /// Guard against pathological trees. Depth is counted from [root].
   final int maxDepth;
@@ -88,6 +141,10 @@ class ProjectScanner {
       return;
     }
 
+    final excluded = [
+      for (final pattern in request.excludeGlobs) ?compileGlob(pattern),
+    ];
+
     var found = 0;
     final queue = <(Directory, int)>[(Directory(request.root), 0)];
 
@@ -128,6 +185,7 @@ class ProjectScanner {
         // Rail 3: never descend a symlink. Link cycles are how a tree walk
         // turns into an infinite loop.
         if (Link(child).existsSync()) continue;
+        if (excluded.any((glob) => glob.hasMatch(child))) continue;
 
         queue.add((Directory(child), depth + 1));
       }
@@ -198,13 +256,22 @@ class ProjectScanner {
     return hits;
   }
 
-  /// Whether each stack's tool is installed. Asked once per scan, after the
-  /// walk, because probing a login shell is slow and the answer does not vary
-  /// per project.
-  Future<Map<StackId, ToolStatus>> toolAvailability() async {
-    final statuses = <StackId, ToolStatus>{};
+  /// Whether each tool a registered stack needs is installed, keyed by binary
+  /// name.
+  ///
+  /// Keyed by binary rather than by [StackId] because that is what is actually
+  /// being asked — and because several stacks legitimately share one binary
+  /// (`make` serves both Make and Autotools), while a custom profile has no
+  /// distinct `StackId` of its own to key by at all.
+  ///
+  /// Asked once per scan, after the walk, because probing a login shell is
+  /// slow and the answer does not vary per project.
+  Future<Map<String, ToolStatus>> toolAvailability() async {
+    final statuses = <String, ToolStatus>{};
     for (final stack in _registry.stacks) {
-      statuses[stack.id] = await _toolchain.status(stack.tool?.binary);
+      final binary = stack.tool?.binary;
+      if (binary == null || statuses.containsKey(binary)) continue;
+      statuses[binary] = await _toolchain.status(binary);
     }
     return statuses;
   }

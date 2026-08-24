@@ -36,6 +36,6 @@ Future<void> main(List<String> args) async {
 
   final tools = await scanner.toolAvailability();
   stdout.writeln(
-    '\ntoolchains: ${tools.entries.map((e) => '${e.key.name}=${e.value.name}').join(' ')}',
+    '\ntoolchains: ${tools.entries.map((e) => '${e.key}=${e.value.name}').join(' ')}',
   );
 }

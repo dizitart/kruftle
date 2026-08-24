@@ -36,6 +36,35 @@ void main() {
         {'lib', 'macos', 'windows'},
         {StackId.flutter},
       ),
+
+      // Tier 2.
+      ('bazel workspace', {'MODULE.bazel'}, {}, {StackId.bazel}),
+      ('meson project', {'meson.build'}, {}, {StackId.meson}),
+      ('ninja build', {'build.ninja'}, {}, {StackId.ninja}),
+      ('autotools project', {'configure.ac'}, {}, {StackId.autotools}),
+      ('conan recipe', {'conanfile.txt'}, {}, {StackId.conan}),
+      ('vcpkg manifest', {'vcpkg.json'}, {}, {StackId.vcpkg}),
+      ('platformio project', {'platformio.ini'}, {}, {StackId.platformio}),
+      ('haskell stack', {'stack.yaml'}, {}, {StackId.haskell}),
+      ('cabal package', {'acme.cabal'}, {}, {StackId.cabal}),
+      ('scala sbt', {'build.sbt'}, {}, {StackId.sbt}),
+      ('leiningen', {'project.clj'}, {}, {StackId.clojure}),
+      ('tools.deps', {'deps.edn'}, {}, {StackId.clojure}),
+      ('erlang rebar', {'rebar.config'}, {}, {StackId.erlang}),
+      ('ocaml dune', {'dune-project'}, {}, {StackId.ocaml}),
+      ('gleam project', {'gleam.toml'}, {}, {StackId.gleam}),
+      ('nim package', {'acme.nimble'}, {}, {StackId.nim}),
+      ('crystal shard', {'shard.yml'}, {}, {StackId.crystal}),
+      ('d dub package', {'dub.json'}, {}, {StackId.dlang}),
+      ('fortran fpm', {'fpm.toml'}, {}, {StackId.fortran}),
+      ('ada alire', {'alire.toml'}, {}, {StackId.ada}),
+      ('deno project', {'deno.json'}, {}, {StackId.deno}),
+      ('php composer', {'composer.json'}, {}, {StackId.composer}),
+      ('terraform module', {'main.tf'}, {}, {StackId.terraform}),
+      ('unity project', {}, {'ProjectSettings', 'Assets'}, {StackId.unity}),
+      ('julia package', {'Project.toml', 'Manifest.toml'}, {}, {StackId.julia}),
+      ('r package', {'DESCRIPTION', 'NAMESPACE'}, {}, {StackId.rlang}),
+      ('perl distribution', {'Makefile.PL'}, {}, {StackId.perl}),
     ];
 
     for (final (name, files, dirs, expected) in cases) {
@@ -53,6 +82,50 @@ void main() {
           .detect(listing(dirs: {'Runner.xcodeproj'}))
           .map((s) => s.id);
       expect(found, contains(StackId.xcode));
+    });
+
+    test('a cabal-only project is not also claimed by Stack', () {
+      final ids = registry
+          .detect(listing(files: {'acme.cabal'}))
+          .map((s) => s.id)
+          .toSet();
+      expect(ids, contains(StackId.cabal));
+      expect(ids, isNot(contains(StackId.haskell)));
+    });
+
+    test('Assets alone does not make a directory a Unity project', () {
+      // "Assets" is one of the most common folder names there is. Claiming a
+      // directory on it alone would offer to delete a web project's images.
+      final ids = registry
+          .detect(listing(dirs: {'Assets'}))
+          .map((s) => s.id)
+          .toSet();
+      expect(ids, isNot(contains(StackId.unity)));
+    });
+
+    test('a bare Project.toml is not assumed to be Julia', () {
+      final ids = registry
+          .detect(listing(files: {'Project.toml'}))
+          .map((s) => s.id)
+          .toSet();
+      expect(ids, isNot(contains(StackId.julia)));
+    });
+
+    test('a bare DESCRIPTION file is not assumed to be an R package', () {
+      final ids = registry
+          .detect(listing(files: {'DESCRIPTION'}))
+          .map((s) => s.id)
+          .toSet();
+      expect(ids, isNot(contains(StackId.rlang)));
+    });
+
+    test('tools.deps has no clean command to run, Leiningen does', () {
+      final clojure = registry.byId(StackId.clojure)!;
+      expect(clojure.commandFor(listing(files: {'deps.edn'})), isNull);
+      expect(
+        clojure.commandFor(listing(files: {'project.clj'})),
+        const CleanCommand('lein', ['clean']),
+      );
     });
 
     test('flutter and dart are mutually exclusive', () {
@@ -163,9 +236,16 @@ void main() {
       final registered = kStacks.map((s) => s.id).toSet();
       expect(
         StackId.values.toSet().difference(registered),
-        isEmpty,
+        // `custom` is the one id with no built-in definition: it belongs to
+        // whatever profiles the user has written, which are merged in at
+        // runtime by `StackRegistry.withCustom`.
+        {StackId.custom},
         reason: 'an enum value without a definition can never be detected',
       );
+    });
+
+    test('no built-in stack claims the id reserved for user profiles', () {
+      expect(kStacks.map((s) => s.id), isNot(contains(StackId.custom)));
     });
 
     test('every stack has either a clean command or artifact paths', () {
@@ -216,6 +296,50 @@ void main() {
           }
         }
       }
+    });
+
+    test('Bazel is only ever cleaned by its own command', () {
+      // `bazel-out` and its siblings are symlinks into an output base under
+      // the user's cache directory. Deleting the link frees nothing and
+      // breaks the workspace, so there must be no artifact path to tempt the
+      // raw-deletion fallback.
+      expect(registry.byId(StackId.bazel)!.artifacts, isEmpty);
+      expect(registry.byId(StackId.bazel)!.cleanCommand, isNotNull);
+    });
+
+    test('the Tier-2 matrix is actually registered', () {
+      // The plan promises these by name; a typo in the registry list would
+      // otherwise go unnoticed until someone wondered why their Haskell
+      // project was never found.
+      const promised = {
+        StackId.bazel,
+        StackId.meson,
+        StackId.ninja,
+        StackId.autotools,
+        StackId.conan,
+        StackId.vcpkg,
+        StackId.platformio,
+        StackId.haskell,
+        StackId.cabal,
+        StackId.sbt,
+        StackId.clojure,
+        StackId.erlang,
+        StackId.ocaml,
+        StackId.gleam,
+        StackId.nim,
+        StackId.crystal,
+        StackId.dlang,
+        StackId.fortran,
+        StackId.ada,
+        StackId.deno,
+        StackId.composer,
+        StackId.terraform,
+        StackId.unity,
+        StackId.julia,
+        StackId.rlang,
+        StackId.perl,
+      };
+      expect(promised.difference(kStacks.map((s) => s.id).toSet()), isEmpty);
     });
 
     test('every stack declares a display name and at least one marker', () {
