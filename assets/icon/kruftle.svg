@@ -1,22 +1,36 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
-  <!-- Kruftle app mark.
+  <!-- Kruftle app mark — "the sweep".
 
-       A bold K whose lower leg breaks apart and sweeps away: the letter is the
-       name, the dissolving leg is the job. Chosen because a broom or a trash
-       can reads as a consumer cleaner, and because a heavy geometric letter
-       survives being drawn at 16 pixels, which a broom does not. -->
+       A heavy amber meter ring, all but closed, whose leading end crumbles
+       into motes and stops. It is the app in one gesture: occupied space,
+       coming apart and going away. The gap that the motes fade into is the
+       space you get back, and it is the largest thing in the picture.
+
+       The mark is deliberately one shape and one colour. A ring survives being
+       drawn at 16 pixels, which is the only size that really has to work; a
+       letterform, a broom or a bin does not — the first says the name and
+       nothing else, and the other two read as a consumer cleaner rather than a
+       developer tool.
+
+       The previous mark, a dissolving K, is kept as `kruftle-legacy.svg`.
+
+       Regenerate every raster from this file with `./tool/make_icons.sh`. -->
   <defs>
     <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
       <stop offset="0" stop-color="#24272F"/>
       <stop offset="1" stop-color="#15171C"/>
     </linearGradient>
-    <!-- userSpaceOnUse, not the default objectBoundingBox: the stem is a
-         vertical line, whose bounding box has zero width, and the spec says a
-         gradient over a zero-area box renders nothing at all. -->
+
+    <!-- userSpaceOnUse, not the default objectBoundingBox: the ring and the
+         motes are separate elements, and only a shared user-space gradient
+         shades them as one object. It also keeps the light coming from the
+         same place regardless of each mote's own bounding box, which is what
+         makes them look like pieces of the ring rather than dots. -->
     <linearGradient id="amber" gradientUnits="userSpaceOnUse"
-                    x1="300" y1="300" x2="820" y2="800">
-      <stop offset="0" stop-color="#F5BC5E"/>
-      <stop offset="1" stop-color="#CE8722"/>
+                    x1="230" y1="810" x2="850" y2="250">
+      <stop offset="0" stop-color="#FFD182"/>
+      <stop offset="0.5" stop-color="#EFAF48"/>
+      <stop offset="1" stop-color="#C57C18"/>
     </linearGradient>
   </defs>
 
@@ -24,16 +38,20 @@
   <rect x="4" y="4" width="1016" height="1016" rx="225" fill="none"
         stroke="#E0A33C" stroke-opacity="0.16" stroke-width="8"/>
 
-  <g stroke="url(#amber)" stroke-linecap="round" fill="url(#amber)">
-    <!-- stem -->
-    <line x1="348" y1="318" x2="348" y2="706" stroke-width="112"/>
-    <!-- upper arm -->
-    <line x1="392" y1="536" x2="676" y2="322" stroke-width="106"/>
-    <!-- lower leg, holding together then coming apart -->
-    <line x1="392" y1="536" x2="536" y2="636" stroke-width="106"/>
-    <circle cx="629" cy="686" r="45" stroke="none"/>
-    <circle cx="705" cy="729" r="32" stroke="none"/>
-    <circle cx="766" cy="766" r="22" stroke="none"/>
-    <circle cx="815" cy="797" r="13" stroke="none"/>
+  <!-- 186° of ring, thick, round-capped. Centred on (532, 528) rather than on
+       the canvas centre: the motes carry weight out to the right, so the ring
+       has to sit right of centre for the whole mark to look centred. -->
+  <path d="M 363.3 743.9 A 274 274 0 1 1 722.3 330.9" fill="none"
+        stroke="url(#amber)" stroke-width="130" stroke-linecap="round"/>
+
+  <!-- The crumbling end. The first mote overlaps the cap on purpose, so the
+       ring appears to break rather than to simply stop and be followed by
+       dots. -->
+  <g fill="url(#amber)">
+    <circle cx="776.2" cy="387.0" r="53" opacity="0.95"/>
+    <circle cx="817.6" cy="467.3" r="37" opacity="0.82"/>
+    <circle cx="834.3" cy="559.8" r="24" opacity="0.68"/>
+    <circle cx="823.1" cy="645.6" r="15" opacity="0.52"/>
+    <circle cx="792.5" cy="717.3" r="9"  opacity="0.38"/>
   </g>
 </svg>

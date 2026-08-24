@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <!-- Kruftle app mark.
+
+       A bold K whose lower leg breaks apart and sweeps away: the letter is the
+       name, the dissolving leg is the job. Chosen because a broom or a trash
+       can reads as a consumer cleaner, and because a heavy geometric letter
+       survives being drawn at 16 pixels, which a broom does not. -->
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#24272F"/>
+      <stop offset="1" stop-color="#15171C"/>
+    </linearGradient>
+    <!-- userSpaceOnUse, not the default objectBoundingBox: the stem is a
+         vertical line, whose bounding box has zero width, and the spec says a
+         gradient over a zero-area box renders nothing at all. -->
+    <linearGradient id="amber" gradientUnits="userSpaceOnUse"
+                    x1="300" y1="300" x2="820" y2="800">
+      <stop offset="0" stop-color="#F5BC5E"/>
+      <stop offset="1" stop-color="#CE8722"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1024" height="1024" rx="228" fill="url(#bg)"/>
+  <rect x="4" y="4" width="1016" height="1016" rx="225" fill="none"
+        stroke="#E0A33C" stroke-opacity="0.16" stroke-width="8"/>
+
+  <g stroke="url(#amber)" stroke-linecap="round" fill="url(#amber)">
+    <!-- stem -->
+    <line x1="348" y1="318" x2="348" y2="706" stroke-width="112"/>
+    <!-- upper arm -->
+    <line x1="392" y1="536" x2="676" y2="322" stroke-width="106"/>
+    <!-- lower leg, holding together then coming apart -->
+    <line x1="392" y1="536" x2="536" y2="636" stroke-width="106"/>
+    <circle cx="629" cy="686" r="45" stroke="none"/>
+    <circle cx="705" cy="729" r="32" stroke="none"/>
+    <circle cx="766" cy="766" r="22" stroke="none"/>
+    <circle cx="815" cy="797" r="13" stroke="none"/>
+  </g>
+</svg>
