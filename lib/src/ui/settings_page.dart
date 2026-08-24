@@ -189,7 +189,10 @@ class SettingsPage extends ConsumerWidget {
               _DropdownRow<LogLevel>(
                 label: l.settingsLogDetail,
                 value: settings.logLevel,
-                items: {for (final level in LogLevel.values) level: level.name},
+                items: {
+                  for (final level in LogLevel.values)
+                    level: logLevelName(l, level),
+                },
                 onChanged: (v) {
                   controller.update((s) => s.copyWith(logLevel: v));
                 },
@@ -292,30 +295,14 @@ class SettingsPage extends ConsumerWidget {
                   ),
                 ),
               ),
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 12),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    if (ref.watch(appVersionProvider) case final version?)
-                      Text(
-                        l.settingsVersion(version),
-                        style: const TextStyle(fontSize: 12.5),
-                      ),
-                    const SizedBox(height: 4),
-                    Text(
-                      l.settingsLicence,
-                      style: TextStyle(
-                        fontSize: 11.5,
-                        height: 1.4,
-                        color: context.colors.onSurfaceVariant,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
             ],
           ),
+
+          // Version, licence and provenance sit below the About card rather
+          // than inside it. They are not a setting and not something to open —
+          // they are the page's colophon, and putting them in the card made
+          // the last row look like a dead link.
+          _Colophon(version: ref.watch(appVersionProvider)),
         ],
       ),
     );
@@ -349,6 +336,54 @@ String languageName(String code) => switch (code) {
   'zh' => '中文',
   _ => code,
 };
+
+/// The label for a log level, so the picker reads as prose rather than as the
+/// enum constant it happens to be stored as.
+String logLevelName(L l, LogLevel level) => switch (level) {
+  LogLevel.debug => l.settingsLogDebug,
+  LogLevel.info => l.settingsLogInfo,
+  LogLevel.warning => l.settingsLogWarning,
+  LogLevel.error => l.settingsLogError,
+};
+
+/// Version, licence and where it came from. Below the last card, centred.
+class _Colophon extends StatelessWidget {
+  const _Colophon({required this.version});
+
+  final String? version;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = L.of(context);
+    final quiet = TextStyle(
+      fontSize: 11.5,
+      height: 1.5,
+      color: context.colors.onSurfaceVariant,
+    );
+
+    return Padding(
+      padding: const EdgeInsets.only(top: 4, bottom: 8),
+      child: Column(
+        children: [
+          if (version case final version?)
+            Text(
+              l.settingsVersion(version),
+              textAlign: TextAlign.center,
+              style: const TextStyle(fontSize: 12.5),
+            ),
+          const SizedBox(height: 4),
+          Text(l.settingsLicence, textAlign: TextAlign.center, style: quiet),
+          const SizedBox(height: 10),
+          Text(
+            l.settingsMadeWith,
+            textAlign: TextAlign.center,
+            style: quiet.copyWith(fontSize: 12),
+          ),
+        ],
+      ),
+    );
+  }
+}
 
 /// A settings row that opens something.
 class _LinkRow extends StatelessWidget {
@@ -564,16 +599,8 @@ class _DropdownRow<T> extends StatelessWidget {
     child: Row(
       children: [
         Expanded(child: Text(label, style: const TextStyle(fontSize: 13))),
-        DropdownButton<T>(
-          value: value,
-          underline: const SizedBox.shrink(),
-          style: TextStyle(fontSize: 13, color: context.colors.onSurface),
-          items: [
-            for (final entry in items.entries)
-              DropdownMenuItem(value: entry.key, child: Text(entry.value)),
-          ],
-          onChanged: (v) => v == null ? null : onChanged(v),
-        ),
+        const SizedBox(width: 16),
+        KruftleDropdown<T>(value: value, items: items, onChanged: onChanged),
       ],
     ),
   );

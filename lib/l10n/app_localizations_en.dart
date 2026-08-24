@@ -403,6 +403,15 @@ class LEn extends L {
   String get cachesRemeasure => 'Re-measure';
 
   @override
+  String get cachesSortTooltip => 'Sort by size';
+
+  @override
+  String get cachesSortLargest => 'Largest first';
+
+  @override
+  String get cachesSortSmallest => 'Smallest first';
+
+  @override
   String get cachesIntro =>
       'These caches are shared by every project on this machine. Emptying one frees space now and costs a re-download later — it never loses work.';
 
@@ -575,6 +584,18 @@ class LEn extends L {
   String get settingsLogDetail => 'Detail';
 
   @override
+  String get settingsLogDebug => 'Debug';
+
+  @override
+  String get settingsLogInfo => 'Info';
+
+  @override
+  String get settingsLogWarning => 'Warning';
+
+  @override
+  String get settingsLogError => 'Error';
+
+  @override
   String get settingsLogRetention => 'Log files kept';
 
   @override
@@ -635,6 +656,9 @@ class LEn extends L {
       'Free software under the GNU General Public License v3.0 or later.';
 
   @override
+  String get settingsMadeWith => 'Made with ❤️ in Kolkata, India';
+
+  @override
   String get settingsSourceCode => 'Source code';
 
   @override
@@ -683,7 +707,7 @@ class LEn extends L {
 
   @override
   String get tourScheduleBody =>
-      'Have Kruftle remind you daily, weekly or monthly, so the cruft never gets a chance to build up again.';
+      'Have Kruftle clean daily, weekly or monthly. It can nudge you while it is open, or register with your operating system\'s own scheduler and do the run with Kruftle closed.';
 
   @override
   String get tourFinishTitle => 'That\'s the whole app';
@@ -703,7 +727,22 @@ class LEn extends L {
 
   @override
   String get scheduleEnableHelp =>
-      'Kruftle checks whether a cleanup is due while it is running, and tells you at launch if one was missed. It cannot wake itself while closed.';
+      'Kruftle checks whether a cleanup is due while it is running, and tells you at launch if one was missed. Turn on background runs below to have it happen without Kruftle open.';
+
+  @override
+  String get scheduleBackground => 'Run even when Kruftle is closed';
+
+  @override
+  String get scheduleBackgroundHelp =>
+      'Registers a job with your operating system’s own scheduler, so a cleanup runs at the chosen time whether or not Kruftle is open. It runs each toolchain’s clean command and deletes only the categories you pre-selected in Settings.';
+
+  @override
+  String get scheduleBackgroundActive =>
+      'Registered with the system scheduler.';
+
+  @override
+  String get scheduleBackgroundFailed =>
+      'Your system refused to register the background job. The reminder still works while Kruftle is open.';
 
   @override
   String get scheduleFrequency => 'How often';

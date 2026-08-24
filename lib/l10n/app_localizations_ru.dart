@@ -411,6 +411,15 @@ class LRu extends L {
   String get cachesRemeasure => 'Измерить заново';
 
   @override
+  String get cachesSortTooltip => 'Сортировать по размеру';
+
+  @override
+  String get cachesSortLargest => 'Сначала крупные';
+
+  @override
+  String get cachesSortSmallest => 'Сначала мелкие';
+
+  @override
   String get cachesIntro =>
       'Эти кэши общие для всех проектов на компьютере. Очистка одного освобождает место сейчас и стоит повторной загрузки позже — работа при этом никогда не теряется.';
 
@@ -586,6 +595,18 @@ class LRu extends L {
   String get settingsLogDetail => 'Подробность';
 
   @override
+  String get settingsLogDebug => 'Отладка';
+
+  @override
+  String get settingsLogInfo => 'Информация';
+
+  @override
+  String get settingsLogWarning => 'Предупреждение';
+
+  @override
+  String get settingsLogError => 'Ошибка';
+
+  @override
   String get settingsLogRetention => 'Сколько файлов журнала хранить';
 
   @override
@@ -646,6 +667,9 @@ class LRu extends L {
       'Свободное программное обеспечение под GNU General Public License v3.0 или новее.';
 
   @override
+  String get settingsMadeWith => 'Сделано с ❤️ в Калькутте, Индия';
+
+  @override
   String get settingsSourceCode => 'Исходный код';
 
   @override
@@ -695,7 +719,7 @@ class LRu extends L {
 
   @override
   String get tourScheduleBody =>
-      'Пусть Kruftle напоминает вам ежедневно, еженедельно или ежемесячно, чтобы мусор больше не успевал накапливаться.';
+      'Пусть Kruftle убирается ежедневно, еженедельно или ежемесячно. Он может напомнить, пока открыт, либо зарегистрироваться в планировщике вашей операционной системы и выполнить очистку при закрытом Kruftle.';
 
   @override
   String get tourFinishTitle => 'Вот и всё приложение';
@@ -715,7 +739,22 @@ class LRu extends L {
 
   @override
   String get scheduleEnableHelp =>
-      'Kruftle проверяет, не пора ли очистить диск, пока он запущен, и сообщает при старте, если срок был пропущен. Разбудить себя в закрытом состоянии он не может.';
+      'Kruftle проверяет, пора ли выполнять очистку, пока он запущен, и сообщает при запуске, если какая-то была пропущена. Включите фоновые запуски ниже, чтобы это происходило без открытого Kruftle.';
+
+  @override
+  String get scheduleBackground => 'Запускать, даже когда Kruftle закрыт';
+
+  @override
+  String get scheduleBackgroundHelp =>
+      'Регистрирует задание в собственном планировщике операционной системы, поэтому очистка выполняется в выбранное время независимо от того, открыт ли Kruftle. Она запускает команду очистки каждого набора инструментов и удаляет только те категории, которые вы заранее выбрали в настройках.';
+
+  @override
+  String get scheduleBackgroundActive =>
+      'Зарегистрировано в планировщике системы.';
+
+  @override
+  String get scheduleBackgroundFailed =>
+      'Система отказалась зарегистрировать фоновое задание. Напоминание по-прежнему работает, пока Kruftle открыт.';
 
   @override
   String get scheduleFrequency => 'Как часто';

@@ -405,6 +405,15 @@ class LPt extends L {
   String get cachesRemeasure => 'Medir de novo';
 
   @override
+  String get cachesSortTooltip => 'Ordenar por tamanho';
+
+  @override
+  String get cachesSortLargest => 'Maiores primeiro';
+
+  @override
+  String get cachesSortSmallest => 'Menores primeiro';
+
+  @override
   String get cachesIntro =>
       'Estes caches são compartilhados por todos os projetos desta máquina. Esvaziar um libera espaço agora e custa um novo download depois — nunca se perde trabalho.';
 
@@ -578,6 +587,18 @@ class LPt extends L {
   String get settingsLogDetail => 'Detalhe';
 
   @override
+  String get settingsLogDebug => 'Depuração';
+
+  @override
+  String get settingsLogInfo => 'Informação';
+
+  @override
+  String get settingsLogWarning => 'Aviso';
+
+  @override
+  String get settingsLogError => 'Erro';
+
+  @override
   String get settingsLogRetention => 'Arquivos de log mantidos';
 
   @override
@@ -638,6 +659,9 @@ class LPt extends L {
       'Software livre sob a Licença Pública Geral GNU v3.0 ou posterior.';
 
   @override
+  String get settingsMadeWith => 'Feito com ❤️ em Calcutá, Índia';
+
+  @override
   String get settingsSourceCode => 'Código-fonte';
 
   @override
@@ -686,7 +710,7 @@ class LPt extends L {
 
   @override
   String get tourScheduleBody =>
-      'Peça ao Kruftle para lembrar você diariamente, semanalmente ou mensalmente, para que o entulho nunca tenha chance de voltar a se acumular.';
+      'Faça o Kruftle limpar diariamente, semanalmente ou mensalmente. Pode avisá-lo enquanto está aberto, ou registar-se no agendador do seu sistema operativo e fazer a limpeza com o Kruftle fechado.';
 
   @override
   String get tourFinishTitle => 'É esse o aplicativo inteiro';
@@ -706,7 +730,21 @@ class LPt extends L {
 
   @override
   String get scheduleEnableHelp =>
-      'O Kruftle verifica se uma limpeza está pendente enquanto está aberto, e avisa ao iniciar se alguma foi perdida. Ele não consegue se acordar sozinho quando está fechado.';
+      'O Kruftle verifica se há uma limpeza pendente enquanto está em execução e avisa-o no arranque se alguma foi falhada. Ative abaixo as execuções em segundo plano para que aconteça sem o Kruftle aberto.';
+
+  @override
+  String get scheduleBackground => 'Executar mesmo com o Kruftle fechado';
+
+  @override
+  String get scheduleBackgroundHelp =>
+      'Regista uma tarefa no agendador do próprio sistema operativo, para que a limpeza corra à hora escolhida, esteja ou não o Kruftle aberto. Executa o comando de limpeza de cada cadeia de ferramentas e apaga apenas as categorias que pré-selecionou nas Definições.';
+
+  @override
+  String get scheduleBackgroundActive => 'Registado no agendador do sistema.';
+
+  @override
+  String get scheduleBackgroundFailed =>
+      'O seu sistema recusou registar a tarefa em segundo plano. O lembrete continua a funcionar enquanto o Kruftle estiver aberto.';
 
   @override
   String get scheduleFrequency => 'Com que frequência';

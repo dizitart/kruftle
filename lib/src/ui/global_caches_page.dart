@@ -23,6 +23,40 @@ class GlobalCachesPage extends ConsumerStatefulWidget {
   ConsumerState<GlobalCachesPage> createState() => _GlobalCachesPageState();
 }
 
+/// Which end of the list the biggest caches go.
+enum CacheOrder { largestFirst, smallestFirst }
+
+/// [targets] in the order they should be shown.
+///
+/// Caches still being measured have no size yet and go last whichever way the
+/// list is pointing. Sorting them as zero would park them at the top under
+/// "smallest first" and then jump them the moment their real size arrived,
+/// moving a row out from under a cursor that was about to tick it.
+///
+/// The sort is made stable by hand, because `List.sort` is not: two caches of
+/// the same size would otherwise swap places on every re-measure.
+List<GlobalCacheTarget> orderCaches(
+  List<GlobalCacheTarget> targets,
+  CacheOrder order,
+) {
+  final measured =
+      [
+        for (final (index, target) in targets.indexed)
+          if (target.sizeBytes != null) (index, target),
+      ]..sort((a, b) {
+        final bySize = order == CacheOrder.largestFirst
+            ? b.$2.sizeBytes!.compareTo(a.$2.sizeBytes!)
+            : a.$2.sizeBytes!.compareTo(b.$2.sizeBytes!);
+        return bySize != 0 ? bySize : a.$1.compareTo(b.$1);
+      });
+
+  return [
+    for (final (_, target) in measured) target,
+    for (final target in targets)
+      if (target.sizeBytes == null) target,
+  ];
+}
+
 class _GlobalCachesPageState extends ConsumerState<GlobalCachesPage> {
   final _cleaner = GlobalCacheCleaner();
 
@@ -30,7 +64,13 @@ class _GlobalCachesPageState extends ConsumerState<GlobalCachesPage> {
   final _selected = <String>{};
   var _loading = true;
   var _running = false;
+  var _order = CacheOrder.largestFirst;
   List<GlobalCacheOutcome>? _outcomes;
+
+  /// Sorted on the way out rather than in `_targets`, so the survey order is
+  /// left alone and a re-measure arriving while the user reads re-sorts with
+  /// no second list to keep in step.
+  List<GlobalCacheTarget> get _ordered => orderCaches(_targets, _order);
 
   @override
   void initState() {
@@ -157,6 +197,19 @@ class _GlobalCachesPageState extends ConsumerState<GlobalCachesPage> {
         backgroundColor: context.colors.surface,
         surfaceTintColor: Colors.transparent,
         actions: [
+          if (_targets.isNotEmpty)
+            Tooltip(
+              message: l.cachesSortTooltip,
+              child: KruftleDropdown<CacheOrder>(
+                value: _order,
+                items: {
+                  CacheOrder.largestFirst: l.cachesSortLargest,
+                  CacheOrder.smallestFirst: l.cachesSortSmallest,
+                },
+                onChanged: (v) => setState(() => _order = v),
+              ),
+            ),
+          const SizedBox(width: 10),
           IconButton(
             onPressed: _loading || _running ? null : _survey,
             icon: const Icon(Icons.refresh_rounded, size: 18),
@@ -202,7 +255,7 @@ class _GlobalCachesPageState extends ConsumerState<GlobalCachesPage> {
                             ),
                           ),
                         ),
-                      for (final target in _targets)
+                      for (final target in _ordered)
                         _CacheRow(
                           target: target,
                           selected: _selected.contains(

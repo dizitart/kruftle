@@ -275,3 +275,73 @@ class NoticeBanner extends StatelessWidget {
     );
   }
 }
+
+/// A dropdown that looks like the rest of the app.
+///
+/// The Material default is a bare label with an underline and a menu whose
+/// corners are rounded by two pixels, so the hover highlight runs flush into a
+/// nearly square edge and the whole control reads as unstyled next to the
+/// app's rounded cards. This gives it a padded, bordered resting state and a
+/// menu with the same radius as everything else.
+///
+/// One widget rather than the same eight lines of styling at each of the five
+/// call sites, because the five have to agree with each other.
+class KruftleDropdown<T> extends StatelessWidget {
+  const KruftleDropdown({
+    super.key,
+    required this.value,
+    required this.items,
+    required this.onChanged,
+  });
+
+  final T value;
+
+  /// Value to label, in the order they should be offered.
+  final Map<T, String> items;
+  final ValueChanged<T> onChanged;
+
+  @override
+  Widget build(BuildContext context) => Container(
+    decoration: BoxDecoration(
+      color: context.colors.surfaceContainerHighest.withValues(alpha: 0.5),
+      borderRadius: BorderRadius.circular(8),
+      border: Border.all(color: context.colors.outlineVariant),
+    ),
+    child: DropdownButtonHideUnderline(
+      child: DropdownButton<T>(
+        value: value,
+        isDense: true,
+        // Matches the cards and the buttons. The default of 2 is what made the
+        // highlighted row look like it was overflowing the menu.
+        borderRadius: BorderRadius.circular(10),
+        dropdownColor: context.colors.surfaceContainerHigh,
+        focusColor: Colors.transparent,
+        padding: const EdgeInsets.fromLTRB(12, 8, 8, 8),
+        icon: Padding(
+          padding: const EdgeInsets.only(left: 2),
+          child: Icon(
+            Icons.expand_more_rounded,
+            size: 18,
+            color: context.colors.onSurfaceVariant,
+          ),
+        ),
+        // Derived from the theme rather than built from scratch, because the
+        // menu items are wrapped in this style and inherit nothing else. A
+        // bare TextStyle would leave them on the platform's default family
+        // while every label beside them followed the theme.
+        style: context.text.bodyMedium?.copyWith(
+          fontSize: 13,
+          color: context.colors.onSurface,
+        ),
+        items: [
+          for (final entry in items.entries)
+            DropdownMenuItem(
+              value: entry.key,
+              child: Text(entry.value, overflow: TextOverflow.ellipsis),
+            ),
+        ],
+        onChanged: (v) => v == null ? null : onChanged(v),
+      ),
+    ),
+  );
+}

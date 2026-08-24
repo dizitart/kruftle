@@ -412,6 +412,15 @@ class LAr extends L {
   String get cachesRemeasure => 'إعادة القياس';
 
   @override
+  String get cachesSortTooltip => 'الترتيب حسب الحجم';
+
+  @override
+  String get cachesSortLargest => 'الأكبر أولاً';
+
+  @override
+  String get cachesSortSmallest => 'الأصغر أولاً';
+
+  @override
   String get cachesIntro =>
       'تتشارك كل مشاريع هذا الجهاز هذه الذاكرات. إفراغ إحداها يحرّر مساحة الآن ويكلّف تنزيلًا لاحقًا — ولا يُفقد أي عمل.';
 
@@ -584,6 +593,18 @@ class LAr extends L {
   String get settingsLogDetail => 'التفصيل';
 
   @override
+  String get settingsLogDebug => 'تصحيح';
+
+  @override
+  String get settingsLogInfo => 'معلومات';
+
+  @override
+  String get settingsLogWarning => 'تحذير';
+
+  @override
+  String get settingsLogError => 'خطأ';
+
+  @override
   String get settingsLogRetention => 'عدد ملفات السجل المحفوظة';
 
   @override
@@ -644,6 +665,9 @@ class LAr extends L {
       'برمجية حرة بموجب رخصة جنو العمومية العامة الإصدار 3.0 أو ما بعده.';
 
   @override
+  String get settingsMadeWith => 'صُنع بـ ❤️ في كولكاتا، الهند';
+
+  @override
   String get settingsSourceCode => 'الشفرة المصدرية';
 
   @override
@@ -692,7 +716,7 @@ class LAr extends L {
 
   @override
   String get tourScheduleBody =>
-      'اجعل Kruftle يذكّرك يوميًا أو أسبوعيًا أو شهريًا، فلا تتاح للمخلفات فرصة التراكم من جديد.';
+      'اجعل Kruftle ينظّف يوميًا أو أسبوعيًا أو شهريًا. يمكنه تذكيرك أثناء فتحه، أو التسجيل في مُجدوِل نظام التشغيل لديك وتنفيذ العملية وKruftle مغلق.';
 
   @override
   String get tourFinishTitle => 'هذا هو التطبيق كله';
@@ -712,7 +736,21 @@ class LAr extends L {
 
   @override
   String get scheduleEnableHelp =>
-      'يتحقق Kruftle مما إذا كان التنظيف مستحقًا وهو قيد التشغيل، ويخبرك عند بدء التشغيل إن فاتت عملية. لا يستطيع إيقاظ نفسه وهو مغلق.';
+      'يتحقق Kruftle أثناء تشغيله مما إذا كان موعد التنظيف قد حان، ويخبرك عند البدء إذا فات أحدها. فعّل التشغيل في الخلفية أدناه ليحدث ذلك دون فتح Kruftle.';
+
+  @override
+  String get scheduleBackground => 'التشغيل حتى عندما يكون Kruftle مغلقًا';
+
+  @override
+  String get scheduleBackgroundHelp =>
+      'يسجّل مهمة في مُجدوِل نظام التشغيل نفسه، فتُنفَّذ عملية التنظيف في الوقت المحدد سواء كان Kruftle مفتوحًا أم لا. يشغّل أمر التنظيف الخاص بكل سلسلة أدوات، ولا يحذف سوى الفئات التي اخترتها مسبقًا في الإعدادات.';
+
+  @override
+  String get scheduleBackgroundActive => 'مُسجَّل لدى مُجدوِل النظام.';
+
+  @override
+  String get scheduleBackgroundFailed =>
+      'رفض نظامك تسجيل المهمة الخلفية. ما زال التذكير يعمل أثناء فتح Kruftle.';
 
   @override
   String get scheduleFrequency => 'كم مرة';

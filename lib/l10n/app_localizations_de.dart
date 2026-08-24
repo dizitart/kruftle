@@ -406,6 +406,15 @@ class LDe extends L {
   String get cachesRemeasure => 'Neu messen';
 
   @override
+  String get cachesSortTooltip => 'Nach Größe sortieren';
+
+  @override
+  String get cachesSortLargest => 'Größte zuerst';
+
+  @override
+  String get cachesSortSmallest => 'Kleinste zuerst';
+
+  @override
   String get cachesIntro =>
       'Diese Caches teilen sich alle Projekte auf diesem Rechner. Einen zu leeren schafft jetzt Platz und kostet später einen erneuten Download — verloren geht dabei nie etwas.';
 
@@ -579,6 +588,18 @@ class LDe extends L {
   String get settingsLogDetail => 'Ausführlichkeit';
 
   @override
+  String get settingsLogDebug => 'Debug';
+
+  @override
+  String get settingsLogInfo => 'Info';
+
+  @override
+  String get settingsLogWarning => 'Warnung';
+
+  @override
+  String get settingsLogError => 'Fehler';
+
+  @override
   String get settingsLogRetention => 'Aufbewahrte Protokolldateien';
 
   @override
@@ -639,6 +660,9 @@ class LDe extends L {
       'Freie Software unter der GNU General Public License v3.0 oder später.';
 
   @override
+  String get settingsMadeWith => 'Mit ❤️ in Kalkutta, Indien gemacht';
+
+  @override
   String get settingsSourceCode => 'Quellcode';
 
   @override
@@ -688,7 +712,7 @@ class LDe extends L {
 
   @override
   String get tourScheduleBody =>
-      'Lass dich von Kruftle täglich, wöchentlich oder monatlich erinnern, damit sich der Ballast gar nicht erst wieder ansammelt.';
+      'Lass Kruftle täglich, wöchentlich oder monatlich aufräumen. Es kann dich erinnern, solange es offen ist, oder sich beim Planer deines Betriebssystems anmelden und den Lauf bei geschlossenem Kruftle erledigen.';
 
   @override
   String get tourFinishTitle => 'Das ist die ganze App';
@@ -708,7 +732,21 @@ class LDe extends L {
 
   @override
   String get scheduleEnableHelp =>
-      'Kruftle prüft während des Betriebs, ob ein Aufräumlauf fällig ist, und sagt beim Start Bescheid, wenn einer ausgefallen ist. Im geschlossenen Zustand kann es sich nicht selbst wecken.';
+      'Kruftle prüft während des Betriebs, ob ein Aufräumlauf fällig ist, und sagt beim Start Bescheid, wenn einer ausgefallen ist. Schalte unten Hintergrundläufe ein, damit es auch ohne geöffnetes Kruftle geschieht.';
+
+  @override
+  String get scheduleBackground => 'Auch bei geschlossenem Kruftle ausführen';
+
+  @override
+  String get scheduleBackgroundHelp =>
+      'Legt einen Auftrag im Planer des Betriebssystems selbst an, sodass der Aufräumlauf zur gewählten Zeit läuft, egal ob Kruftle geöffnet ist. Er führt den Clean-Befehl jeder Toolchain aus und löscht nur die Kategorien, die du in den Einstellungen vorausgewählt hast.';
+
+  @override
+  String get scheduleBackgroundActive => 'Beim Systemplaner registriert.';
+
+  @override
+  String get scheduleBackgroundFailed =>
+      'Dein System hat die Registrierung des Hintergrundauftrags abgelehnt. Die Erinnerung funktioniert weiterhin, solange Kruftle geöffnet ist.';
 
   @override
   String get scheduleFrequency => 'Wie oft';

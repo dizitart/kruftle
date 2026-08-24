@@ -761,6 +761,24 @@ abstract class L {
   /// **'Re-measure'**
   String get cachesRemeasure;
 
+  /// No description provided for @cachesSortTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Sort by size'**
+  String get cachesSortTooltip;
+
+  /// No description provided for @cachesSortLargest.
+  ///
+  /// In en, this message translates to:
+  /// **'Largest first'**
+  String get cachesSortLargest;
+
+  /// No description provided for @cachesSortSmallest.
+  ///
+  /// In en, this message translates to:
+  /// **'Smallest first'**
+  String get cachesSortSmallest;
+
   /// No description provided for @cachesIntro.
   ///
   /// In en, this message translates to:
@@ -1037,6 +1055,30 @@ abstract class L {
   /// **'Detail'**
   String get settingsLogDetail;
 
+  /// No description provided for @settingsLogDebug.
+  ///
+  /// In en, this message translates to:
+  /// **'Debug'**
+  String get settingsLogDebug;
+
+  /// No description provided for @settingsLogInfo.
+  ///
+  /// In en, this message translates to:
+  /// **'Info'**
+  String get settingsLogInfo;
+
+  /// No description provided for @settingsLogWarning.
+  ///
+  /// In en, this message translates to:
+  /// **'Warning'**
+  String get settingsLogWarning;
+
+  /// No description provided for @settingsLogError.
+  ///
+  /// In en, this message translates to:
+  /// **'Error'**
+  String get settingsLogError;
+
   /// No description provided for @settingsLogRetention.
   ///
   /// In en, this message translates to:
@@ -1145,6 +1187,12 @@ abstract class L {
   /// **'Free software under the GNU General Public License v3.0 or later.'**
   String get settingsLicence;
 
+  /// No description provided for @settingsMadeWith.
+  ///
+  /// In en, this message translates to:
+  /// **'Made with ❤️ in Kolkata, India'**
+  String get settingsMadeWith;
+
   /// No description provided for @settingsSourceCode.
   ///
   /// In en, this message translates to:
@@ -1232,7 +1280,7 @@ abstract class L {
   /// No description provided for @tourScheduleBody.
   ///
   /// In en, this message translates to:
-  /// **'Have Kruftle remind you daily, weekly or monthly, so the cruft never gets a chance to build up again.'**
+  /// **'Have Kruftle clean daily, weekly or monthly. It can nudge you while it is open, or register with your operating system\'s own scheduler and do the run with Kruftle closed.'**
   String get tourScheduleBody;
 
   /// No description provided for @tourFinishTitle.
@@ -1268,8 +1316,32 @@ abstract class L {
   /// No description provided for @scheduleEnableHelp.
   ///
   /// In en, this message translates to:
-  /// **'Kruftle checks whether a cleanup is due while it is running, and tells you at launch if one was missed. It cannot wake itself while closed.'**
+  /// **'Kruftle checks whether a cleanup is due while it is running, and tells you at launch if one was missed. Turn on background runs below to have it happen without Kruftle open.'**
   String get scheduleEnableHelp;
+
+  /// No description provided for @scheduleBackground.
+  ///
+  /// In en, this message translates to:
+  /// **'Run even when Kruftle is closed'**
+  String get scheduleBackground;
+
+  /// No description provided for @scheduleBackgroundHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Registers a job with your operating system’s own scheduler, so a cleanup runs at the chosen time whether or not Kruftle is open. It runs each toolchain’s clean command and deletes only the categories you pre-selected in Settings.'**
+  String get scheduleBackgroundHelp;
+
+  /// No description provided for @scheduleBackgroundActive.
+  ///
+  /// In en, this message translates to:
+  /// **'Registered with the system scheduler.'**
+  String get scheduleBackgroundActive;
+
+  /// No description provided for @scheduleBackgroundFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Your system refused to register the background job. The reminder still works while Kruftle is open.'**
+  String get scheduleBackgroundFailed;
 
   /// No description provided for @scheduleFrequency.
   ///

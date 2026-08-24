@@ -404,6 +404,15 @@ class LHi extends L {
   String get cachesRemeasure => 'फिर से मापें';
 
   @override
+  String get cachesSortTooltip => 'आकार के अनुसार क्रमबद्ध करें';
+
+  @override
+  String get cachesSortLargest => 'बड़े पहले';
+
+  @override
+  String get cachesSortSmallest => 'छोटे पहले';
+
+  @override
   String get cachesIntro =>
       'ये कैश इस मशीन के हर प्रोजेक्ट में साझा हैं। किसी एक को ख़ाली करने से अभी जगह मिलती है और बाद में दोबारा डाउनलोड करना पड़ता है — इससे कोई काम नहीं खोता।';
 
@@ -577,6 +586,18 @@ class LHi extends L {
   String get settingsLogDetail => 'विवरण';
 
   @override
+  String get settingsLogDebug => 'डिबग';
+
+  @override
+  String get settingsLogInfo => 'सूचना';
+
+  @override
+  String get settingsLogWarning => 'चेतावनी';
+
+  @override
+  String get settingsLogError => 'त्रुटि';
+
+  @override
   String get settingsLogRetention => 'रखी जाने वाली लॉग फ़ाइलें';
 
   @override
@@ -637,6 +658,9 @@ class LHi extends L {
       'GNU जनरल पब्लिक लाइसेंस v3.0 या बाद के तहत मुक्त सॉफ़्टवेयर।';
 
   @override
+  String get settingsMadeWith => '❤️ के साथ कोलकाता, भारत में बनाया गया';
+
+  @override
   String get settingsSourceCode => 'स्रोत कोड';
 
   @override
@@ -685,7 +709,7 @@ class LHi extends L {
 
   @override
   String get tourScheduleBody =>
-      'Kruftle से रोज़, हर हफ़्ते या हर महीने याद दिलवाइए, ताकि कचरे को दोबारा जमा होने का मौक़ा ही न मिले।';
+      'Kruftle से रोज़, हर हफ़्ते या हर महीने सफ़ाई कराएँ। यह खुला रहने पर आपको याद दिला सकता है, या आपके ऑपरेटिंग सिस्टम के अपने शेड्यूलर में पंजीकृत होकर Kruftle बंद रहते हुए भी सफ़ाई कर सकता है।';
 
   @override
   String get tourFinishTitle => 'बस इतना ही है यह ऐप';
@@ -705,7 +729,21 @@ class LHi extends L {
 
   @override
   String get scheduleEnableHelp =>
-      'Kruftle चलते समय जाँचता है कि सफ़ाई का समय हुआ या नहीं, और कोई छूट गई हो तो शुरू होते ही बता देता है। बंद रहते हुए यह ख़ुद नहीं जाग सकता।';
+      'Kruftle चलते समय जाँचता है कि सफ़ाई का समय हुआ या नहीं, और कोई छूट गई हो तो शुरू होते ही बता देता है। Kruftle खुले बिना भी यह हो, इसके लिए नीचे पृष्ठभूमि में चलाना चालू करें।';
+
+  @override
+  String get scheduleBackground => 'Kruftle बंद होने पर भी चलाएँ';
+
+  @override
+  String get scheduleBackgroundHelp =>
+      'आपके ऑपरेटिंग सिस्टम के अपने शेड्यूलर में एक कार्य पंजीकृत करता है, ताकि चुने गए समय पर सफ़ाई चले, चाहे Kruftle खुला हो या न हो। यह हर टूलचेन का clean कमांड चलाता है और केवल वही श्रेणियाँ हटाता है जो आपने सेटिंग्स में पहले से चुनी हैं।';
+
+  @override
+  String get scheduleBackgroundActive => 'सिस्टम शेड्यूलर में पंजीकृत।';
+
+  @override
+  String get scheduleBackgroundFailed =>
+      'आपके सिस्टम ने पृष्ठभूमि कार्य पंजीकृत करने से मना कर दिया। Kruftle खुला रहने पर अनुस्मारक फिर भी काम करता है।';
 
   @override
   String get scheduleFrequency => 'कितनी बार';

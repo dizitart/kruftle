@@ -141,7 +141,11 @@ class _TitleBar extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 10),
-          Flexible(
+          // Expanded rather than Flexible with a Spacer after it: both take a
+          // flex of 1, so the pair split the free space between them and the
+          // buttons ended up in the middle of the bar. One flexible child, and
+          // the buttons sit against the right edge where they belong.
+          Expanded(
             child: Text(
               l.appTagline,
               overflow: TextOverflow.ellipsis,
@@ -151,7 +155,7 @@ class _TitleBar extends StatelessWidget {
               ),
             ),
           ),
-          const Spacer(),
+          const SizedBox(width: 10),
           IconButton(
             onPressed: () => Navigator.of(context).push(
               MaterialPageRoute<void>(builder: (_) => const SchedulePage()),

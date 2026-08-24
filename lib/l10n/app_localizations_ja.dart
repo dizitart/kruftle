@@ -394,6 +394,15 @@ class LJa extends L {
   String get cachesRemeasure => '再測定';
 
   @override
+  String get cachesSortTooltip => 'サイズで並べ替え';
+
+  @override
+  String get cachesSortLargest => '大きい順';
+
+  @override
+  String get cachesSortSmallest => '小さい順';
+
+  @override
   String get cachesIntro =>
       'これらのキャッシュはこのマシンのすべてのプロジェクトで共有されます。ひとつ空にすると今すぐ容量が空き、後で再ダウンロードが必要になります。作業内容が失われることはありません。';
 
@@ -562,6 +571,18 @@ class LJa extends L {
   String get settingsLogDetail => '詳細度';
 
   @override
+  String get settingsLogDebug => 'デバッグ';
+
+  @override
+  String get settingsLogInfo => '情報';
+
+  @override
+  String get settingsLogWarning => '警告';
+
+  @override
+  String get settingsLogError => 'エラー';
+
+  @override
   String get settingsLogRetention => '保持するログ ファイル数';
 
   @override
@@ -620,6 +641,9 @@ class LJa extends L {
   String get settingsLicence => 'GNU 一般公衆利用許諾書 v3.0 以降に基づく自由ソフトウェアです。';
 
   @override
+  String get settingsMadeWith => '❤️ を込めてインド・コルカタで開発';
+
+  @override
   String get settingsSourceCode => 'ソースコード';
 
   @override
@@ -667,7 +691,8 @@ class LJa extends L {
   String get tourScheduleTitle => '設定したら忘れてよい';
 
   @override
-  String get tourScheduleBody => '毎日・毎週・毎月のリマインドを設定しておけば、ゴミが再び積み上がる隙はありません。';
+  String get tourScheduleBody =>
+      'Kruftle に毎日・毎週・毎月の掃除をさせましょう。開いている間に知らせることも、オペレーティングシステム自身のスケジューラーに登録して Kruftle を閉じたまま実行することもできます。';
 
   @override
   String get tourFinishTitle => 'アプリの全体像は以上です';
@@ -686,7 +711,21 @@ class LJa extends L {
 
   @override
   String get scheduleEnableHelp =>
-      'Kruftle は起動中にクリーンアップの時期かどうかを確認し、逃した場合は次回の起動時にお知らせします。閉じている間に自分で起動することはできません。';
+      'Kruftle は実行中にクリーンアップの予定を確認し、見逃したものがあれば起動時に知らせます。Kruftle を開かずに実行するには、下のバックグラウンド実行をオンにしてください。';
+
+  @override
+  String get scheduleBackground => 'Kruftle を閉じていても実行する';
+
+  @override
+  String get scheduleBackgroundHelp =>
+      'オペレーティングシステム自身のスケジューラーにジョブを登録します。Kruftle が開いているかどうかにかかわらず、指定した時刻にクリーンアップが実行されます。各ツールチェーンの clean コマンドを実行し、設定であらかじめ選んだ種類だけを削除します。';
+
+  @override
+  String get scheduleBackgroundActive => 'システムのスケジューラーに登録済みです。';
+
+  @override
+  String get scheduleBackgroundFailed =>
+      'システムがバックグラウンドジョブの登録を拒否しました。Kruftle を開いている間はリマインダーが引き続き機能します。';
 
   @override
   String get scheduleFrequency => '頻度';

@@ -390,6 +390,15 @@ class LZh extends L {
   String get cachesRemeasure => '重新测量';
 
   @override
+  String get cachesSortTooltip => '按大小排序';
+
+  @override
+  String get cachesSortLargest => '从大到小';
+
+  @override
+  String get cachesSortSmallest => '从小到大';
+
+  @override
   String get cachesIntro =>
       '这些缓存由本机上的所有项目共享。清空其中一个会立即释放空间，代价是以后需要重新下载——它不会丢失任何工作成果。';
 
@@ -554,6 +563,18 @@ class LZh extends L {
   String get settingsLogDetail => '详细程度';
 
   @override
+  String get settingsLogDebug => '调试';
+
+  @override
+  String get settingsLogInfo => '信息';
+
+  @override
+  String get settingsLogWarning => '警告';
+
+  @override
+  String get settingsLogError => '错误';
+
+  @override
   String get settingsLogRetention => '保留的日志文件数';
 
   @override
@@ -612,6 +633,9 @@ class LZh extends L {
   String get settingsLicence => '基于 GNU 通用公共许可证 v3.0 或更高版本的自由软件。';
 
   @override
+  String get settingsMadeWith => '用 ❤️ 打造于印度加尔各答';
+
+  @override
   String get settingsSourceCode => '源代码';
 
   @override
@@ -659,7 +683,8 @@ class LZh extends L {
   String get tourScheduleTitle => '设好就不用管了';
 
   @override
-  String get tourScheduleBody => '让 Kruftle 每天、每周或每月提醒你，这样杂物就再也没机会堆积起来。';
+  String get tourScheduleBody =>
+      '让 Kruftle 每天、每周或每月清理一次。它可以在打开时提醒你，也可以注册到操作系统自带的计划程序，在 Kruftle 关闭时完成清理。';
 
   @override
   String get tourFinishTitle => '整个应用就是这些';
@@ -678,7 +703,20 @@ class LZh extends L {
 
   @override
   String get scheduleEnableHelp =>
-      'Kruftle 会在运行期间检查是否该清理了，如果错过了也会在启动时告诉你。它无法在关闭状态下自行唤醒。';
+      'Kruftle 在运行时检查是否该清理了，若错过了会在启动时告诉你。在下方开启后台执行，即可在 Kruftle 未打开时也进行清理。';
+
+  @override
+  String get scheduleBackground => '即使 Kruftle 已关闭也执行';
+
+  @override
+  String get scheduleBackgroundHelp =>
+      '向操作系统自带的计划程序注册一个任务，无论 Kruftle 是否打开，都会在设定的时间执行清理。它会运行各工具链自己的清理命令，并且只删除你在设置中预先勾选的类别。';
+
+  @override
+  String get scheduleBackgroundActive => '已注册到系统计划程序。';
+
+  @override
+  String get scheduleBackgroundFailed => '系统拒绝注册后台任务。Kruftle 打开时提醒仍然有效。';
 
   @override
   String get scheduleFrequency => '频率';
