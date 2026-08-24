@@ -38,7 +38,10 @@ void main() {
 
     test('reports zero for an empty directory', () {
       Directory(p.join(tmp.path, 'empty')).createSync();
-      expect(directorySizeSync(p.join(tmp.path, 'empty')), 0);
+      expect(
+        directorySizeSync(p.join(tmp.path, 'empty'), mode: SizeMode.apparent),
+        0,
+      );
     });
 
     test('does not follow symlinks or count what they point at', () {
@@ -191,6 +194,26 @@ void main() {
           int.parse((du.stdout as String).trim().split(RegExp(r'\s+')).first) *
           1024;
 
+      expect(measured, duBytes);
+    });
+
+    test('an empty directory costs whatever the filesystem charges', () {
+      // Not zero, and not a number this test may assume. APFS charges nothing
+      // for an empty directory; ext4 charges a whole 4 KiB block. Both are
+      // right, which is why the assertion is against `du` rather than against
+      // a figure written here -- the claim of this mode is only ever "the same
+      // answer the operating system gives".
+      Directory(p.join(tmp.path, 'hollow')).createSync();
+      final path = p.join(tmp.path, 'hollow');
+
+      final measured = directorySizeSync(path, mode: SizeMode.onDisk);
+      expect(measured, greaterThanOrEqualTo(0));
+
+      if (!Platform.isMacOS && !Platform.isLinux) return;
+      final du = Process.runSync('du', ['-sk', path]);
+      final duBytes =
+          int.parse((du.stdout as String).trim().split(RegExp(r'\s+')).first) *
+          1024;
       expect(measured, duBytes);
     });
 
