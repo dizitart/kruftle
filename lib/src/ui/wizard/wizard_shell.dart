@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../l10n/app_localizations.dart';
 import '../state/wizard_controller.dart';
 import '../theme.dart';
 import 'step_report.dart';
@@ -53,23 +54,27 @@ class _StepRail extends StatelessWidget {
 
   final WizardStep current;
 
-  static const _steps = [
-    (WizardStep.source, 'Folder', Icons.folder_outlined),
-    (WizardStep.scanning, 'Scan', Icons.radar_rounded),
-    (WizardStep.review, 'Review', Icons.checklist_rounded),
-    (WizardStep.running, 'Clean', Icons.cleaning_services_outlined),
-    (WizardStep.report, 'Report', Icons.summarize_outlined),
+  static List<(WizardStep, String, IconData)> _steps(L l) => [
+    (WizardStep.source, l.railFolder, Icons.folder_outlined),
+    (WizardStep.scanning, l.railScan, Icons.radar_rounded),
+    (WizardStep.review, l.railReview, Icons.checklist_rounded),
+    (WizardStep.running, l.railClean, Icons.cleaning_services_outlined),
+    (WizardStep.report, l.railReport, Icons.summarize_outlined),
   ];
 
   @override
   Widget build(BuildContext context) => Container(
-    width: 168,
+    // Wide enough for the longest translated label. German and Russian both
+    // need noticeably more room than English, and a rail that ellipsises
+    // "Aufräumen" to "Aufräum…" is worse than a rail that is a little wider
+    // everywhere.
+    width: 196,
     padding: const EdgeInsets.fromLTRB(16, 28, 12, 16),
     color: context.colors.surfaceContainerLowest,
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        for (final (step, label, icon) in _steps)
+        for (final (step, label, icon) in _steps(L.of(context)))
           _RailItem(
             label: label,
             icon: icon,
@@ -101,7 +106,7 @@ class _RailItem extends StatelessWidget {
   Widget build(BuildContext context) {
     final color = switch (state) {
       _ItemState.active => context.colors.primary,
-      _ItemState.done => KruftleTheme.freed,
+      _ItemState.done => context.freed,
       _ItemState.upcoming => context.colors.onSurfaceVariant.withValues(
         alpha: 0.45,
       ),
@@ -124,14 +129,21 @@ class _RailItem extends StatelessWidget {
             color: color,
           ),
           const SizedBox(width: 11),
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 12.5,
-              color: color,
-              fontWeight: state == _ItemState.active
-                  ? FontWeight.w600
-                  : FontWeight.w400,
+          // Flexible, not fixed: a translated label that is one word too long
+          // for the rail should shorten rather than overflow the row. There is
+          // a test per locale that fails on the overflow.
+          Flexible(
+            child: Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontSize: 12.5,
+                color: color,
+                fontWeight: state == _ItemState.active
+                    ? FontWeight.w600
+                    : FontWeight.w400,
+              ),
             ),
           ),
         ],

@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:kruftle/l10n/app_localizations.dart';
 import 'package:kruftle/src/core/models/clean.dart';
 import 'package:kruftle/src/core/models/project.dart';
 import 'package:kruftle/src/core/models/stack.dart';
@@ -20,6 +21,8 @@ Future<void> pumpWizard(
   WidgetTester tester,
   WizardState Function(WizardState) seed, {
   Size size = const Size(1200, 820),
+  Locale locale = const Locale('en'),
+  Brightness brightness = Brightness.dark,
 }) async {
   SharedPreferences.setMockInitialValues({});
   final preferences = await SharedPreferences.getInstance();
@@ -45,12 +48,21 @@ Future<void> pumpWizard(
     UncontrolledProviderScope(
       container: container,
       child: MaterialApp(
-        theme: KruftleTheme.dark(),
+        theme: brightness == Brightness.dark
+            ? KruftleTheme.dark()
+            : KruftleTheme.light(),
+        locale: locale,
+        localizationsDelegates: L.localizationsDelegates,
+        supportedLocales: L.supportedLocales,
         home: const Scaffold(body: WizardShell()),
       ),
     ),
   );
+  // Long enough for every tween to land on its final value. Not
+  // `pumpAndSettle`: the scanning radar repeats forever by design, so waiting
+  // for the tree to go quiet would wait for ever.
   await tester.pump();
+  await tester.pump(const Duration(seconds: 1));
 }
 
 DetectedProject project(
@@ -113,9 +125,7 @@ void main() {
       WidgetTester tester, {
       List<DetectedProject>? projects,
       Set<String>? selected,
-      Map<StackId, ToolStatus> tools = const {
-        StackId.rust: ToolStatus.available,
-      },
+      Map<String, ToolStatus> tools = const {'cargo': ToolStatus.available},
       double? sizing,
     }) {
       final found =
@@ -177,7 +187,7 @@ void main() {
     testWidgets('warns when a selected project has no toolchain installed', (
       tester,
     ) async {
-      await pumpReview(tester, tools: const {StackId.rust: ToolStatus.missing});
+      await pumpReview(tester, tools: const {'cargo': ToolStatus.missing});
 
       expect(
         find.textContaining('Some selected projects have no SDK installed'),

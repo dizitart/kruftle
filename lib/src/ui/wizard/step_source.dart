@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path/path.dart' as p;
 
+import '../../../l10n/app_localizations.dart';
 import '../../core/clean/safety.dart';
 import '../state/app_state.dart';
 import '../state/wizard_controller.dart';
@@ -17,13 +18,14 @@ class StepSource extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l = L.of(context);
     final state = ref.watch(wizardProvider);
     final settings = ref.watch(settingsProvider);
     final controller = ref.read(wizardProvider.notifier);
 
     Future<void> browse() async {
       final chosen = await getDirectoryPath(
-        confirmButtonText: 'Scan this folder',
+        confirmButtonText: l.sourceConfirmButton,
       );
       if (chosen != null) await controller.startScan(chosen);
     }
@@ -32,7 +34,7 @@ class StepSource extends ConsumerWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Which directory should Kruftle look through?',
+          l.sourceHeading,
           style: context.text.headlineSmall?.copyWith(
             fontWeight: FontWeight.w600,
             letterSpacing: -0.4,
@@ -40,8 +42,7 @@ class StepSource extends ConsumerWidget {
         ),
         const SizedBox(height: 8),
         Text(
-          'Everything underneath it is examined. Nothing is touched until you '
-          'say so.',
+          l.sourceSubheading,
           style: TextStyle(
             fontSize: 13.5,
             height: 1.5,
@@ -54,7 +55,7 @@ class StepSource extends ConsumerWidget {
           NoticeBanner(
             message: state.error!,
             icon: Icons.block_rounded,
-            color: KruftleTheme.danger,
+            color: context.danger,
           ),
           const SizedBox(height: 20),
         ],
@@ -63,7 +64,7 @@ class StepSource extends ConsumerWidget {
 
         if (settings.defaultRoots.isNotEmpty) ...[
           const SizedBox(height: 28),
-          const PanelLabel('Recent'),
+          PanelLabel(l.sourceRecent),
           const SizedBox(height: 10),
           for (final root in settings.defaultRoots.take(5))
             _RecentRoot(
@@ -110,13 +111,13 @@ class _DropTarget extends StatelessWidget {
             color: context.colors.primary,
           ),
           const SizedBox(height: 14),
-          const Text(
-            'Choose a folder',
-            style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+          Text(
+            L.of(context).sourceChooseFolder,
+            style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
           ),
           const SizedBox(height: 6),
           Text(
-            'Your codebase root, or any folder holding projects',
+            L.of(context).sourceChooseFolderHelp,
             style: TextStyle(
               fontSize: 12.5,
               color: context.colors.onSurfaceVariant,
@@ -161,7 +162,7 @@ class _RecentRoot extends StatelessWidget {
                   size: 16,
                   color: refused == null
                       ? context.colors.onSurfaceVariant
-                      : KruftleTheme.danger,
+                      : context.danger,
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -181,10 +182,7 @@ class _RecentRoot extends StatelessWidget {
                         const SizedBox(height: 3),
                         Text(
                           refused.message,
-                          style: const TextStyle(
-                            fontSize: 11,
-                            color: KruftleTheme.danger,
-                          ),
+                          style: TextStyle(fontSize: 11, color: context.danger),
                         ),
                       ],
                     ],
@@ -193,7 +191,7 @@ class _RecentRoot extends StatelessWidget {
                 IconButton(
                   onPressed: onForget,
                   icon: const Icon(Icons.close_rounded, size: 15),
-                  tooltip: 'Remove from recents',
+                  tooltip: L.of(context).sourceForget,
                   visualDensity: VisualDensity.compact,
                 ),
               ],

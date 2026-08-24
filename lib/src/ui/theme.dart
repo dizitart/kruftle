@@ -10,9 +10,24 @@ abstract final class KruftleTheme {
   /// Warm amber. Sawdust, swarf, cruft — the stuff being swept up.
   static const seed = Color(0xFFE0A33C);
 
+  // Semantic colours come in pairs. The dark values are tuned to glow against
+  // a near-black surface; on a white one the same green washes out to roughly
+  // 1.7:1 contrast, which is a swatch rather than a signal. Reach for these
+  // through `context.freed` and friends, never directly, so the right one for
+  // the current brightness is always used. A test asserts the contrast of
+  // every pair against the surface it will actually sit on.
   static const freed = Color(0xFF4ADE80);
+  static const freedLight = Color(0xFF15803D);
   static const warn = Color(0xFFFBBF24);
+  static const warnLight = Color(0xFF9A6100);
   static const danger = Color(0xFFF87171);
+  static const dangerLight = Color(0xFFC02626);
+
+  static Color freedFor(Brightness b) =>
+      b == Brightness.dark ? freed : freedLight;
+  static Color warnFor(Brightness b) => b == Brightness.dark ? warn : warnLight;
+  static Color dangerFor(Brightness b) =>
+      b == Brightness.dark ? danger : dangerLight;
 
   /// The platform's own code font, so paths and commands look like they do in
   /// the user's editor. No downloaded font: a 200 KB dependency to render
@@ -101,6 +116,17 @@ abstract final class KruftleTheme {
 extension KruftleTextStyles on BuildContext {
   TextTheme get text => Theme.of(this).textTheme;
   ColorScheme get colors => Theme.of(this).colorScheme;
+
+  Brightness get brightness => Theme.of(this).brightness;
+
+  /// Space reclaimed, a step that succeeded — anything good.
+  Color get freed => KruftleTheme.freedFor(brightness);
+
+  /// Something the user should look at before continuing.
+  Color get warn => KruftleTheme.warnFor(brightness);
+
+  /// A failure, or a path Kruftle refuses to touch.
+  Color get danger => KruftleTheme.dangerFor(brightness);
 
   /// For anything the user could paste into a shell: paths, commands, digests.
   TextStyle mono({double size = 12, Color? color, FontWeight? weight}) =>

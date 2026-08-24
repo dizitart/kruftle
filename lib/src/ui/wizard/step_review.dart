@@ -5,13 +5,16 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path/path.dart' as p;
 
+import '../../../l10n/app_localizations.dart';
 import '../../core/models/project.dart';
 import '../../core/models/stack.dart';
 import '../../core/scan/sizer.dart';
 import '../../core/scan/toolchain.dart';
+import '../anim/animated_bytes.dart';
 import '../state/app_state.dart';
 import '../state/wizard_controller.dart';
 import '../theme.dart';
+import '../viz/artifact_treemap.dart';
 import '../widgets/common.dart';
 
 /// Step 3 — choose what to clean, and what Kruftle is allowed to delete.
@@ -63,6 +66,7 @@ class _StepReviewState extends ConsumerState<StepReview> {
     final state = ref.watch(wizardProvider);
     final controller = ref.read(wizardProvider.notifier);
     final visible = _visible(state);
+    final l = L.of(context);
 
     return CallbackShortcuts(
       bindings: {
@@ -78,15 +82,15 @@ class _StepReviewState extends ConsumerState<StepReview> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _header(state, controller),
+            _header(l, state, controller),
             const SizedBox(height: 16),
             Expanded(
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Expanded(child: _table(state, visible, controller)),
+                  Expanded(child: _table(l, state, visible, controller)),
                   const SizedBox(width: 22),
-                  SizedBox(width: 320, child: _sidebar(state, controller)),
+                  SizedBox(width: 320, child: _sidebar(l, state, controller)),
                 ],
               ),
             ),
@@ -99,7 +103,7 @@ class _StepReviewState extends ConsumerState<StepReview> {
   /// Says which folder these results came from, and offers the way back out.
   /// Without this the review screen is a dead end: the step rail is a progress
   /// indicator, not navigation.
-  Widget _header(WizardState state, WizardController controller) => Row(
+  Widget _header(L l, WizardState state, WizardController controller) => Row(
     children: [
       Icon(
         Icons.folder_rounded,
@@ -121,20 +125,19 @@ class _StepReviewState extends ConsumerState<StepReview> {
         ),
       ),
       Text(
-        '${state.projects.length} '
-        '${state.projects.length == 1 ? 'project' : 'projects'}',
+        l.reviewProjectCount(state.projects.length),
         style: TextStyle(fontSize: 12, color: context.colors.onSurfaceVariant),
       ),
       const SizedBox(width: 12),
       IconButton(
         onPressed: () => controller.startScan(state.root!),
         icon: const Icon(Icons.refresh_rounded, size: 17),
-        tooltip: 'Scan again',
+        tooltip: l.reviewScanAgain,
       ),
       TextButton.icon(
         onPressed: controller.restart,
         icon: const Icon(Icons.arrow_back_rounded, size: 15),
-        label: const Text('Change folder'),
+        label: Text(l.reviewChangeFolder),
       ),
     ],
   );
@@ -142,6 +145,7 @@ class _StepReviewState extends ConsumerState<StepReview> {
   // ------------------------------------------------------------------- table
 
   Widget _table(
+    L l,
     WizardState state,
     List<DetectedProject> visible,
     WizardController controller,
@@ -157,7 +161,7 @@ class _StepReviewState extends ConsumerState<StepReview> {
               onChanged: (v) => setState(() => _query = v),
               style: const TextStyle(fontSize: 13),
               decoration: InputDecoration(
-                hintText: 'Filter by name, path or stack   ( / )',
+                hintText: l.reviewFilterHint,
                 prefixIcon: const Icon(Icons.search_rounded, size: 17),
                 prefixIconConstraints: const BoxConstraints(
                   minWidth: 38,
@@ -186,11 +190,11 @@ class _StepReviewState extends ConsumerState<StepReview> {
                 : () => controller.selectOnly(
                     visible.map((project) => project.path),
                   ),
-            child: Text(_query.isEmpty ? 'All' : 'All matching'),
+            child: Text(_query.isEmpty ? l.actionAll : l.actionAllMatching),
           ),
           TextButton(
             onPressed: controller.selectNone,
-            child: const Text('None'),
+            child: Text(l.actionNone),
           ),
           IconButton(
             onPressed: () => setState(() => _sortBySize = !_sortBySize),
@@ -200,7 +204,7 @@ class _StepReviewState extends ConsumerState<StepReview> {
                   : Icons.sort_by_alpha_rounded,
               size: 17,
             ),
-            tooltip: _sortBySize ? 'Sorted by size' : 'Sorted by path',
+            tooltip: _sortBySize ? l.reviewSortedBySize : l.reviewSortedByPath,
           ),
         ],
       ),
@@ -210,8 +214,8 @@ class _StepReviewState extends ConsumerState<StepReview> {
             ? Center(
                 child: Text(
                   state.projects.isEmpty
-                      ? 'No projects with build output under this folder.'
-                      : 'Nothing matches "$_query".',
+                      ? l.reviewNoProjects
+                      : l.reviewNoMatches(_query),
                   style: TextStyle(
                     fontSize: 13,
                     color: context.colors.onSurfaceVariant,
@@ -238,7 +242,7 @@ class _StepReviewState extends ConsumerState<StepReview> {
 
   // ----------------------------------------------------------------- sidebar
 
-  Widget _sidebar(WizardState state, WizardController controller) {
+  Widget _sidebar(L l, WizardState state, WizardController controller) {
     final plan = state.plan;
 
     // The options list is taller than the panel on a small window, so it
@@ -257,16 +261,29 @@ class _StepReviewState extends ConsumerState<StepReview> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        StatTile(
-                          value: formatBytes(
-                            plan?.estimatedBytes ?? state.selectedBytes,
+                        // Sizes arrive in a stream of several hundred
+                        // measurements, so this figure changes constantly.
+                        // Counting reads as measurement; jumping reads as a
+                        // glitch.
+                        AnimatedBytes(
+                          plan?.estimatedBytes ?? state.selectedBytes,
+                          style: TextStyle(
+                            fontSize: 34,
+                            height: 1.1,
+                            fontWeight: FontWeight.w700,
+                            color: context.colors.primary,
+                            letterSpacing: -0.5,
                           ),
-                          label: plan == null
-                              ? 'in ${state.selected.length} selected '
-                                    '${state.selected.length == 1 ? 'project' : 'projects'}'
-                              : 'measured by the dry run',
-                          emphasis: true,
-                          color: context.colors.primary,
+                        ),
+                        const SizedBox(height: 3),
+                        Text(
+                          plan == null
+                              ? l.reviewInSelected(state.selected.length)
+                              : l.reviewMeasuredByDryRun,
+                          style: TextStyle(
+                            fontSize: 11.5,
+                            color: context.colors.onSurfaceVariant,
+                          ),
                         ),
                         if (state.sizingProgress != null) ...[
                           const SizedBox(height: 12),
@@ -283,8 +300,9 @@ class _StepReviewState extends ConsumerState<StepReview> {
                               ),
                               const SizedBox(width: 9),
                               Text(
-                                'still measuring — '
-                                '${((state.sizingProgress ?? 0) * 100).round()}%',
+                                l.reviewStillMeasuring(
+                                  ((state.sizingProgress ?? 0) * 100).round(),
+                                ),
                                 style: TextStyle(
                                   fontSize: 11.5,
                                   color: context.colors.onSurfaceVariant,
@@ -296,10 +314,14 @@ class _StepReviewState extends ConsumerState<StepReview> {
                         const SizedBox(height: 14),
                         Text(
                           plan == null
-                              ? '${formatBytes(state.totalBytes)} found in total across '
-                                    '${state.projects.length} projects.'
-                              : '${plan.steps.length} steps across '
-                                    '${plan.projectPaths.length} projects.',
+                              ? l.reviewFoundInTotal(
+                                  formatBytes(state.totalBytes),
+                                  state.projects.length,
+                                )
+                              : l.reviewPlanSummary(
+                                  plan.steps.length,
+                                  plan.projectPaths.length,
+                                ),
                           style: TextStyle(
                             fontSize: 12,
                             height: 1.45,
@@ -311,13 +333,34 @@ class _StepReviewState extends ConsumerState<StepReview> {
                   ),
                 ),
 
+                // Where the space is, before deciding what to do about it. A
+                // sorted table says which project is biggest; only area says
+                // that one of them is most of the total.
+                if (state.sizingProgress == null &&
+                    state.selectedBytes > 0) ...[
+                  const SizedBox(height: 20),
+                  PanelLabel(l.reviewLargestDirectories),
+                  const SizedBox(height: 4),
+                  Text(
+                    l.reviewLargestDirectoriesHelp,
+                    style: TextStyle(
+                      fontSize: 11.5,
+                      height: 1.45,
+                      color: context.colors.onSurfaceVariant,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  ArtifactTreemap(
+                    projects: state.selectedProjects,
+                    root: state.root ?? '',
+                  ),
+                ],
+
                 const SizedBox(height: 18),
-                const PanelLabel('Also delete outright'),
+                PanelLabel(l.reviewAlsoDelete),
                 const SizedBox(height: 4),
                 Text(
-                  'Kruftle prefers each toolchain’s own clean command. These '
-                  'categories are removed by deleting the directory, so they are off '
-                  'unless you say otherwise.',
+                  l.reviewAlsoDeleteHelp,
                   style: TextStyle(
                     fontSize: 11.5,
                     height: 1.45,
@@ -331,51 +374,39 @@ class _StepReviewState extends ConsumerState<StepReview> {
                   value: state.risks.contains(CleanRisk.buildOutput),
                   onChanged: (v) =>
                       controller.setRisk(CleanRisk.buildOutput, v),
-                  title: 'Build output when the SDK is missing',
-                  subtitle:
-                      'For projects whose toolchain is not installed, delete the '
-                      'known output directory instead. Rebuilding restores it.',
+                  title: l.reviewRiskBuildOutput,
+                  subtitle: l.reviewRiskBuildOutputHelp,
                 ),
                 RiskToggle(
                   risk: CleanRisk.dependencies,
                   value: state.risks.contains(CleanRisk.dependencies),
                   onChanged: (v) =>
                       controller.setRisk(CleanRisk.dependencies, v),
-                  title: 'Downloaded dependencies',
-                  subtitle:
-                      'node_modules, .venv, deps. Restored from the lockfile, '
-                      'but that costs a download.',
+                  title: l.reviewRiskDependencies,
+                  subtitle: l.reviewRiskDependenciesHelp,
                 ),
                 RiskToggle(
                   risk: CleanRisk.cache,
                   value: state.risks.contains(CleanRisk.cache),
                   onChanged: (v) => controller.setRisk(CleanRisk.cache, v),
-                  title: 'Tool caches',
-                  subtitle:
-                      '.gradle, .turbo, .mypy_cache and friends. Only cost is a '
-                      'slower next build.',
+                  title: l.reviewRiskCache,
+                  subtitle: l.reviewRiskCacheHelp,
                 ),
 
                 if (state.hasMissingToolchains &&
                     !state.risks.contains(CleanRisk.buildOutput)) ...[
                   const SizedBox(height: 12),
-                  const NoticeBanner(
-                    message:
-                        'Some selected projects have no SDK installed. Without '
-                        'the first option above, they will be skipped.',
+                  NoticeBanner(
+                    message: l.reviewMissingToolchains,
                     icon: Icons.info_outline_rounded,
-                    color: KruftleTheme.warn,
+                    color: context.warn,
                   ),
                 ],
 
                 if (plan != null && plan.gitTracked.isNotEmpty) ...[
                   const SizedBox(height: 12),
                   NoticeBanner(
-                    message:
-                        '${plan.gitTracked.length} artifact '
-                        '${plan.gitTracked.length == 1 ? 'directory is' : 'directories are'} '
-                        'tracked by git and will be left alone. Deleting committed '
-                        'content is not something a rebuild can undo.',
+                    message: l.reviewGitTracked(plan.gitTracked.length),
                     icon: Icons.shield_outlined,
                   ),
                 ],
@@ -392,7 +423,7 @@ class _StepReviewState extends ConsumerState<StepReview> {
                 ? null
                 : () => controller.dryRun(),
             icon: const Icon(Icons.calculate_outlined, size: 17),
-            label: Text(plan == null ? 'Dry run' : 'Re-measure'),
+            label: Text(plan == null ? l.reviewDryRun : l.reviewRemeasure),
           ),
         ),
         const SizedBox(height: 8),
@@ -403,12 +434,12 @@ class _StepReviewState extends ConsumerState<StepReview> {
                 ? null
                 : () => _confirmAndRun(state, controller),
             icon: const Icon(Icons.cleaning_services_rounded, size: 17),
-            label: const Text('Clean now'),
+            label: Text(l.reviewCleanNow),
           ),
         ),
         const SizedBox(height: 8),
         Text(
-          'A dry run changes nothing. You can skip it.',
+          l.reviewDryRunNote,
           textAlign: TextAlign.center,
           style: TextStyle(
             fontSize: 11,
@@ -446,20 +477,16 @@ class _ConfirmDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = L.of(context);
     final categories = {
-      CleanRisk.buildOutput:
-          'build output directories where the SDK is missing',
-      CleanRisk.dependencies: 'downloaded dependency directories',
-      CleanRisk.cache: 'tool cache directories',
+      CleanRisk.buildOutput: l.confirmCategoryBuildOutput,
+      CleanRisk.dependencies: l.confirmCategoryDependencies,
+      CleanRisk.cache: l.confirmCategoryCache,
     };
 
     return AlertDialog(
-      icon: const Icon(
-        Icons.warning_amber_rounded,
-        size: 30,
-        color: KruftleTheme.warn,
-      ),
-      title: const Text('Delete these directories?'),
+      icon: Icon(Icons.warning_amber_rounded, size: 30, color: context.warn),
+      title: Text(l.confirmDeleteTitle),
       content: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 440),
         child: Column(
@@ -467,8 +494,7 @@ class _ConfirmDialog extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Alongside running each toolchain’s clean command, Kruftle '
-              'will delete:',
+              l.confirmDeleteIntro,
               style: TextStyle(
                 fontSize: 13,
                 height: 1.5,
@@ -494,9 +520,10 @@ class _ConfirmDialog extends StatelessWidget {
               ),
             const SizedBox(height: 12),
             Text(
-              'Across ${state.selected.length} selected projects under '
-              '${p.basename(state.root ?? '')}. Everything here is '
-              'regenerable, and anything git tracks is skipped.',
+              l.confirmDeleteScope(
+                state.selected.length,
+                p.basename(state.root ?? ''),
+              ),
               style: TextStyle(
                 fontSize: 12,
                 height: 1.5,
@@ -509,11 +536,11 @@ class _ConfirmDialog extends StatelessWidget {
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(false),
-          child: const Text('Cancel'),
+          child: Text(l.actionCancel),
         ),
         FilledButton(
           onPressed: () => Navigator.of(context).pop(true),
-          child: const Text('Delete and clean'),
+          child: Text(l.confirmDeleteAccept),
         ),
       ],
     );
@@ -531,7 +558,7 @@ class _ProjectRow extends StatelessWidget {
 
   final DetectedProject project;
   final String root;
-  final Map<StackId, ToolStatus> tools;
+  final Map<String, ToolStatus> tools;
   final bool selected;
   final VoidCallback onToggle;
 
@@ -541,6 +568,9 @@ class _ProjectRow extends StatelessWidget {
     // so the row is identified by its path relative to the scan root.
     final relative = p.relative(project.path, from: root);
     final parent = p.dirname(relative);
+    // "Measured" means every artifact directory has a byte count, not that the
+    // total is non-zero: an empty `target/` legitimately measures zero.
+    final measured = project.allArtifacts.every((a) => a.sizeBytes != null);
 
     return InkWell(
       onTap: onToggle,
@@ -586,7 +616,8 @@ class _ProjectRow extends StatelessWidget {
                 children: [
                   for (final stack in project.stacks)
                     ToolBadge(
-                      status: tools[stack.stackId] ?? ToolStatus.notApplicable,
+                      status:
+                          tools[stack.toolBinary] ?? ToolStatus.notApplicable,
                       binary: stack.toolBinary,
                       stackName: stack.displayName,
                     ),
@@ -598,15 +629,23 @@ class _ProjectRow extends StatelessWidget {
               message: project.allArtifacts.map((a) => a.relative).join('\n'),
               child: SizedBox(
                 width: 84,
-                child: Text(
-                  formatBytes(project.estimatedBytes),
-                  textAlign: TextAlign.right,
-                  style: context.mono(
-                    size: 12,
-                    color: context.colors.onSurface,
-                    weight: FontWeight.w500,
-                  ),
-                ),
+                child: measured
+                    ? Text(
+                        formatBytes(project.estimatedBytes),
+                        textAlign: TextAlign.right,
+                        style: context.mono(
+                          size: 12,
+                          color: context.colors.onSurface,
+                          weight: FontWeight.w500,
+                        ),
+                      )
+                    // Not measured yet. Showing `0 B` here would be a lie the
+                    // user might act on, and a spinner per row on a table of
+                    // two hundred projects is two hundred tickers.
+                    : const Align(
+                        alignment: Alignment.centerRight,
+                        child: MeasuringShimmer(),
+                      ),
               ),
             ),
           ],

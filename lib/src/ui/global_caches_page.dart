@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../l10n/app_localizations.dart';
 import '../core/clean/global_caches.dart';
 import '../core/log/activity_log.dart';
 import '../core/models/clean.dart';
@@ -68,54 +69,7 @@ class _GlobalCachesPageState extends ConsumerState<GlobalCachesPage> {
 
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        icon: const Icon(
-          Icons.warning_amber_rounded,
-          size: 30,
-          color: KruftleTheme.warn,
-        ),
-        title: const Text('Empty these caches?'),
-        content: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 430),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'These are shared by every project on this machine, not just '
-                'the one you last scanned. Emptying them frees '
-                '${formatBytes(_selectedBytes)} now and costs a re-download '
-                'the next time any project needs them.',
-                style: TextStyle(
-                  fontSize: 13,
-                  height: 1.5,
-                  color: context.colors.onSurfaceVariant,
-                ),
-              ),
-              const SizedBox(height: 12),
-              for (final target in chosen)
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 4),
-                  child: Text(
-                    '•  ${target.cache.displayName} '
-                    '(${formatBytes(target.sizeBytes ?? 0)})',
-                    style: const TextStyle(fontSize: 13),
-                  ),
-                ),
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Cancel'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('Empty them'),
-          ),
-        ],
-      ),
+      builder: (context) => _confirmDialog(L.of(context), chosen),
     );
     if (confirmed != true) return;
 
@@ -146,14 +100,57 @@ class _GlobalCachesPageState extends ConsumerState<GlobalCachesPage> {
     await _survey();
   }
 
+  Widget _confirmDialog(L l, List<GlobalCacheTarget> chosen) => AlertDialog(
+    icon: Icon(Icons.warning_amber_rounded, size: 30, color: context.warn),
+    title: Text(l.cachesConfirmTitle),
+    content: ConstrainedBox(
+      constraints: const BoxConstraints(maxWidth: 430),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            l.cachesConfirmBody(formatBytes(_selectedBytes)),
+            style: TextStyle(
+              fontSize: 13,
+              height: 1.5,
+              color: context.colors.onSurfaceVariant,
+            ),
+          ),
+          const SizedBox(height: 12),
+          for (final target in chosen)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 4),
+              child: Text(
+                '\u2022  ${target.cache.displayName} '
+                '(${formatBytes(target.sizeBytes ?? 0)})',
+                style: const TextStyle(fontSize: 13),
+              ),
+            ),
+        ],
+      ),
+    ),
+    actions: [
+      TextButton(
+        onPressed: () => Navigator.of(context).pop(false),
+        child: Text(l.actionCancel),
+      ),
+      FilledButton(
+        onPressed: () => Navigator.of(context).pop(true),
+        child: Text(l.cachesConfirmAccept),
+      ),
+    ],
+  );
+
   @override
   Widget build(BuildContext context) {
+    final l = L.of(context);
     final outcomes = _outcomes;
     final freed = outcomes?.fold(0, (int sum, o) => sum + o.bytesFreed) ?? 0;
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Global caches'),
+        title: Text(l.cachesTitle),
         titleTextStyle: context.text.titleMedium?.copyWith(
           fontWeight: FontWeight.w600,
         ),
@@ -163,7 +160,7 @@ class _GlobalCachesPageState extends ConsumerState<GlobalCachesPage> {
           IconButton(
             onPressed: _loading || _running ? null : _survey,
             icon: const Icon(Icons.refresh_rounded, size: 18),
-            tooltip: 'Re-measure',
+            tooltip: l.cachesRemeasure,
           ),
           const SizedBox(width: 8),
         ],
@@ -176,22 +173,19 @@ class _GlobalCachesPageState extends ConsumerState<GlobalCachesPage> {
                   child: ListView(
                     padding: const EdgeInsets.fromLTRB(28, 8, 28, 20),
                     children: [
-                      const NoticeBanner(
-                        message:
-                            'These caches are shared by every project on '
-                            'this machine. Emptying one frees space now and '
-                            'costs a re-download later — it never loses work.',
+                      NoticeBanner(
+                        message: l.cachesIntro,
                         icon: Icons.public_rounded,
                       ),
                       if (outcomes != null) ...[
                         const SizedBox(height: 12),
                         NoticeBanner(
-                          message:
-                              'Freed ${formatBytes(freed)} from '
-                              '${outcomes.length} '
-                              '${outcomes.length == 1 ? 'cache' : 'caches'}.',
+                          message: l.cachesFreed(
+                            formatBytes(freed),
+                            outcomes.length,
+                          ),
                           icon: Icons.check_circle_outline_rounded,
-                          color: KruftleTheme.freed,
+                          color: context.freed,
                         ),
                       ],
                       const SizedBox(height: 18),
@@ -200,7 +194,7 @@ class _GlobalCachesPageState extends ConsumerState<GlobalCachesPage> {
                           padding: const EdgeInsets.symmetric(vertical: 60),
                           child: Center(
                             child: Text(
-                              'No global caches found in your home directory.',
+                              l.cachesNoneFound,
                               style: TextStyle(
                                 fontSize: 13,
                                 color: context.colors.onSurfaceVariant,
@@ -245,7 +239,7 @@ class _GlobalCachesPageState extends ConsumerState<GlobalCachesPage> {
                         ),
                         const SizedBox(width: 8),
                         Text(
-                          'selected',
+                          l.cachesSelected,
                           style: TextStyle(
                             fontSize: 12,
                             color: context.colors.onSurfaceVariant,
@@ -269,7 +263,7 @@ class _GlobalCachesPageState extends ConsumerState<GlobalCachesPage> {
                                   size: 17,
                                 ),
                           label: Text(
-                            _running ? 'Emptying…' : 'Empty selected',
+                            _running ? l.cachesEmptying : l.cachesEmptySelected,
                           ),
                         ),
                       ],
@@ -331,19 +325,15 @@ class _CacheRow extends StatelessWidget {
                         if (target.usesCommand)
                           Tag(
                             '${target.cache.command}',
-                            color: KruftleTheme.freed,
+                            color: context.freed,
                             icon: Icons.terminal_rounded,
-                            tooltip:
-                                'Emptied with the toolchain’s own command '
-                                'rather than by deleting files.',
+                            tooltip: L.of(context).cachesUsesCommand,
                           )
                         else
-                          const Tag(
-                            'delete',
+                          Tag(
+                            L.of(context).cachesDeleteTag,
                             icon: Icons.folder_delete_outlined,
-                            tooltip:
-                                'No official command for this cache, so '
-                                'the directory is removed.',
+                            tooltip: L.of(context).cachesUsesDelete,
                           ),
                       ],
                     ),

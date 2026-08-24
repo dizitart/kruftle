@@ -1,14 +1,21 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:url_launcher/url_launcher.dart';
 
+import '../../l10n/app_localizations.dart';
 import '../core/log/activity_log.dart';
 import '../core/models/stack.dart';
+import '../core/scan/sizer.dart';
+import '../core/settings/settings.dart';
+import 'about_pages.dart';
 import 'state/app_state.dart';
 import 'theme.dart';
+import 'tour_page.dart';
 import 'widgets/common.dart';
 
 class SettingsPage extends ConsumerWidget {
@@ -16,13 +23,14 @@ class SettingsPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l = L.of(context);
     final settings = ref.watch(settingsProvider);
     final controller = ref.read(settingsProvider.notifier);
     final log = ref.read(activityLogProvider);
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Settings'),
+        title: Text(l.settingsTitle),
         titleTextStyle: context.text.titleMedium?.copyWith(
           fontWeight: FontWeight.w600,
         ),
@@ -33,26 +41,63 @@ class SettingsPage extends ConsumerWidget {
         padding: const EdgeInsets.fromLTRB(28, 8, 28, 40),
         children: [
           _Section(
-            title: 'Scanning',
+            title: l.settingsSectionAppearance,
+            children: [
+              _DropdownRow<AppThemeMode>(
+                label: l.settingsTheme,
+                value: settings.themeMode,
+                items: {
+                  AppThemeMode.system: l.settingsThemeSystem,
+                  AppThemeMode.light: l.settingsThemeLight,
+                  AppThemeMode.dark: l.settingsThemeDark,
+                },
+                onChanged: (v) =>
+                    controller.update((s) => s.copyWith(themeMode: v)),
+              ),
+              _DropdownRow<String>(
+                label: l.settingsLanguage,
+                // The empty string stands in for null, because a
+                // DropdownButton cannot hold a null value alongside real ones
+                // without special-casing every comparison.
+                value: settings.localeCode ?? '',
+                items: {
+                  '': l.settingsLanguageSystem,
+                  for (final code in kSupportedLocaleCodes)
+                    code: languageName(code),
+                },
+                onChanged: (v) => controller.update(
+                  (s) => v.isEmpty
+                      ? s.copyWith(clearLocaleCode: true)
+                      : s.copyWith(localeCode: v),
+                ),
+              ),
+              _SwitchRow(
+                label: l.settingsReduceMotion,
+                help: l.settingsReduceMotionHelp,
+                value: settings.reduceMotion,
+                onChanged: (v) =>
+                    controller.update((s) => s.copyWith(reduceMotion: v)),
+              ),
+            ],
+          ),
+
+          _Section(
+            title: l.settingsSectionScanning,
             children: [
               _SliderRow(
-                label: 'Maximum depth',
-                help:
-                    'How far below the chosen folder to look. Deeper finds '
-                    'more nested projects and takes longer.',
+                label: l.settingsMaxDepth,
+                help: l.settingsMaxDepthHelp,
                 value: settings.maxScanDepth.toDouble(),
                 min: 2,
                 max: 32,
-                format: (v) => '${v.round()} levels',
+                format: (v) => l.settingsLevels(v.round()),
                 onChanged: (v) => controller.update(
                   (s) => s.copyWith(maxScanDepth: v.round()),
                 ),
               ),
               _SwitchRow(
-                label: 'Include hidden directories',
-                help:
-                    'Folders beginning with a dot. Usually editor state and '
-                    'tool caches rather than projects.',
+                label: l.settingsHiddenDirectories,
+                help: l.settingsHiddenDirectoriesHelp,
                 value: settings.scanHiddenDirectories,
                 onChanged: (v) => controller.update(
                   (s) => s.copyWith(scanHiddenDirectories: v),
@@ -62,14 +107,28 @@ class SettingsPage extends ConsumerWidget {
           ),
 
           _Section(
-            title: 'Cleaning',
+            title: l.settingsSectionSizes,
+            children: [
+              _DropdownRow<SizeMode>(
+                label: l.settingsSizeMode,
+                value: settings.sizeMode,
+                items: {
+                  SizeMode.onDisk: l.settingsSizeModeOnDisk,
+                  SizeMode.apparent: l.settingsSizeModeApparent,
+                },
+                onChanged: (v) =>
+                    controller.update((s) => s.copyWith(sizeMode: v)),
+              ),
+              _HelpText(l.settingsSizeModeHelp),
+            ],
+          ),
+
+          _Section(
+            title: l.settingsSectionCleaning,
             children: [
               _SliderRow(
-                label: 'Projects at once',
-                help:
-                    'Clean commands that run in parallel. More is faster '
-                    'until the disk becomes the bottleneck. '
-                    '${Platform.numberOfProcessors} cores available.',
+                label: l.settingsConcurrency,
+                help: l.settingsConcurrencyHelp(Platform.numberOfProcessors),
                 value: settings.cleanConcurrency.toDouble(),
                 min: 1,
                 max: 16,
@@ -79,28 +138,22 @@ class SettingsPage extends ConsumerWidget {
                 ),
               ),
               _SliderRow(
-                label: 'Step timeout',
-                help:
-                    'A clean command that runs longer than this is killed '
-                    'and reported, so one stuck build tool cannot hold up the '
-                    'whole run.',
+                label: l.settingsTimeout,
+                help: l.settingsTimeoutHelp,
                 value: settings.stepTimeoutSeconds.toDouble(),
                 min: 30,
                 max: 1800,
                 divisions: 59,
                 format: (v) => v < 120
-                    ? '${v.round()} seconds'
-                    : '${(v / 60).round()} minutes',
+                    ? l.settingsSeconds(v.round())
+                    : l.settingsMinutes((v / 60).round()),
                 onChanged: (v) => controller.update(
                   (s) => s.copyWith(stepTimeoutSeconds: v.round()),
                 ),
               ),
               _SwitchRow(
-                label: 'Confirm before deleting',
-                help:
-                    'Show a summary dialog whenever a run will delete '
-                    'directories outright rather than only running clean '
-                    'commands.',
+                label: l.settingsConfirmBeforeDelete,
+                help: l.settingsConfirmBeforeDeleteHelp,
                 value: settings.confirmBeforeDelete,
                 onChanged: (v) => controller.update(
                   (s) => s.copyWith(confirmBeforeDelete: v),
@@ -110,15 +163,13 @@ class SettingsPage extends ConsumerWidget {
           ),
 
           _Section(
-            title: 'Pre-select these deletion categories',
-            subtitle:
-                'A convenience only. Every run still shows them ticked '
-                'and still asks before deleting anything.',
+            title: l.settingsSectionPreselect,
+            subtitle: l.settingsPreselectHelp,
             children: [
-              for (final (risk, label) in const [
-                (CleanRisk.buildOutput, 'Build output when the SDK is missing'),
-                (CleanRisk.dependencies, 'Downloaded dependencies'),
-                (CleanRisk.cache, 'Tool caches'),
+              for (final (risk, label) in [
+                (CleanRisk.buildOutput, l.reviewRiskBuildOutput),
+                (CleanRisk.dependencies, l.reviewRiskDependencies),
+                (CleanRisk.cache, l.reviewRiskCache),
               ])
                 _SwitchRow(
                   label: label,
@@ -133,10 +184,10 @@ class SettingsPage extends ConsumerWidget {
           ),
 
           _Section(
-            title: 'Logging',
+            title: l.settingsSectionLogging,
             children: [
               _DropdownRow<LogLevel>(
-                label: 'Detail',
+                label: l.settingsLogDetail,
                 value: settings.logLevel,
                 items: {for (final level in LogLevel.values) level: level.name},
                 onChanged: (v) {
@@ -144,12 +195,12 @@ class SettingsPage extends ConsumerWidget {
                 },
               ),
               _SliderRow(
-                label: 'Log files kept',
-                help: 'Older files are removed once the active log is rotated.',
+                label: l.settingsLogRetention,
+                help: l.settingsLogRetentionHelp,
                 value: settings.logRetentionFiles.toDouble(),
                 min: 0,
                 max: 20,
-                format: (v) => v == 0 ? 'none' : '${v.round()}',
+                format: (v) => v == 0 ? l.settingsNone : '${v.round()}',
                 onChanged: (v) => controller.update(
                   (s) => s.copyWith(logRetentionFiles: v.round()),
                 ),
@@ -163,11 +214,11 @@ class SettingsPage extends ConsumerWidget {
                     TextButton.icon(
                       onPressed: () => _revealLog(log),
                       icon: const Icon(Icons.folder_open_rounded, size: 15),
-                      label: const Text('Show'),
+                      label: Text(l.actionShow),
                     ),
                     TextButton(
                       onPressed: log.clear,
-                      child: const Text('Clear'),
+                      child: Text(l.actionClear),
                     ),
                   ],
                 ),
@@ -176,16 +227,92 @@ class SettingsPage extends ConsumerWidget {
           ),
 
           _Section(
-            title: 'Updates',
+            title: l.settingsSectionUpdates,
             children: [
               _SwitchRow(
-                label: 'Check for updates automatically',
-                help:
-                    'Kruftle asks GitHub Releases on launch and offers a '
-                    'verified download. It never installs without asking.',
+                label: l.settingsCheckUpdates,
+                help: l.settingsCheckUpdatesHelp,
                 value: settings.checkForUpdates,
                 onChanged: (v) =>
                     controller.update((s) => s.copyWith(checkForUpdates: v)),
+              ),
+            ],
+          ),
+
+          _Section(
+            title: l.settingsSectionAbout,
+            children: [
+              _LinkRow(
+                label: l.settingsShowTour,
+                icon: Icons.slideshow_outlined,
+                onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute<void>(builder: (_) => const TourScreen()),
+                ),
+              ),
+              _LinkRow(
+                label: l.settingsChangelog,
+                icon: Icons.auto_awesome_rounded,
+                onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                    builder: (_) => const ChangelogPage(),
+                  ),
+                ),
+              ),
+              _LinkRow(
+                label: l.settingsPrivacyPolicy,
+                icon: Icons.privacy_tip_outlined,
+                onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                    builder: (_) => DocumentPage(
+                      title: l.legalPrivacyTitle,
+                      asset: privacyPolicyAsset,
+                    ),
+                  ),
+                ),
+              ),
+              _LinkRow(
+                label: l.settingsTermsOfService,
+                icon: Icons.gavel_rounded,
+                onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                    builder: (_) => DocumentPage(
+                      title: l.legalTermsTitle,
+                      asset: termsAsset,
+                    ),
+                  ),
+                ),
+              ),
+              _LinkRow(
+                label: l.settingsSourceCode,
+                icon: Icons.code_rounded,
+                onTap: () => unawaited(
+                  launchUrl(
+                    Uri.https('github.com', '/dizitart/kruftle'),
+                    mode: LaunchMode.externalApplication,
+                  ),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    if (ref.watch(appVersionProvider) case final version?)
+                      Text(
+                        l.settingsVersion(version),
+                        style: const TextStyle(fontSize: 12.5),
+                      ),
+                    const SizedBox(height: 4),
+                    Text(
+                      l.settingsLicence,
+                      style: TextStyle(
+                        fontSize: 11.5,
+                        height: 1.4,
+                        color: context.colors.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ],
           ),
@@ -203,6 +330,78 @@ class SettingsPage extends ConsumerWidget {
         : ('xdg-open', [directory]);
     Process.run(command, args);
   }
+}
+
+/// The endonym for each supported language — what its own speakers call it.
+///
+/// A language picker that lists "Japanese" to someone who cannot read English
+/// is not a language picker. These are deliberately not translated.
+String languageName(String code) => switch (code) {
+  'en' => 'English',
+  'ar' => 'العربية',
+  'de' => 'Deutsch',
+  'es' => 'Español',
+  'fr' => 'Français',
+  'hi' => 'हिन्दी',
+  'ja' => '日本語',
+  'pt' => 'Português',
+  'ru' => 'Русский',
+  'zh' => '中文',
+  _ => code,
+};
+
+/// A settings row that opens something.
+class _LinkRow extends StatelessWidget {
+  const _LinkRow({
+    required this.label,
+    required this.icon,
+    required this.onTap,
+  });
+
+  final String label;
+  final IconData icon;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) => InkWell(
+    onTap: onTap,
+    borderRadius: BorderRadius.circular(6),
+    child: Padding(
+      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 2),
+      child: Row(
+        children: [
+          Icon(icon, size: 16, color: context.colors.onSurfaceVariant),
+          const SizedBox(width: 12),
+          Expanded(child: Text(label, style: const TextStyle(fontSize: 13))),
+          Icon(
+            Icons.chevron_right_rounded,
+            size: 18,
+            color: context.colors.onSurfaceVariant,
+          ),
+        ],
+      ),
+    ),
+  );
+}
+
+/// Explanatory paragraph under a control that is too long for a `help:` line.
+class _HelpText extends StatelessWidget {
+  const _HelpText(this.text);
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.only(bottom: 12),
+    child: Text(
+      text,
+      style: TextStyle(
+        fontSize: 11.5,
+        height: 1.4,
+        color: context.colors.onSurfaceVariant,
+      ),
+    ),
+  );
 }
 
 class _Section extends StatelessWidget {

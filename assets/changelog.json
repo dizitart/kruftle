@@ -1,0 +1,41 @@
+{
+  "kruftle.changelog": 1,
+  "versions": [
+    {
+      "version": "0.2.0",
+      "date": "2026-08-24",
+      "added": [
+        "A radar sweep while scanning, a sweeping band while cleaning, and figures that count rather than jump — all of which stop when your system asks for reduced motion, or when you do.",
+        "Ten languages: English, Español, Deutsch, Français, Português, Русский, 中文, 日本語, हिन्दी and العربية, including full right-to-left layout.",
+        "A light theme, and a chooser for light, dark or whatever your desktop is set to.",
+        "Twenty-six more project types, including Bazel, Meson, Autotools, Conan, vcpkg, PlatformIO, Haskell, Scala, Clojure, Erlang, OCaml, Nim, Crystal, D, Deno, PHP, Terraform, Unity, Julia, R and Perl.",
+        "Cleanup profiles: teach Kruftle a project type it does not know, and it is detected and cleaned by exactly the same code — and the same safety rules — as a built-in one.",
+        "Scheduled reminders, daily, weekly or monthly, with a desktop notification when a cleanup is due and when one finishes.",
+        "A treemap of the biggest artifact directories, so you can see where the space is before deciding what to do about it.",
+        "A before-and-after gauge of the volume's free space on the report.",
+        "A short tour of the app on first run, replayable from Settings.",
+        "This changelog, and the Privacy Policy and Terms of Service, readable inside the app.",
+        "Windows and Linux builds for arm64 alongside x64."
+      ],
+      "changed": [
+        "Sizes are now the space a directory actually occupies on disk, read from the operating system, rather than the sum of its files' lengths. It is the figure you get back, and it matches what Finder and df report. The old measurement is still available in Settings, and is used automatically on Windows."
+      ],
+      "fixed": [
+        "The step rail no longer overflows when a translated label is longer than the English one.",
+        "The accent colours are legible on a light background."
+      ]
+    },
+    {
+      "version": "0.1.0",
+      "date": "2026-08-23",
+      "added": [
+        "The first release. Finds every project under a folder, works out what built it, and asks that toolchain to clean up after itself.",
+        "Sixteen project types, from Cargo and Gradle to Xcode and Mix.",
+        "A five-step wizard: choose a folder, scan, review, run, report.",
+        "Ten safety rules, each with its own test, including never following a symlink, never leaving the folder you chose, and never touching anything git tracks.",
+        "A separate screen for the global SDK caches in your home directory.",
+        "In-app updates, verified against the release's published SHA-256."
+      ]
+    }
+  ]
+}

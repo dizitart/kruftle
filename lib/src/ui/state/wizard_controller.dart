@@ -14,6 +14,7 @@ import '../../core/scan/project_scanner.dart';
 import '../../core/scan/sizer.dart';
 import '../../core/scan/toolchain.dart';
 import 'app_state.dart';
+import 'schedule_controller.dart';
 
 enum WizardStep { source, scanning, review, running, report }
 
@@ -49,7 +50,7 @@ class WizardState {
   /// Raw-deletion categories opted into for this run (safety rail 7).
   final Set<CleanRisk> risks;
 
-  final Map<StackId, ToolStatus> tools;
+  final Map<String, ToolStatus> tools;
 
   // Scan progress.
   final String? currentPath;
@@ -82,7 +83,7 @@ class WizardState {
   /// why opting into deletion might be worth it.
   bool get hasMissingToolchains => selectedProjects.any(
     (project) => project.stacks.any(
-      (s) => s.command != null && tools[s.stackId] == ToolStatus.missing,
+      (s) => s.command != null && tools[s.toolBinary] == ToolStatus.missing,
     ),
   );
 
@@ -95,7 +96,7 @@ class WizardState {
     List<DetectedProject>? projects,
     Set<String>? selected,
     Set<CleanRisk>? risks,
-    Map<StackId, ToolStatus>? tools,
+    Map<String, ToolStatus>? tools,
     String? currentPath,
     int? directoriesScanned,
     double? sizingProgress,
@@ -166,7 +167,7 @@ class WizardController extends Notifier<WizardState> {
 
     await ref.read(settingsProvider.notifier).rememberRoot(root);
 
-    final scanner = ProjectScanner();
+    final scanner = ProjectScanner(registry: ref.read(registryProvider));
     final found = <DetectedProject>[];
     final completed = Completer<void>();
 
@@ -176,6 +177,7 @@ class WizardController extends Notifier<WizardState> {
             root: root,
             maxDepth: settings.maxScanDepth,
             followHiddenDirectories: settings.scanHiddenDirectories,
+            excludeGlobs: ref.read(profilesProvider).excludeGlobs,
           ),
         )
         .listen(
@@ -224,7 +226,7 @@ class WizardController extends Notifier<WizardState> {
       sizingProgress: 0,
     );
 
-    unawaited(_measureInBackground(found, root));
+    unawaited(_measureInBackground(found, root, settings.sizeMode));
   }
 
   /// Measures artifact directories after the review screen is already up,
@@ -236,6 +238,7 @@ class WizardController extends Notifier<WizardState> {
   Future<void> _measureInBackground(
     List<DetectedProject> projects,
     String root,
+    SizeMode mode,
   ) async {
     final paths = [
       for (final project in projects)
@@ -267,7 +270,7 @@ class WizardController extends Notifier<WizardState> {
       (_) => flush(),
     );
 
-    await Sizer().measureAll(
+    await Sizer(mode: mode).measureAll(
       paths,
       onMeasured: (path, bytes) {
         sizes[path] = bytes;
@@ -356,6 +359,7 @@ class WizardController extends Notifier<WizardState> {
     final cleaner = Cleaner(
       concurrency: settings.cleanConcurrency,
       stepTimeout: settings.stepTimeout,
+      sizer: Sizer(mode: settings.sizeMode),
     );
     final measured = await cleaner.dryRun(await _buildPlan());
 
@@ -389,6 +393,7 @@ class WizardController extends Notifier<WizardState> {
     final cleaner = _cleaner = Cleaner(
       concurrency: settings.cleanConcurrency,
       stepTimeout: settings.stepTimeout,
+      sizer: Sizer(mode: settings.sizeMode),
     );
 
     final outcomes = <StepOutcome>[];
@@ -416,6 +421,9 @@ class WizardController extends Notifier<WizardState> {
                   'cancelled': report.cancelled,
                   'seconds': report.duration.inSeconds,
                 });
+                // Resets the schedule's interval and, if asked, says so — the
+                // user may well have switched to something else by now.
+                unawaited(_announce(report));
                 state = state.copyWith(step: WizardStep.report, report: report);
             }
           },
@@ -428,6 +436,21 @@ class WizardController extends Notifier<WizardState> {
 
     await completed.future;
     _cleaner = null;
+  }
+
+  /// Tells the schedule a cleanup happened, and posts the finish notification
+  /// when the user asked for one.
+  Future<void> _announce(CleanReport report) async {
+    final schedule = ref.read(scheduleProvider.notifier);
+    await schedule.markRan();
+    if (report.cancelled) return;
+
+    await schedule.announceFinished(
+      title: 'Kruftle',
+      body:
+          '${formatBytes(report.bytesFreed)} · '
+          '${report.projectsTouched} projects',
+    );
   }
 
   void _logOutcome(StepOutcome outcome) {

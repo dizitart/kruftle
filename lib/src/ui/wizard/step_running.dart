@@ -4,7 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path/path.dart' as p;
 
+import '../../../l10n/app_localizations.dart';
 import '../../core/models/clean.dart';
+import '../anim/cleaning_sweep.dart';
 import '../state/wizard_controller.dart';
 import '../theme.dart';
 
@@ -15,6 +17,7 @@ class StepRunning extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l = L.of(context);
     final state = ref.watch(wizardProvider);
     final running = state.runningStep;
 
@@ -22,7 +25,7 @@ class StepRunning extends ConsumerWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Cleaning',
+          l.runningHeading,
           style: context.text.headlineSmall?.copyWith(
             fontWeight: FontWeight.w600,
             letterSpacing: -0.4,
@@ -30,7 +33,7 @@ class StepRunning extends ConsumerWidget {
         ),
         const SizedBox(height: 8),
         Text(
-          '${state.stepsDone} of ${state.stepsTotal} steps',
+          l.runningProgress(state.stepsDone, state.stepsTotal),
           style: TextStyle(
             fontSize: 13,
             color: context.colors.onSurfaceVariant,
@@ -38,14 +41,7 @@ class StepRunning extends ConsumerWidget {
         ),
         const SizedBox(height: 20),
 
-        ClipRRect(
-          borderRadius: BorderRadius.circular(3),
-          child: LinearProgressIndicator(
-            value: state.runProgress,
-            minHeight: 5,
-            backgroundColor: context.colors.surfaceContainerHighest,
-          ),
-        ),
+        CleaningSweep(value: state.runProgress),
 
         if (running != null) ...[
           const SizedBox(height: 14),
@@ -86,7 +82,7 @@ class StepRunning extends ConsumerWidget {
         OutlinedButton.icon(
           onPressed: ref.read(wizardProvider.notifier).cancelRun,
           icon: const Icon(Icons.stop_rounded, size: 17),
-          label: const Text('Stop'),
+          label: Text(l.runningStop),
         ),
       ],
     );
@@ -108,7 +104,10 @@ class _OutcomeLog extends StatelessWidget {
         itemCount: newestFirst.length,
         itemBuilder: (context, index) {
           final outcome = newestFirst[index];
-          final (icon, color) = statusAppearance(outcome.status);
+          final (icon, color) = statusAppearance(
+            outcome.status,
+            context.brightness,
+          );
 
           return Padding(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
@@ -176,11 +175,29 @@ class _OutcomeLog extends StatelessWidget {
   }
 }
 
-(IconData, Color) statusAppearance(StepStatus status) => switch (status) {
-  StepStatus.success => (Icons.check_rounded, KruftleTheme.freed),
-  StepStatus.skipped => (Icons.remove_rounded, Colors.grey),
-  StepStatus.cancelled => (Icons.block_rounded, Colors.grey),
-  StepStatus.refused => (Icons.shield_outlined, KruftleTheme.warn),
-  StepStatus.timedOut => (Icons.timer_off_outlined, KruftleTheme.danger),
-  StepStatus.failed => (Icons.close_rounded, KruftleTheme.danger),
-};
+/// The icon and colour for a step's outcome.
+///
+/// Takes a brightness rather than a `BuildContext` so it stays a pure function
+/// — it is called from inside two different list builders, and threading a
+/// context through both buys nothing the caller cannot supply in a word.
+(IconData, Color) statusAppearance(StepStatus status, Brightness brightness) =>
+    switch (status) {
+      StepStatus.success => (
+        Icons.check_rounded,
+        KruftleTheme.freedFor(brightness),
+      ),
+      StepStatus.skipped => (Icons.remove_rounded, Colors.grey),
+      StepStatus.cancelled => (Icons.block_rounded, Colors.grey),
+      StepStatus.refused => (
+        Icons.shield_outlined,
+        KruftleTheme.warnFor(brightness),
+      ),
+      StepStatus.timedOut => (
+        Icons.timer_off_outlined,
+        KruftleTheme.dangerFor(brightness),
+      ),
+      StepStatus.failed => (
+        Icons.close_rounded,
+        KruftleTheme.dangerFor(brightness),
+      ),
+    };

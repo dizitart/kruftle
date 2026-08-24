@@ -2,6 +2,7 @@
 
 import 'package:flutter/material.dart';
 
+import '../../../l10n/app_localizations.dart';
 import '../../core/models/stack.dart';
 import '../../core/scan/toolchain.dart';
 import '../theme.dart';
@@ -63,29 +64,27 @@ class ToolBadge extends StatelessWidget {
   final String stackName;
 
   @override
-  Widget build(BuildContext context) => switch (status) {
-    ToolStatus.available => Tag(
-      stackName,
-      color: KruftleTheme.freed,
-      icon: Icons.check_rounded,
-      tooltip:
-          '$binary is installed — $stackName projects will be '
-          'cleaned with their own command.',
-    ),
-    ToolStatus.missing => Tag(
-      stackName,
-      color: KruftleTheme.warn,
-      icon: Icons.priority_high_rounded,
-      tooltip:
-          '$binary is not on PATH. Kruftle can only clean this by '
-          'deleting the build directory, which needs your explicit '
-          'permission.',
-    ),
-    ToolStatus.notApplicable => Tag(
-      stackName,
-      tooltip: '$stackName has no official clean command.',
-    ),
-  };
+  Widget build(BuildContext context) {
+    final l = L.of(context);
+    return switch (status) {
+      ToolStatus.available => Tag(
+        stackName,
+        color: context.freed,
+        icon: Icons.check_rounded,
+        tooltip: l.toolAvailable(binary ?? '', stackName),
+      ),
+      ToolStatus.missing => Tag(
+        stackName,
+        color: context.warn,
+        icon: Icons.priority_high_rounded,
+        tooltip: l.toolMissing(binary ?? ''),
+      ),
+      ToolStatus.notApplicable => Tag(
+        stackName,
+        tooltip: l.toolNotApplicable(stackName),
+      ),
+    };
+  }
 }
 
 /// Section heading inside a panel.
