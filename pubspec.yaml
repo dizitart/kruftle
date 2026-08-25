@@ -24,7 +24,7 @@ dependencies:
 
   # Desktop integration
   file_selector: ^1.0.3
-  window_manager: ^0.4.3
+  window_manager: ^0.5.2
   url_launcher: ^6.3.1
   path_provider: ^2.1.5
   shared_preferences: ^2.3.3
@@ -32,7 +32,7 @@ dependencies:
   ffi: ^2.2.0
   flutter_localizations:
     sdk: flutter
-  intl: ^0.20.2
+  intl: ^0.20.3
 
 dev_dependencies:
   flutter_test:
