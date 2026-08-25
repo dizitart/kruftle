@@ -672,6 +672,9 @@ class LPt extends L {
   String get settingsSourceCode => 'Código-fonte';
 
   @override
+  String get settingsWebsite => 'Site do Kruftle';
+
+  @override
   String get tourWelcomeTitle => 'Boas-vindas ao Kruftle';
 
   @override

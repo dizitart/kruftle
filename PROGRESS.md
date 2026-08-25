@@ -14,12 +14,12 @@ check in §3 to confirm the tree is in the state this document claims.
 
 | | |
 |---|---|
-| **Current milestone** | **v0.2.1** (re-cut, twice) — the Finder-launch bug that made v0.2.0 clean nothing, carried down to the tools a clean command itself starts; plus never planning a clean target that does not exist |
-| **Last updated** | 2026-08-25 |
+| **Current milestone** | **v0.2.2** — the About panel links out to Kruftle's own page and to Dizitart |
+| **Last updated** | 2026-08-26 |
 | **Build green?** | Yes — 583 tests, analyzer clean, formatter clean, all five release targets green |
 | **Repo** | https://github.com/dizitart/kruftle (public, GPL-3.0) |
 | **CI** | Green — analyze/test plus release builds on all three OSs |
-| **Released** | [v0.2.1](https://github.com/dizitart/kruftle/releases/tag/v0.2.1) — .dmg, two .exe, two .AppImage, two .deb, checksums.txt |
+| **Released** | [v0.2.2](https://github.com/dizitart/kruftle/releases/tag/v0.2.2) — .dmg, two .exe, two .AppImage, two .deb, checksums.txt |
 
 ---
 
@@ -121,6 +121,21 @@ it is there to be looked at. Regenerate the app icon's rasters with:
 ## 4. Session log
 
 Newest first.
+
+### Session 10 — 2026-08-26
+
+**Landed** — v0.2.2: two links in Settings → About.
+
+- **Kruftle website** (`kruftle.dizitart.com`) and **Dizitart**
+  (`www.dizitart.com`), next to the existing source-code row. One new ARB key
+  across all ten locales for "Kruftle website"; the publisher's row is the
+  literal `Dizitart`, since a brand name is the same in every language.
+- **The privacy policy had to move with it.** `about_test.dart` scans every
+  `Uri.https(` host in `lib/` and fails if the policy does not name it. The
+  new hosts are browser-opened links, not fetches, so §4's "not network
+  activity" bullet now names them explicitly and says so; "Last updated"
+  bumped to 2026-08-26. `hasAcceptedLegal` is a plain bool with no date
+  comparison, so nobody is re-prompted for consent.
 
 ### Session 9 — 2026-08-25
 

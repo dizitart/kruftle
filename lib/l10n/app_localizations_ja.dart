@@ -654,6 +654,9 @@ class LJa extends L {
   String get settingsSourceCode => 'ソースコード';
 
   @override
+  String get settingsWebsite => 'Kruftle のウェブサイト';
+
+  @override
   String get tourWelcomeTitle => 'Kruftle へようこそ';
 
   @override

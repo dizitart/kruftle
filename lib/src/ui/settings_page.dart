@@ -295,6 +295,28 @@ class SettingsPage extends ConsumerWidget {
                   ),
                 ),
               ),
+              _LinkRow(
+                label: l.settingsWebsite,
+                icon: Icons.public_rounded,
+                onTap: () => unawaited(
+                  launchUrl(
+                    Uri.https('kruftle.dizitart.com', '/'),
+                    mode: LaunchMode.externalApplication,
+                  ),
+                ),
+              ),
+              // ponytail: the publisher's name is a brand, not prose, so it is
+              // the same in every language and needs no ARB entry.
+              _LinkRow(
+                label: 'Dizitart',
+                icon: Icons.storefront_rounded,
+                onTap: () => unawaited(
+                  launchUrl(
+                    Uri.https('www.dizitart.com', '/'),
+                    mode: LaunchMode.externalApplication,
+                  ),
+                ),
+              ),
             ],
           ),
 

@@ -1211,6 +1211,12 @@ abstract class L {
   /// **'Source code'**
   String get settingsSourceCode;
 
+  /// No description provided for @settingsWebsite.
+  ///
+  /// In en, this message translates to:
+  /// **'Kruftle website'**
+  String get settingsWebsite;
+
   /// No description provided for @tourWelcomeTitle.
   ///
   /// In en, this message translates to:

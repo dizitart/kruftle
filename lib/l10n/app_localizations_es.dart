@@ -674,6 +674,9 @@ class LEs extends L {
   String get settingsSourceCode => 'Código fuente';
 
   @override
+  String get settingsWebsite => 'Sitio web de Kruftle';
+
+  @override
   String get tourWelcomeTitle => 'Te damos la bienvenida a Kruftle';
 
   @override

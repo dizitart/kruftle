@@ -646,6 +646,9 @@ class LZh extends L {
   String get settingsSourceCode => '源代码';
 
   @override
+  String get settingsWebsite => 'Kruftle 网站';
+
+  @override
   String get tourWelcomeTitle => '欢迎使用 Kruftle';
 
   @override

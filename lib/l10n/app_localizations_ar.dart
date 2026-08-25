@@ -678,6 +678,9 @@ class LAr extends L {
   String get settingsSourceCode => 'الشفرة المصدرية';
 
   @override
+  String get settingsWebsite => 'موقع Kruftle';
+
+  @override
   String get tourWelcomeTitle => 'مرحبًا بك في Kruftle';
 
   @override

@@ -198,6 +198,7 @@
   "settingsLicence": "Freie Software unter der GNU General Public License v3.0 oder später.",
   "settingsMadeWith": "Mit ❤️ in Kalkutta, Indien gemacht",
   "settingsSourceCode": "Quellcode",
+  "settingsWebsite": "Kruftle-Website",
 
   "tourWelcomeTitle": "Willkommen bei Kruftle",
   "tourWelcomeBody": "Build-Artefakte sammeln sich still und leise an. Kruftle findet jedes Projekt auf deiner Platte, ermittelt, was es gebaut hat, und bittet diese Toolchain, hinter sich aufzuräumen.",

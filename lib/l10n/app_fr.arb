@@ -198,6 +198,7 @@
   "settingsLicence": "Logiciel libre sous licence publique générale GNU v3.0 ou ultérieure.",
   "settingsMadeWith": "Fait avec ❤️ à Calcutta, Inde",
   "settingsSourceCode": "Code source",
+  "settingsWebsite": "Site web de Kruftle",
 
   "tourWelcomeTitle": "Bienvenue dans Kruftle",
   "tourWelcomeBody": "Les fichiers de compilation s’accumulent en silence. Kruftle trouve chaque projet de votre disque, détermine ce qui l’a compilé, et demande à cet outil de nettoyer derrière lui.",

@@ -198,6 +198,7 @@
   "settingsLicence": "Свободное программное обеспечение под GNU General Public License v3.0 или новее.",
   "settingsMadeWith": "Сделано с ❤️ в Калькутте, Индия",
   "settingsSourceCode": "Исходный код",
+  "settingsWebsite": "Сайт Kruftle",
 
   "tourWelcomeTitle": "Добро пожаловать в Kruftle",
   "tourWelcomeBody": "Результаты сборки копятся незаметно. Kruftle находит каждый проект на диске, выясняет, чем он собран, и просит этот инструмент убрать за собой.",

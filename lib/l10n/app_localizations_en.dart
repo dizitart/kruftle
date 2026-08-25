@@ -669,6 +669,9 @@ class LEn extends L {
   String get settingsSourceCode => 'Source code';
 
   @override
+  String get settingsWebsite => 'Kruftle website';
+
+  @override
   String get tourWelcomeTitle => 'Welcome to Kruftle';
 
   @override

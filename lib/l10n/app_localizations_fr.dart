@@ -675,6 +675,9 @@ class LFr extends L {
   String get settingsSourceCode => 'Code source';
 
   @override
+  String get settingsWebsite => 'Site web de Kruftle';
+
+  @override
   String get tourWelcomeTitle => 'Bienvenue dans Kruftle';
 
   @override

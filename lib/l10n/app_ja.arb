@@ -198,6 +198,7 @@
   "settingsLicence": "GNU 一般公衆利用許諾書 v3.0 以降に基づく自由ソフトウェアです。",
   "settingsMadeWith": "❤️ を込めてインド・コルカタで開発",
   "settingsSourceCode": "ソースコード",
+  "settingsWebsite": "Kruftle のウェブサイト",
 
   "tourWelcomeTitle": "Kruftle へようこそ",
   "tourWelcomeBody": "ビルド成果物は静かに積み上がります。Kruftle はディスク上のすべてのプロジェクトを見つけ、何がビルドしたのかを突き止め、そのツールチェーン自身に後片付けをさせます。",

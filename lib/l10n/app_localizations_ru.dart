@@ -680,6 +680,9 @@ class LRu extends L {
   String get settingsSourceCode => 'Исходный код';
 
   @override
+  String get settingsWebsite => 'Сайт Kruftle';
+
+  @override
   String get tourWelcomeTitle => 'Добро пожаловать в Kruftle';
 
   @override

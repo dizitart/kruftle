@@ -1,6 +1,6 @@
 # Privacy Policy
 
-**Last updated:** 2026-08-24
+**Last updated:** 2026-08-26
 
 This Privacy Policy explains how **Dizitart** (a sole proprietorship
 registered in Kolkata, West Bengal, India — "Dizitart", "we", "us", "our")
@@ -117,10 +117,14 @@ ever, and you update by downloading a release yourself.
 
 Two things that are *not* network activity, despite appearing to be:
 
-- **Install links.** When a project's build tool is missing, Kruftle shows
-  a link to that tool's own website. Nothing is fetched; the link opens in
-  your browser only if you click it, and then it is your browser talking to
-  that site, not Kruftle.
+- **Install links and the links in Settings → About.** When a project's
+  build tool is missing, Kruftle shows a link to that tool's own website,
+  and the About panel links to Kruftle's own page at `kruftle.dizitart.com`,
+  to `www.dizitart.com` and to the source repository. Nothing is fetched;
+  a link opens in your browser only if you click it, and then it is your
+  browser talking to that site, not Kruftle. Our own sites are ordinary web
+  pages, and visiting one tells us nothing about your copy of Kruftle beyond
+  what any website sees from any visitor.
 - **Clean commands.** Kruftle runs your build tools' own clean commands
   (`cargo clean`, `flutter clean`, and so on). Those are your tools, run on
   your machine under your account, and whatever they do — including any

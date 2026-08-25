@@ -2,6 +2,13 @@
   "kruftle.changelog": 1,
   "versions": [
     {
+      "version": "0.2.2",
+      "date": "2026-08-26",
+      "added": [
+        "The About panel in Settings now links to the Kruftle website and to Dizitart, alongside the source code."
+      ]
+    },
+    {
       "version": "0.2.1",
       "date": "2026-08-25",
       "added": [

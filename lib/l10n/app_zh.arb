@@ -198,6 +198,7 @@
   "settingsLicence": "基于 GNU 通用公共许可证 v3.0 或更高版本的自由软件。",
   "settingsMadeWith": "用 ❤️ 打造于印度加尔各答",
   "settingsSourceCode": "源代码",
+  "settingsWebsite": "Kruftle 网站",
 
   "tourWelcomeTitle": "欢迎使用 Kruftle",
   "tourWelcomeBody": "构建产物在不知不觉中越积越多。Kruftle 会找出磁盘上的每一个项目，判断它是用什么构建的，然后请那个工具链自己收拾残局。",

@@ -671,6 +671,9 @@ class LHi extends L {
   String get settingsSourceCode => 'स्रोत कोड';
 
   @override
+  String get settingsWebsite => 'Kruftle वेबसाइट';
+
+  @override
   String get tourWelcomeTitle => 'Kruftle में आपका स्वागत है';
 
   @override
