@@ -1,6 +1,10 @@
 <h1 align="center">Kruftle</h1>
 
 <p align="center">
+  <img alt="Kruftle" src="assets/icon/kruftle-512.png" width="128" height="128">
+</p>
+
+<p align="center">
   <em>Reclaim your disk. Kill the cruft.</em>
 </p>
 
