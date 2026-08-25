@@ -1010,4 +1010,17 @@ class LFr extends L {
 
   @override
   String get legalOpenInBrowser => 'Ouvrir dans le navigateur';
+
+  @override
+  String get consentTitle => 'Conditions et confidentialité';
+
+  @override
+  String get consentBody =>
+      'Kruftle exécute la commande de nettoyage propre à chaque chaîne d\'outils, ce qui supprime les fichiers de compilation de cette machine. Lisez les Conditions d\'utilisation et la Politique de confidentialité avant de commencer : continuer vaut acceptation des deux.';
+
+  @override
+  String get consentAccept => 'Accepter et continuer';
+
+  @override
+  String get consentDecline => 'Refuser et quitter';
 }

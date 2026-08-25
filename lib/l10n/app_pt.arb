@@ -295,5 +295,10 @@
   "legalPrivacyTitle": "Política de Privacidade",
   "legalTermsTitle": "Termos de Serviço",
   "legalUnavailable": "Não foi possível carregar este documento.",
-  "legalOpenInBrowser": "Abrir no navegador"
+  "legalOpenInBrowser": "Abrir no navegador",
+
+  "consentTitle": "Termos e privacidade",
+  "consentBody": "O Kruftle executa o comando de limpeza da própria cadeia de ferramentas, o que apaga a saída de compilação desta máquina. Leia os Termos de Serviço e a Política de Privacidade antes de começar — continuar significa que você aceita ambos.",
+  "consentAccept": "Aceitar e continuar",
+  "consentDecline": "Recusar e sair"
 }

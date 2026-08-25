@@ -1006,4 +1006,17 @@ class LDe extends L {
 
   @override
   String get legalOpenInBrowser => 'Im Browser öffnen';
+
+  @override
+  String get consentTitle => 'Bedingungen & Datenschutz';
+
+  @override
+  String get consentBody =>
+      'Kruftle führt den Clean-Befehl jeder Toolchain aus und löscht damit Build-Ausgaben von diesem Rechner. Lies vor dem Start die Nutzungsbedingungen und die Datenschutzerklärung — mit dem Fortfahren akzeptierst du beide.';
+
+  @override
+  String get consentAccept => 'Akzeptieren und fortfahren';
+
+  @override
+  String get consentDecline => 'Ablehnen und beenden';
 }

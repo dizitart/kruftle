@@ -1014,4 +1014,17 @@ class LRu extends L {
 
   @override
   String get legalOpenInBrowser => 'Открыть в браузере';
+
+  @override
+  String get consentTitle => 'Условия и конфиденциальность';
+
+  @override
+  String get consentBody =>
+      'Kruftle запускает собственную команду очистки каждого набора инструментов, а она удаляет результаты сборки с этого компьютера. Прочитайте Условия обслуживания и Политику конфиденциальности перед началом — продолжение означает согласие с обоими документами.';
+
+  @override
+  String get consentAccept => 'Принять и продолжить';
+
+  @override
+  String get consentDecline => 'Отклонить и выйти';
 }

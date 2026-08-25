@@ -16,6 +16,7 @@
         "A before-and-after gauge of the volume's free space on the report.",
         "A short tour of the app on first run, replayable from Settings.",
         "This changelog, and the Privacy Policy and Terms of Service, readable inside the app.",
+        "The Terms of Service and the Privacy Policy are put in front of you on the very first run, with both documents one tap away, and nothing else in the app opens until you accept them.",
         "Windows and Linux builds for arm64 alongside x64.",
         "The global cache list sorts by size, largest or smallest first."
       ],

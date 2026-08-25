@@ -981,4 +981,17 @@ class LJa extends L {
 
   @override
   String get legalOpenInBrowser => 'ブラウザで開く';
+
+  @override
+  String get consentTitle => '規約とプライバシー';
+
+  @override
+  String get consentBody =>
+      'Kruftle は各ツールチェーン自身の clean コマンドを実行し、このマシンからビルド出力を削除します。開始する前に利用規約とプライバシーポリシーをお読みください。続行すると両方に同意したものとみなされます。';
+
+  @override
+  String get consentAccept => '同意して続ける';
+
+  @override
+  String get consentDecline => '同意せず終了する';
 }

@@ -14,9 +14,9 @@ check in §3 to confirm the tree is in the state this document claims.
 
 | | |
 |---|---|
-| **Current milestone** | M24, M25 and M26 done — **v0.2.0 is published**, and self-update is proved |
+| **Current milestone** | M24, M25 and M26 done — **v0.2.0 is published**, and self-update is proved; the first-run consent gate landed and v0.2.0 was re-cut |
 | **Last updated** | 2026-08-25 |
-| **Build green?** | Yes — 554 tests, analyzer clean, formatter clean, all five release targets green |
+| **Build green?** | Yes — 556 tests, analyzer clean, formatter clean, all five release targets green |
 | **Repo** | https://github.com/dizitart/kruftle (public, GPL-3.0) |
 | **CI** | Green — analyze/test plus release builds on all three OSs |
 | **Released** | [v0.2.0](https://github.com/dizitart/kruftle/releases/tag/v0.2.0) — .dmg, two .exe, two .AppImage, two .deb, checksums.txt |
@@ -120,6 +120,23 @@ it is there to be looked at. Regenerate the app icon's rasters with:
 ## 4. Session log
 
 Newest first.
+
+### Session 6 — 2026-08-25
+
+**Landed** — the first-run consent gate, and v0.2.0 re-cut with it.
+
+- **The gate.** `ui/consent_page.dart`: the Terms of Service and the Privacy
+  Policy in front of the tour, both documents openable from the screen itself,
+  accept or quit. Nothing new was written for it — the documents were already
+  shipping as assets and already had a `DocumentPage` to render them, so this
+  is a screen with two buttons and one settings flag, `hasAcceptedLegal`.
+- **Where it sits.** `_Root` in `ui/app.dart` is now a three-way gate: consent,
+  then tour, then the app. Still a gate rather than a pushed route, for the
+  reason already recorded there — nothing behind it should build.
+- **Driven by hand on macOS,** from a cleared preferences domain: the gate on
+  launch, both documents opening and coming back, accept leading into the
+  tour, the flag on disk, and a relaunch going straight to the wizard.
+- **One trap found in the test suite** — see §6 on the asset cache.
 
 ### Session 2 — 2026-08-24
 
@@ -424,6 +441,15 @@ Append-only. Record *why*, so a future session does not undo it.
 ---
 
 ## 6. Known gotchas
+
+- **Reading a bundled asset in a widget test poisons the next test that reads
+  the same one.** The bundle caches it as a buffer the following test cannot
+  read back, and its `FutureBuilder` silently renders the error branch — so a
+  test that passes alone fails when another one happens to read the same file
+  first. `addTearDown(rootBundle.clear)` in whichever test reads it. This is
+  why the consent-gate test in `test/ui/about_test.dart` has that line and the
+  legal-document tests below it do not.
+
 
 Hard-won. Read before debugging something that looks impossible.
 

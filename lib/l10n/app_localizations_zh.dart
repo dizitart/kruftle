@@ -968,4 +968,17 @@ class LZh extends L {
 
   @override
   String get legalOpenInBrowser => '在浏览器中打开';
+
+  @override
+  String get consentTitle => '条款与隐私';
+
+  @override
+  String get consentBody =>
+      'Kruftle 会运行每个工具链自带的清理命令，这会删除本机上的构建产物。开始之前请阅读服务条款和隐私政策——继续即表示你接受两者。';
+
+  @override
+  String get consentAccept => '接受并继续';
+
+  @override
+  String get consentDecline => '拒绝并退出';
 }

@@ -30,6 +30,7 @@ import 'package:kruftle/src/core/schedule/background_service.dart';
 import 'package:kruftle/src/core/schedule/schedule.dart';
 import 'package:kruftle/src/core/settings/settings.dart';
 import 'package:kruftle/src/ui/app.dart';
+import 'package:kruftle/src/ui/consent_page.dart';
 import 'package:kruftle/src/ui/global_caches_page.dart';
 import 'package:kruftle/src/ui/profiles_page.dart';
 import 'package:kruftle/src/ui/schedule_page.dart';
@@ -256,15 +257,21 @@ void main() {
     await shoot(tester, 'tour', const TourScreen());
   });
 
+  testWidgets('the consent gate', (tester) async {
+    await shoot(tester, 'consent', const ConsentScreen());
+  });
+
   testWidgets('the whole window, title bar included', (tester) async {
     // `KruftleApp` rather than a screen, because the title bar is private to
     // it and the alignment of its buttons is the thing being looked at.
-    // `hasSeenTour` is what gets past the first-run gate.
+    // `hasAcceptedLegal` and `hasSeenTour` are what get past the two
+    // first-run gates.
     await shoot(
       tester,
       'window',
       const SizedBox.shrink(),
       settings: const Settings(
+        hasAcceptedLegal: true,
         hasSeenTour: true,
         checkForUpdates: false,
         defaultRoots: ['/Volumes/External/codebase'],

@@ -1000,4 +1000,17 @@ class LEn extends L {
 
   @override
   String get legalOpenInBrowser => 'Open in browser';
+
+  @override
+  String get consentTitle => 'Terms & Privacy';
+
+  @override
+  String get consentBody =>
+      'Kruftle runs each toolchain\'s own clean command, and that deletes build output from this machine. Read the Terms of Service and the Privacy Policy before you start — continuing means you accept both.';
+
+  @override
+  String get consentAccept => 'Accept and continue';
+
+  @override
+  String get consentDecline => 'Decline and quit';
 }

@@ -3,12 +3,14 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart' show rootBundle;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kruftle/l10n/app_localizations.dart';
 import 'package:kruftle/src/core/changelog/changelog.dart';
 import 'package:kruftle/src/core/settings/settings.dart';
 import 'package:kruftle/src/ui/about_pages.dart';
+import 'package:kruftle/src/ui/consent_page.dart';
 import 'package:kruftle/src/ui/state/app_state.dart';
 import 'package:kruftle/src/ui/theme.dart';
 import 'package:kruftle/src/ui/tour_page.dart';
@@ -172,6 +174,36 @@ void main() {
         reason: 'an unknown version means we cannot tell, so show everything',
       );
       expect(changelog.since(null), hasLength(3));
+    });
+  });
+
+  group('the consent gate', () {
+    testWidgets('offers both documents and records acceptance', (tester) async {
+      // Reading an asset here leaves it cached as a buffer the next test
+      // cannot read again, which fails whichever legal test runs after this
+      // one. Dropping the cache on the way out keeps them independent.
+      addTearDown(rootBundle.clear);
+
+      final container = await pumpAbout(tester, const ConsentScreen());
+      final l = L.of(tester.element(find.byType(ConsentScreen)));
+
+      expect(find.text(l.consentTitle), findsOneWidget);
+      expect(container.read(settingsProvider).hasAcceptedLegal, isFalse);
+
+      // Each document opens from the gate itself, so nobody has to accept
+      // terms they were never shown.
+      for (final title in [l.legalTermsTitle, l.legalPrivacyTitle]) {
+        await tester.tap(find.text(title));
+        await tester.pumpAndSettle();
+        expect(find.byType(DocumentPage), findsOneWidget);
+        await tester.pageBack();
+        await tester.pumpAndSettle();
+      }
+
+      await tester.tap(find.text(l.consentAccept));
+      await tester.pump();
+
+      expect(container.read(settingsProvider).hasAcceptedLegal, isTrue);
     });
   });
 

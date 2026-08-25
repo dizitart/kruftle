@@ -51,6 +51,7 @@ class Settings {
     this.reduceMotion = false,
     this.sizeMode = SizeMode.onDisk,
     this.hasSeenTour = false,
+    this.hasAcceptedLegal = false,
     this.lastSeenVersion,
   });
 
@@ -101,6 +102,13 @@ class Settings {
   /// Set once the feature tour has been seen or skipped.
   final bool hasSeenTour;
 
+  /// Set once the terms and the privacy policy have been accepted. Nothing
+  /// else in the app runs until it is true.
+  ///
+  /// ponytail: a bool, not the accepted version — re-consent on a document
+  /// change would need a version stamp here and a comparison at startup.
+  final bool hasAcceptedLegal;
+
   /// The version that last ran, so an update can show what changed exactly
   /// once rather than on every launch.
   final String? lastSeenVersion;
@@ -124,6 +132,7 @@ class Settings {
     bool? reduceMotion,
     SizeMode? sizeMode,
     bool? hasSeenTour,
+    bool? hasAcceptedLegal,
     String? lastSeenVersion,
   }) => Settings(
     defaultRoots: defaultRoots ?? this.defaultRoots,
@@ -143,6 +152,7 @@ class Settings {
     reduceMotion: reduceMotion ?? this.reduceMotion,
     sizeMode: sizeMode ?? this.sizeMode,
     hasSeenTour: hasSeenTour ?? this.hasSeenTour,
+    hasAcceptedLegal: hasAcceptedLegal ?? this.hasAcceptedLegal,
     lastSeenVersion: lastSeenVersion ?? this.lastSeenVersion,
   );
 
@@ -162,6 +172,7 @@ class Settings {
     'reduceMotion': reduceMotion,
     'sizeMode': sizeMode.name,
     'hasSeenTour': hasSeenTour,
+    'hasAcceptedLegal': hasAcceptedLegal,
     'lastSeenVersion': lastSeenVersion,
   };
 
@@ -218,6 +229,8 @@ class Settings {
           _enumByName(SizeMode.values, read<String>('sizeMode')) ??
           fallback.sizeMode,
       hasSeenTour: read<bool>('hasSeenTour') ?? fallback.hasSeenTour,
+      hasAcceptedLegal:
+          read<bool>('hasAcceptedLegal') ?? fallback.hasAcceptedLegal,
       lastSeenVersion:
           read<String>('lastSeenVersion') ?? fallback.lastSeenVersion,
     );

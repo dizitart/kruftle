@@ -1768,6 +1768,30 @@ abstract class L {
   /// In en, this message translates to:
   /// **'Open in browser'**
   String get legalOpenInBrowser;
+
+  /// No description provided for @consentTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Terms & Privacy'**
+  String get consentTitle;
+
+  /// No description provided for @consentBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Kruftle runs each toolchain\'s own clean command, and that deletes build output from this machine. Read the Terms of Service and the Privacy Policy before you start — continuing means you accept both.'**
+  String get consentBody;
+
+  /// No description provided for @consentAccept.
+  ///
+  /// In en, this message translates to:
+  /// **'Accept and continue'**
+  String get consentAccept;
+
+  /// No description provided for @consentDecline.
+  ///
+  /// In en, this message translates to:
+  /// **'Decline and quit'**
+  String get consentDecline;
 }
 
 class _LDelegate extends LocalizationsDelegate<L> {

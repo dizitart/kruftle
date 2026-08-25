@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../l10n/app_localizations.dart';
 import '../core/settings/settings.dart';
 import 'about_pages.dart';
+import 'consent_page.dart';
 import 'global_caches_page.dart';
 import 'profiles_page.dart';
 import 'schedule_page.dart';
@@ -46,7 +47,7 @@ class KruftleApp extends ConsumerWidget {
   }
 }
 
-/// The tour on a first run, the app on every other one.
+/// The legal documents on the very first run, then the tour, then the app.
 ///
 /// A gate rather than a route pushed after the fact: pushing would mean the
 /// wizard building, checking for updates and starting a schedule timer behind
@@ -55,10 +56,11 @@ class _Root extends ConsumerWidget {
   const _Root();
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) =>
-      ref.watch(settingsProvider.select((s) => s.hasSeenTour))
-      ? const _Home()
-      : const TourScreen();
+  Widget build(BuildContext context, WidgetRef ref) {
+    final settings = ref.watch(settingsProvider);
+    if (!settings.hasAcceptedLegal) return const ConsentScreen();
+    return settings.hasSeenTour ? const _Home() : const TourScreen();
+  }
 }
 
 class _Home extends ConsumerStatefulWidget {

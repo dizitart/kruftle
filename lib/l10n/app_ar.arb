@@ -295,5 +295,10 @@
   "legalPrivacyTitle": "سياسة الخصوصية",
   "legalTermsTitle": "شروط الخدمة",
   "legalUnavailable": "تعذّر تحميل هذا المستند.",
-  "legalOpenInBrowser": "فتح في المتصفح"
+  "legalOpenInBrowser": "فتح في المتصفح",
+
+  "consentTitle": "الشروط والخصوصية",
+  "consentBody": "يشغّل Kruftle أمر التنظيف الخاص بكل سلسلة أدوات، وهذا يحذف مخرجات البناء من هذا الجهاز. اقرأ شروط الخدمة وسياسة الخصوصية قبل البدء — المتابعة تعني قبولك لكليهما.",
+  "consentAccept": "أوافق وأتابع",
+  "consentDecline": "أرفض وأخرج"
 }

@@ -1003,4 +1003,17 @@ class LPt extends L {
 
   @override
   String get legalOpenInBrowser => 'Abrir no navegador';
+
+  @override
+  String get consentTitle => 'Termos e privacidade';
+
+  @override
+  String get consentBody =>
+      'O Kruftle executa o comando de limpeza da própria cadeia de ferramentas, o que apaga a saída de compilação desta máquina. Leia os Termos de Serviço e a Política de Privacidade antes de começar — continuar significa que você aceita ambos.';
+
+  @override
+  String get consentAccept => 'Aceitar e continuar';
+
+  @override
+  String get consentDecline => 'Recusar e sair';
 }

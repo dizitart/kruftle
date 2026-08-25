@@ -295,5 +295,10 @@
   "legalPrivacyTitle": "Datenschutzerklärung",
   "legalTermsTitle": "Nutzungsbedingungen",
   "legalUnavailable": "Dieses Dokument konnte nicht geladen werden.",
-  "legalOpenInBrowser": "Im Browser öffnen"
+  "legalOpenInBrowser": "Im Browser öffnen",
+
+  "consentTitle": "Bedingungen & Datenschutz",
+  "consentBody": "Kruftle führt den Clean-Befehl jeder Toolchain aus und löscht damit Build-Ausgaben von diesem Rechner. Lies vor dem Start die Nutzungsbedingungen und die Datenschutzerklärung — mit dem Fortfahren akzeptierst du beide.",
+  "consentAccept": "Akzeptieren und fortfahren",
+  "consentDecline": "Ablehnen und beenden"
 }

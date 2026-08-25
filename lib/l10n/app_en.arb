@@ -464,5 +464,10 @@
   "legalPrivacyTitle": "Privacy Policy",
   "legalTermsTitle": "Terms of Service",
   "legalUnavailable": "This document could not be loaded.",
-  "legalOpenInBrowser": "Open in browser"
+  "legalOpenInBrowser": "Open in browser",
+
+  "consentTitle": "Terms & Privacy",
+  "consentBody": "Kruftle runs each toolchain's own clean command, and that deletes build output from this machine. Read the Terms of Service and the Privacy Policy before you start — continuing means you accept both.",
+  "consentAccept": "Accept and continue",
+  "consentDecline": "Decline and quit"
 }

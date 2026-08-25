@@ -1001,4 +1001,17 @@ class LHi extends L {
 
   @override
   String get legalOpenInBrowser => 'ब्राउज़र में खोलें';
+
+  @override
+  String get consentTitle => 'शर्तें और गोपनीयता';
+
+  @override
+  String get consentBody =>
+      'Kruftle हर टूलचेन की अपनी clean कमांड चलाता है, जो इस मशीन से बिल्ड आउटपुट मिटा देती है। शुरू करने से पहले सेवा की शर्तें और गोपनीयता नीति पढ़ें — आगे बढ़ने का अर्थ है कि आप दोनों को स्वीकार करते हैं।';
+
+  @override
+  String get consentAccept => 'स्वीकार करें और आगे बढ़ें';
+
+  @override
+  String get consentDecline => 'अस्वीकार करें और बंद करें';
 }

@@ -1005,4 +1005,17 @@ class LEs extends L {
 
   @override
   String get legalOpenInBrowser => 'Abrir en el navegador';
+
+  @override
+  String get consentTitle => 'Términos y privacidad';
+
+  @override
+  String get consentBody =>
+      'Kruftle ejecuta el comando de limpieza propio de cada cadena de herramientas, y eso borra la salida de compilación de este equipo. Lee los Términos del servicio y la Política de privacidad antes de empezar: continuar significa que aceptas ambos.';
+
+  @override
+  String get consentAccept => 'Aceptar y continuar';
+
+  @override
+  String get consentDecline => 'Rechazar y salir';
 }

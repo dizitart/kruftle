@@ -295,5 +295,10 @@
   "legalPrivacyTitle": "プライバシー ポリシー",
   "legalTermsTitle": "利用規約",
   "legalUnavailable": "この文書を読み込めませんでした。",
-  "legalOpenInBrowser": "ブラウザで開く"
+  "legalOpenInBrowser": "ブラウザで開く",
+
+  "consentTitle": "規約とプライバシー",
+  "consentBody": "Kruftle は各ツールチェーン自身の clean コマンドを実行し、このマシンからビルド出力を削除します。開始する前に利用規約とプライバシーポリシーをお読みください。続行すると両方に同意したものとみなされます。",
+  "consentAccept": "同意して続ける",
+  "consentDecline": "同意せず終了する"
 }

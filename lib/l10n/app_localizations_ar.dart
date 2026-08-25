@@ -1008,4 +1008,17 @@ class LAr extends L {
 
   @override
   String get legalOpenInBrowser => 'فتح في المتصفح';
+
+  @override
+  String get consentTitle => 'الشروط والخصوصية';
+
+  @override
+  String get consentBody =>
+      'يشغّل Kruftle أمر التنظيف الخاص بكل سلسلة أدوات، وهذا يحذف مخرجات البناء من هذا الجهاز. اقرأ شروط الخدمة وسياسة الخصوصية قبل البدء — المتابعة تعني قبولك لكليهما.';
+
+  @override
+  String get consentAccept => 'أوافق وأتابع';
+
+  @override
+  String get consentDecline => 'أرفض وأخرج';
 }
