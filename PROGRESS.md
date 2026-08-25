@@ -122,6 +122,35 @@ it is there to be looked at. Regenerate the app icon's rasters with:
 
 Newest first.
 
+### Session 11 — 2026-08-26
+
+**Landed** — Dependabot, and the machinery behind kruftle.dizitart.com.
+
+- **`.github/dependabot.yml`.** Weekly and grouped: one PR for minor/patch pub
+  bumps, one for the actions the release workflow pins. Majors still arrive on
+  their own. The native shells carry no third-party manifests, so there is
+  nothing else here to watch.
+- **`tool/site_screenshots.dart`** renders the real app screens to PNG for the
+  website — it pumps `KruftleApp` with seeded wizard state and rasterises the
+  RepaintBoundary, so what the site publishes is the production widget tree
+  rather than a mockup. Deliberately outside `test/` so CI never runs it; the
+  analyser does not grant a file out there test privileges, hence the
+  `ignore_for_file` pair at the top.
+  - Fonts come from the Flutter SDK's own cache. Without that every glyph is a
+    box, because the test binding ships a placeholder font.
+  - **Run one shot per process** (`--plain-name`, wrapped in `timeout 90`).
+    The PNG is written in seconds, then the process hangs at teardown on a
+    timer the app leaves pending; the file is already on disk by then.
+- **The treemap labels now take the theme's font family.** They are painted
+  straight onto a canvas with a bare `TextStyle`, so nothing handed them a
+  theme and they fell through to whatever the engine defaults to — visible as
+  tofu in any render outside a real desktop. No change to what a user sees:
+  `bodySmall.fontFamily` is what every other string in the app already
+  resolves to.
+- **Gotcha found, not fixed:** `mac_swap_test.dart` is flaky. It spawns a real
+  shell that waits on a PID, and it failed once in three full runs today and
+  passed alone every time. Worth a look before it starts failing CI.
+
 ### Session 10 — 2026-08-26
 
 **Landed** — v0.2.2: two links in Settings → About.

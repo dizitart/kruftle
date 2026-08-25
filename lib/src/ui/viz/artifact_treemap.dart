@@ -118,6 +118,7 @@ class _ArtifactTreemapState extends State<ArtifactTreemap> {
                       base: context.colors.primary,
                       border: context.colors.surface,
                       text: context.colors.onSurface,
+                      fontFamily: context.text.bodySmall?.fontFamily,
                     ),
                   ),
                 ),
@@ -155,6 +156,7 @@ class _TreemapPainter extends CustomPainter {
     required this.base,
     required this.border,
     required this.text,
+    required this.fontFamily,
   });
 
   final List<TreemapTile<ArtifactBlock>> tiles;
@@ -162,6 +164,12 @@ class _TreemapPainter extends CustomPainter {
   final Color base;
   final Color border;
   final Color text;
+
+  /// The face the rest of the app is set in. The labels are painted straight
+  /// onto a canvas rather than built as widgets, so nothing hands them a
+  /// theme — without this they fall through to whatever the engine happens to
+  /// default to, which is not the font every other string here uses.
+  final String? fontFamily;
 
   /// A rectangle needs to be at least this big before a label fits in it.
   static const _labelMinWidth = 62.0;
@@ -209,6 +217,7 @@ class _TreemapPainter extends CustomPainter {
           TextSpan(
             text: '${block.label}\n',
             style: TextStyle(
+              fontFamily: fontFamily,
               fontSize: 10,
               height: 1.25,
               fontWeight: FontWeight.w600,
@@ -218,6 +227,7 @@ class _TreemapPainter extends CustomPainter {
           TextSpan(
             text: formatBytes(block.bytes),
             style: TextStyle(
+              fontFamily: fontFamily,
               fontSize: 9.5,
               height: 1.25,
               color: text.withValues(alpha: 0.75),
@@ -235,5 +245,8 @@ class _TreemapPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(_TreemapPainter old) =>
-      old.tiles != tiles || old.hovered != hovered || old.base != base;
+      old.tiles != tiles ||
+      old.hovered != hovered ||
+      old.base != base ||
+      old.fontFamily != fontFamily;
 }
