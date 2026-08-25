@@ -1,0 +1,29 @@
+# Dependabot keeps the two dependency sets that actually ship here current:
+# the Dart packages in pubspec.yaml, and the actions the release workflow
+# pins. The native shells (CocoaPods, CMake) carry no third-party manifests
+# of their own, so there is nothing there to watch.
+version: 2
+updates:
+  - package-ecosystem: "pub"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "deps"
+    groups:
+      dart-dependencies:
+        patterns: ["*"]
+        update-types: ["minor", "patch"]
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    commit-message:
+      prefix: "ci"
+    groups:
+      actions:
+        patterns: ["*"]
