@@ -209,7 +209,11 @@ class ProjectScanner {
     } on FileSystemException {
       return null;
     }
-    return DirListing(files: files, directories: directories);
+    return DirListing(
+      path: directory.path,
+      files: files,
+      directories: directories,
+    );
   }
 
   Future<DetectedProject> _describe(

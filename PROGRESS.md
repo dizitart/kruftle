@@ -14,9 +14,9 @@ check in §3 to confirm the tree is in the state this document claims.
 
 | | |
 |---|---|
-| **Current milestone** | **v0.2.1** (re-cut) — the Finder-launch bug that made v0.2.0 clean nothing, single-instance, and a macOS self-update that installs itself instead of asking for a drag |
+| **Current milestone** | **v0.2.1** (re-cut, twice) — the Finder-launch bug that made v0.2.0 clean nothing, carried down to the tools a clean command itself starts; plus never planning a clean target that does not exist |
 | **Last updated** | 2026-08-25 |
-| **Build green?** | Yes — 577 tests, analyzer clean, formatter clean, all five release targets green |
+| **Build green?** | Yes — 583 tests, analyzer clean, formatter clean, all five release targets green |
 | **Repo** | https://github.com/dizitart/kruftle (public, GPL-3.0) |
 | **CI** | Green — analyze/test plus release builds on all three OSs |
 | **Released** | [v0.2.1](https://github.com/dizitart/kruftle/releases/tag/v0.2.1) — .dmg, two .exe, two .AppImage, two .deb, checksums.txt |
@@ -91,7 +91,7 @@ Run this first, every session. It is the definition of "the tree is healthy".
 cd /Volumes/External/codebase/kruftle && dart format --output=none --set-exit-if-changed lib test tool && flutter analyze --fatal-infos && flutter test
 ```
 
-Expected: formatter reports 0 changed, `No issues found!`, then 577 passing.
+Expected: formatter reports 0 changed, `No issues found!`, then 583 passing.
 
 `lib/l10n/app_localizations*.dart` is generated and committed. Regenerate it
 with `flutter gen-l10n` after editing any `.arb`; the analyzer will not warn if
@@ -121,6 +121,37 @@ it is there to be looked at. Regenerate the app icon's rasters with:
 ## 4. Session log
 
 Newest first.
+
+### Session 9 — 2026-08-25
+
+**Landed** — v0.2.1 re-cut again: the last thirteen failing clean steps, read
+off a real 333 GB run's log.
+
+- **The bug, one level down.** Session 7 resolved the *executable* through
+  `ToolchainProbe`, which fixed 94 of 96 failures. It did not fix the ten
+  that read `env: node: No such file or directory`: `npm` started fine, then
+  its script reached for `node` through a `#!/usr/bin/env node` shebang, and
+  `env` searched the **child's** PATH — still the Finder one, because
+  `Process.start` inherits the parent environment and we never replaced it.
+  Same root cause, one process deeper.
+- **The fix.** `ToolchainProbe.searchPathValue()` exposes the directories the
+  probe already searches; `SystemProcessRunner` passes them as the child's
+  `PATH`. Never an empty one — an empty PATH is worse than the inherited one.
+- **Reproduced before and after** by running the core under
+  `env -i PATH=/usr/bin:/bin:/usr/sbin:/sbin` — exactly what launchd hands a
+  Finder-launched `.app`. Before: `exit=127, env: node: No such file or
+  directory`, the log line verbatim. After: exit 0.
+- **Three failures were Kruftle planning a command it could not run.**
+  `npm run clean` at every `package.json` (most declare no such script);
+  `make distclean` at an Autotools tree whose Makefile the *previous* run's
+  distclean had already deleted. Both resolvers now read the file —
+  `DirListing` carries its own path for this — and offer no command rather
+  than a command that fails. The projects fall back to allow-listed deletion,
+  which is what they should have had all along.
+- **One failure was real** and stays a failure: a `pom.xml` missing four
+  dependency versions. Maven prints that to stdout, so the report showed a
+  bare `exited 1`; a failing command now falls back to stdout when stderr is
+  silent.
 
 ### Session 8 — 2026-08-25
 
@@ -541,7 +572,19 @@ Hard-won. Read before debugging something that looks impossible.
   be carried through to `Process.start`** — a resolved path that is then not
   used is exactly the shape of the v0.2.0 bug: every command failed with
   `No such file or directory` while the review screen cheerfully reported
-  every toolchain as installed.
+  every toolchain as installed. **Resolving the executable is still not
+  enough**: `npm run clean` spawns `node`, a Gradle wrapper spawns `java`, and
+  those search the child's PATH. The child gets the probe's PATH as its
+  environment, or the bug simply reappears one process deeper — which is
+  exactly what v0.2.1 shipped.
+
+- **Never plan a clean command you have not checked exists.** `npm run clean`
+  in a package with no such script, `make clean` in a Makefile with no such
+  target, `make distclean` in an Autotools tree the last run already
+  distcleaned — each exits non-zero and lands in the report as a failed clean
+  when nothing is wrong. A resolver may read the project's own files
+  (`DirListing.path` is there for this) and return `null`; the fallback to
+  allow-listed deletion is the better answer anyway.
 
 - **A `SnackBar` with an action never times out.** `persist` defaults to
   `action != null`, and a persistent snack bar ignores `duration` entirely.

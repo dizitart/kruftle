@@ -152,7 +152,15 @@ class ArtifactPath {
 /// keeps every detector and resolver a pure function, which is what makes the
 /// registry testable without touching a disk.
 class DirListing {
-  const DirListing({this.files = const {}, this.directories = const {}});
+  const DirListing({
+    this.path = '',
+    this.files = const {},
+    this.directories = const {},
+  });
+
+  /// Absolute path of the directory, so a resolver that has to look *inside* a
+  /// file — does this `package.json` declare a `clean` script? — can.
+  final String path;
 
   final Set<String> files;
   final Set<String> directories;

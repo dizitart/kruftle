@@ -44,6 +44,30 @@ void main() {
     expect(outcome.stdout.trim(), 'ran');
   }, skip: Platform.isWindows);
 
+  /// The v0.2.1 residue: `npm` itself was resolved and started, then its
+  /// script reached for `node` through `#!/usr/bin/env node` and searched the
+  /// *child's* PATH — the Finder one — and died with
+  /// `env: node: No such file or directory`.
+  test('the tool can find its own helpers on PATH too', () async {
+    writeTool('kruftle-fake-helper');
+    final wrapper = File(p.join(temp.path, 'kruftle-fake-wrapper'))
+      ..writeAsStringSync('#!/bin/sh\nexec kruftle-fake-helper\n');
+    Process.runSync('chmod', ['+x', wrapper.path]);
+
+    final runner = SystemProcessRunner(
+      toolchain: ToolchainProbe(environment: {'PATH': temp.path}),
+    );
+
+    final outcome = await runner.run(
+      const CleanCommand('kruftle-fake-wrapper'),
+      workingDirectory: temp.path,
+      timeout: const Duration(seconds: 10),
+    );
+
+    expect(outcome.succeeded, isTrue, reason: outcome.stderr);
+    expect(outcome.stdout.trim(), 'ran');
+  }, skip: Platform.isWindows);
+
   test('a project wrapper stays relative to the project', () async {
     writeTool('gradlew');
     final runner = SystemProcessRunner(

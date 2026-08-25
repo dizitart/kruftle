@@ -55,6 +55,15 @@ class ToolchainProbe {
     return resolved;
   }
 
+  /// Every directory the probe searches, in order.
+  ///
+  /// Handed to clean commands as their `PATH`. Resolving the executable is not
+  /// enough: `npm run clean` starts, then its script spawns `node` through a
+  /// `#!/usr/bin/env node` shebang, which searches the *child's* PATH — the
+  /// Finder one — and dies with "env: node: No such file or directory".
+  Future<String> searchPathValue() async =>
+      (await _path()).join(_windows ? ';' : ':');
+
   Future<ToolStatus> status(String? binary) async {
     if (binary == null) return ToolStatus.notApplicable;
     return await locate(binary) != null

@@ -341,6 +341,28 @@ void main() {
       expect(report.problems.single.message, 'error: could not remove');
     });
 
+    /// Maven writes its errors to stdout, so a stderr-only report told the
+    /// user only "exited 1".
+    test('a failure that spoke on stdout still says why', () async {
+      final runner = FakeRunner(
+        outcome: const ProcessOutcome(
+          exitCode: 1,
+          stdout: '[ERROR] the pom is missing a version',
+          stderr: '',
+        ),
+      );
+
+      final report = await execute(
+        await planFor([makeProject('app')]),
+        runner: runner,
+      );
+
+      expect(
+        report.problems.single.message,
+        '[ERROR] the pom is missing a version',
+      );
+    });
+
     test('a timed-out command is killed and reported, not hidden', () async {
       final runner = FakeRunner(
         onRun: (_, _) => const ProcessOutcome(

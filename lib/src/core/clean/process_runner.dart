@@ -65,12 +65,19 @@ class SystemProcessRunner implements ProcessRunner {
         ? command.executable
         : await _toolchain.locate(command.executable) ?? command.executable;
 
+    // Never hand a child an empty PATH: that is worse than the one we inherit.
+    final path = await _toolchain.searchPathValue();
+
     final Process process;
     try {
       process = await Process.start(
         executable,
         command.args,
         workingDirectory: workingDirectory,
+        // The tool's own children look themselves up on PATH — an npm script
+        // reaching for `node`, a Gradle wrapper reaching for `java`. Resolving
+        // only the executable we spawn leaves those one level down to fail.
+        environment: {if (path.isNotEmpty) 'PATH': path},
         // A wrapper script such as ./gradlew needs a shell on Windows; on
         // POSIX we exec directly so no argument is ever re-parsed by a shell.
         runInShell: Platform.isWindows,

@@ -1,6 +1,36 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
+import 'dart:io';
+
+import 'package:path/path.dart' as p;
+
 import '../../models/stack.dart';
+
+/// The names GNU make itself looks for, in its own order of preference.
+const _makefileNames = ['GNUmakefile', 'makefile', 'Makefile'];
+
+/// `make <target>` only when a Makefile here actually declares that target.
+///
+/// A Makefile is free to define no `clean` at all, and an Autotools tree loses
+/// its Makefile to the first `distclean` — so running it blind fails with
+/// ``No rule to make target `clean'`` and reports as a broken clean when
+/// nothing is broken.
+CleanCommand? makeTargetCommand(DirListing listing, String target) {
+  if (listing.path.isEmpty) return null;
+  for (final name in _makefileNames) {
+    if (!listing.hasFile(name)) continue;
+    try {
+      final body = File(p.join(listing.path, name)).readAsStringSync();
+      if (RegExp('^$target\\s*:', multiLine: true).hasMatch(body)) {
+        return CleanCommand('make', [target]);
+      }
+    } on FileSystemException {
+      // Unreadable Makefile: no command, fall back to allow-listed deletion.
+    }
+    return null; // make reads the first one it finds and no other.
+  }
+  return null;
+}
 
 const cmakeStack = StackDefinition(
   id: StackId.cmake,
@@ -23,12 +53,15 @@ const cmakeStack = StackDefinition(
   priority: 5,
 );
 
+CleanCommand? _makeClean(DirListing listing) =>
+    makeTargetCommand(listing, 'clean');
+
 const makeStack = StackDefinition(
   id: StackId.make,
   displayName: 'Make',
   markers: {'Makefile', 'makefile', 'GNUmakefile'},
   tool: ToolProbe(binary: 'make', versionArgs: ['--version']),
-  cleanCommand: CleanCommand('make', ['clean']),
+  resolveCleanCommand: _makeClean,
   // Makefiles put output anywhere; we never guess. `make clean` or nothing.
   artifacts: [],
   priority: 1,

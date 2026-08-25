@@ -1,13 +1,27 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
+import 'dart:io';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kruftle/src/core/models/stack.dart';
 import 'package:kruftle/src/core/registry/stack_registry.dart';
+import 'package:path/path.dart' as p;
 
 DirListing listing({
   Set<String> files = const {},
   Set<String> dirs = const {},
-}) => DirListing(files: files, directories: dirs);
+  String path = '',
+}) => DirListing(path: path, files: files, directories: dirs);
+
+/// A real directory, for the resolvers that have to read a file's contents.
+DirListing onDisk(Map<String, String> contents) {
+  final dir = Directory.systemTemp.createTempSync('kruftle_listing');
+  addTearDown(() => dir.deleteSync(recursive: true));
+  for (final entry in contents.entries) {
+    File(p.join(dir.path, entry.key)).writeAsStringSync(entry.value);
+  }
+  return listing(path: dir.path, files: contents.keys.toSet());
+}
 
 void main() {
   const registry = StackRegistry();
@@ -194,18 +208,66 @@ void main() {
     });
 
     test('picks the node package manager named by the lockfile', () {
+      const manifest = '{"scripts": {"clean": "rm -rf dist"}}';
       final node = registry.byId(StackId.node)!;
-      String managerFor(Set<String> files) =>
-          node.commandFor(listing(files: files))!.executable;
+      String managerFor(Set<String> lockfiles) => node
+          .commandFor(
+            onDisk({
+              'package.json': manifest,
+              for (final lock in lockfiles) lock: '',
+            }),
+          )!
+          .executable;
 
-      expect(managerFor({'package.json', 'pnpm-lock.yaml'}), 'pnpm');
-      expect(managerFor({'package.json', 'yarn.lock'}), 'yarn');
-      expect(managerFor({'package.json', 'bun.lockb'}), 'bun');
-      expect(managerFor({'package.json', 'package-lock.json'}), 'npm');
+      expect(managerFor({'pnpm-lock.yaml'}), 'pnpm');
+      expect(managerFor({'yarn.lock'}), 'yarn');
+      expect(managerFor({'bun.lockb'}), 'bun');
+      expect(managerFor({'package-lock.json'}), 'npm');
       expect(
-        managerFor({'package.json'}),
+        managerFor({}),
         'npm',
         reason: 'npm is the ecosystem default when no lockfile is present',
+      );
+    });
+
+    /// `npm run clean` in a package that declares no such script exits 1 with
+    /// `Missing script: "clean"`, which the report showed as a failed clean.
+    test('node offers a clean only when the package declares one', () {
+      final node = registry.byId(StackId.node)!;
+      expect(
+        node.commandFor(onDisk({'package.json': '{"dependencies": {}}'})),
+        isNull,
+      );
+      expect(node.commandFor(onDisk({'package.json': 'not json'})), isNull);
+      expect(
+        node.commandFor(listing(files: {'package.json'})),
+        isNull,
+        reason: 'an unreadable package.json cannot promise a clean script',
+      );
+    });
+
+    /// A Makefile need not define `clean`, and an Autotools tree loses its
+    /// generated Makefile to the first `distclean` — both used to be reported
+    /// as failures reading ``No rule to make target``.
+    test('make offers a target only when the Makefile declares it', () {
+      final make = registry.byId(StackId.make)!;
+      expect(
+        make.commandFor(onDisk({'Makefile': 'all:\n\tcc x.c\nclean:\n'})),
+        const CleanCommand('make', ['clean']),
+      );
+      expect(make.commandFor(onDisk({'Makefile': 'all:\n\tcc x.c\n'})), isNull);
+
+      final autotools = registry.byId(StackId.autotools)!;
+      expect(
+        autotools.commandFor(
+          onDisk({'configure.ac': '', 'Makefile': 'distclean: clean\n'}),
+        ),
+        const CleanCommand('make', ['distclean']),
+      );
+      expect(
+        autotools.commandFor(onDisk({'configure.ac': ''})),
+        isNull,
+        reason: 'no Makefile means configure has not run, or distclean has',
       );
     });
 

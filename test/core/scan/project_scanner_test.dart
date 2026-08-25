@@ -201,12 +201,47 @@ void main() {
     });
 
     test('resolves the node package manager from the lockfile', () async {
-      file('web/package.json');
+      file('web/package.json', '{"scripts": {"clean": "rm -rf dist"}}');
       file('web/pnpm-lock.yaml');
       dir('web/node_modules');
 
       final projects = await scanProjects();
       expect(named(projects, 'web').stacks.single.command?.executable, 'pnpm');
+    });
+
+    /// v0.2.1 ran `npm run clean` at every package.json it found. Most have no
+    /// such script, so the run reported failures for projects that were fine.
+    test(
+      'offers no node command when package.json has no clean script',
+      () async {
+        file('web/package.json', '{"dependencies": {}}');
+        dir('web/node_modules');
+
+        final projects = await scanProjects();
+        expect(named(projects, 'web').stacks.single.command, isNull);
+      },
+    );
+
+    /// The v0.2.1 run failed `make distclean` on an Autotools tree whose
+    /// Makefile the previous run's distclean had already removed.
+    test('offers make distclean only while a Makefile declares it', () async {
+      file('configured/configure.ac');
+      file('configured/Makefile', 'distclean: clean\n');
+      dir('configured/autom4te.cache');
+      file('distcleaned/configure.ac');
+      dir('distcleaned/autom4te.cache');
+
+      final projects = await scanProjects();
+      CleanCommand? autotoolsIn(String name) => named(
+        projects,
+        name,
+      ).stacks.firstWhere((s) => s.stackId == StackId.autotools).command;
+
+      expect(
+        autotoolsIn('configured'),
+        const CleanCommand('make', ['distclean']),
+      );
+      expect(autotoolsIn('distcleaned'), isNull);
     });
   });
 

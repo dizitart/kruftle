@@ -277,9 +277,13 @@ class Cleaner {
             ? done(StepStatus.success, message: result.stdout.trim())
             : done(
                 StepStatus.failed,
-                message: result.stderr.trim().isEmpty
-                    ? 'exited ${result.exitCode}'
-                    : result.stderr.trim(),
+                // Maven prints its errors to stdout, so stderr-only reporting
+                // showed the user a bare "exited 1" and no reason.
+                message: switch ((result.stderr.trim(), result.stdout.trim())) {
+                  (final err, _) when err.isNotEmpty => err,
+                  (_, final out) when out.isNotEmpty => out,
+                  _ => 'exited ${result.exitCode}',
+                },
               );
 
       case StepKind.delete:

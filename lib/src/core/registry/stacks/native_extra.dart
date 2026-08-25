@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 import '../../models/stack.dart';
+import 'native.dart';
 
 /// The C and C++ world beyond CMake and Make.
 ///
@@ -46,6 +47,9 @@ const ninjaStack = StackDefinition(
   priority: 5,
 );
 
+CleanCommand? _autotoolsClean(DirListing listing) =>
+    makeTargetCommand(listing, 'distclean');
+
 const autotoolsStack = StackDefinition(
   id: StackId.autotools,
   displayName: 'Autotools',
@@ -54,7 +58,9 @@ const autotoolsStack = StackDefinition(
   tool: ToolProbe(binary: 'make'),
   // Deliberately `distclean`, not `clean`: it also removes the generated
   // Makefile and config.status, which is what actually costs the disk space.
-  cleanCommand: CleanCommand('make', ['distclean']),
+  // Only once `configure` has generated that Makefile, though — an unbuilt or
+  // already-distcleaned tree has no target to run.
+  resolveCleanCommand: _autotoolsClean,
   artifacts: [ArtifactPath('autom4te.cache', risk: CleanRisk.cache)],
   priority: 8,
 );
