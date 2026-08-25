@@ -287,15 +287,12 @@ class _ExportButton extends ConsumerWidget {
       final file = ref.read(activityLogProvider).export(location.path);
       if (!context.mounted) return;
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(L.of(context).reportLogExported(p.basename(file.path))),
-          behavior: SnackBarBehavior.floating,
-          width: 420,
-          action: SnackBarAction(
-            label: L.of(context).actionShow,
-            onPressed: () => _reveal(file),
-          ),
+      showToast(
+        context,
+        L.of(context).reportLogExported(p.basename(file.path)),
+        action: SnackBarAction(
+          label: L.of(context).actionShow,
+          onPressed: () => _reveal(file),
         ),
       );
     },

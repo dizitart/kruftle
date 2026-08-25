@@ -63,6 +63,13 @@ class LJa extends L {
   String get actionNotNow => '後で';
 
   @override
+  String get alreadyRunningTitle => 'Kruftle はすでに起動しています';
+
+  @override
+  String get alreadyRunningBody =>
+      '別の Kruftle ウィンドウが実行中です。同時に 2 つがクリーンアップすると、ビルドディレクトリが中途半端に削除される恐れがあるため、このウィンドウは開きません。';
+
+  @override
   String get titleBarGlobalCaches => 'グローバル SDK キャッシュ';
 
   @override

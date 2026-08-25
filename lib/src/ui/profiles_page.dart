@@ -153,13 +153,13 @@ class ProfilesPage extends ConsumerWidget {
 
     final l = L.of(context);
     if (parsed == null) {
-      _toast(context, l.profilesImportFailed);
+      showToast(context, l.profilesImportFailed);
       return;
     }
 
     await ref.read(profilesProvider.notifier).import(parsed);
     if (!context.mounted) return;
-    _toast(context, l.profilesImported(parsed.profiles.length));
+    showToast(context, l.profilesImported(parsed.profiles.length));
   }
 
   Future<void> _export(BuildContext context, WidgetRef ref) async {
@@ -170,15 +170,6 @@ class ProfilesPage extends ConsumerWidget {
 
     File(location.path).writeAsStringSync(ref.read(profilesProvider).encode());
   }
-
-  void _toast(BuildContext context, String message) =>
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(message),
-          behavior: SnackBarBehavior.floating,
-          width: 420,
-        ),
-      );
 }
 
 class _ProfileCard extends StatelessWidget {

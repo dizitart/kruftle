@@ -63,6 +63,13 @@ class LHi extends L {
   String get actionNotNow => 'अभी नहीं';
 
   @override
+  String get alreadyRunningTitle => 'Kruftle पहले से खुला है';
+
+  @override
+  String get alreadyRunningBody =>
+      'Kruftle की एक और विंडो पहले से चल रही है। दो विंडो एक साथ सफ़ाई करें तो कोई बिल्ड डायरेक्टरी आधी हटी रह सकती है, इसलिए यह विंडो नहीं खुलेगी।';
+
+  @override
   String get titleBarGlobalCaches => 'वैश्विक SDK कैश';
 
   @override

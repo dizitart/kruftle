@@ -3,7 +3,10 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:path/path.dart' as p;
+
 import '../models/stack.dart';
+import '../scan/toolchain.dart';
 
 /// The result of running one clean command.
 class ProcessOutcome {
@@ -37,6 +40,17 @@ abstract interface class ProcessRunner {
 }
 
 class SystemProcessRunner implements ProcessRunner {
+  SystemProcessRunner({ToolchainProbe? toolchain})
+    : _toolchain = toolchain ?? ToolchainProbe.shared;
+
+  /// Resolves `flutter` to the absolute path the scanner found it at.
+  ///
+  /// A GUI application launched from Finder or the shell's Dock does not
+  /// inherit the login shell's PATH, so `Process.start('flutter', ...)` fails
+  /// with ENOENT for every SDK installed by a shell rc file — while the probe,
+  /// which asks the login shell, has known where it is all along.
+  final ToolchainProbe _toolchain;
+
   final Set<Process> _live = {};
 
   @override
@@ -45,10 +59,16 @@ class SystemProcessRunner implements ProcessRunner {
     required String workingDirectory,
     required Duration timeout,
   }) async {
+    // A wrapper checked into the project (`./gradlew`) is already a path, and
+    // is meant to be resolved against the working directory, not the PATH.
+    final executable = _isPath(command.executable)
+        ? command.executable
+        : await _toolchain.locate(command.executable) ?? command.executable;
+
     final Process process;
     try {
       process = await Process.start(
-        command.executable,
+        executable,
         command.args,
         workingDirectory: workingDirectory,
         // A wrapper script such as ./gradlew needs a shell on Windows; on
@@ -93,6 +113,9 @@ class SystemProcessRunner implements ProcessRunner {
       _live.remove(process);
     }
   }
+
+  bool _isPath(String executable) =>
+      executable.contains('/') || executable.contains(p.separator);
 
   @override
   Future<void> killAll() async {

@@ -63,6 +63,13 @@ class LZh extends L {
   String get actionNotNow => '暂不';
 
   @override
+  String get alreadyRunningTitle => 'Kruftle 已在运行';
+
+  @override
+  String get alreadyRunningBody =>
+      '另一个 Kruftle 窗口正在运行。两个同时清理可能导致构建目录被删除到一半，因此不会打开此窗口。';
+
+  @override
   String get titleBarGlobalCaches => '全局 SDK 缓存';
 
   @override

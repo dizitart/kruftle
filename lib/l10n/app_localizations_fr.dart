@@ -63,6 +63,13 @@ class LFr extends L {
   String get actionNotNow => 'Pas maintenant';
 
   @override
+  String get alreadyRunningTitle => 'Kruftle est déjà ouvert';
+
+  @override
+  String get alreadyRunningBody =>
+      'Une autre fenêtre de Kruftle est en cours d’exécution. Si deux nettoient en même temps, un répertoire de compilation peut rester à moitié supprimé : cette fenêtre ne s’ouvrira donc pas.';
+
+  @override
   String get titleBarGlobalCaches => 'Caches SDK globaux';
 
   @override

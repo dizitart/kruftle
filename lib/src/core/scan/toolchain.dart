@@ -33,6 +33,14 @@ class ToolchainProbe {
   final Map<String, String> _environment;
   final bool _windows;
 
+  /// The probe every part of the app shares.
+  ///
+  /// One instance, because the answer is the same everywhere and the login
+  /// shell it has to start is slow. The cleaner needs the same resolved paths
+  /// the scanner used, or it spawns a bare `flutter` the process PATH cannot
+  /// find — see `SystemProcessRunner`.
+  static final ToolchainProbe shared = ToolchainProbe();
+
   final Map<String, String?> _cache = {};
   List<String>? _searchPath;
 

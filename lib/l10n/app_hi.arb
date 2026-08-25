@@ -21,6 +21,9 @@
   "actionRetry": "फिर कोशिश करें",
   "actionNotNow": "अभी नहीं",
 
+  "alreadyRunningTitle": "Kruftle पहले से खुला है",
+  "alreadyRunningBody": "Kruftle की एक और विंडो पहले से चल रही है। दो विंडो एक साथ सफ़ाई करें तो कोई बिल्ड डायरेक्टरी आधी हटी रह सकती है, इसलिए यह विंडो नहीं खुलेगी।",
+
   "titleBarGlobalCaches": "वैश्विक SDK कैश",
   "titleBarSettings": "सेटिंग्स",
   "titleBarDiskUsage": "डिस्क उपयोग",

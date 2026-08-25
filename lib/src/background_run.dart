@@ -17,6 +17,7 @@ import 'core/scan/sizer.dart';
 import 'core/schedule/notifier.dart';
 import 'core/schedule/schedule.dart';
 import 'core/settings/settings.dart';
+import 'core/single_instance.dart';
 
 /// The whole app when the operating system's scheduler started it.
 ///
@@ -56,6 +57,14 @@ Future<void> runBackgroundCleanup({
     minimumLevel: settings.logLevel,
     keepRotations: settings.logRetentionFiles,
   );
+
+  // A window is open, and it may well be cleaning right now. The scheduled
+  // run is the one that gives way: the person at the keyboard is watching.
+  // Not released — the process exits the moment this returns.
+  if (InstanceLock.tryAcquire(support.path) == null) {
+    log.warning('Background run declined: Kruftle is already open');
+    return;
+  }
 
   final root = schedule.root;
   // The job outliving the setting that created it is the case worth guarding:

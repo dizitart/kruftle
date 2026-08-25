@@ -21,6 +21,9 @@
   "actionRetry": "Повторить",
   "actionNotNow": "Не сейчас",
 
+  "alreadyRunningTitle": "Kruftle уже запущен",
+  "alreadyRunningBody": "Другое окно Kruftle уже работает. Если очистку выполнят сразу два, каталог сборки может остаться удалённым наполовину, поэтому это окно не откроется.",
+
   "titleBarGlobalCaches": "Глобальные кэши SDK",
   "titleBarSettings": "Настройки",
   "titleBarDiskUsage": "Использование диска",

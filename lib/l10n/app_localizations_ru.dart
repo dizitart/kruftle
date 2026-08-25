@@ -63,6 +63,13 @@ class LRu extends L {
   String get actionNotNow => 'Не сейчас';
 
   @override
+  String get alreadyRunningTitle => 'Kruftle уже запущен';
+
+  @override
+  String get alreadyRunningBody =>
+      'Другое окно Kruftle уже работает. Если очистку выполнят сразу два, каталог сборки может остаться удалённым наполовину, поэтому это окно не откроется.';
+
+  @override
   String get titleBarGlobalCaches => 'Глобальные кэши SDK';
 
   @override

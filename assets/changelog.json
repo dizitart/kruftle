@@ -2,6 +2,17 @@
   "kruftle.changelog": 1,
   "versions": [
     {
+      "version": "0.2.1",
+      "date": "2026-08-25",
+      "added": [
+        "Kruftle now runs one window at a time. Opening a second one — or a scheduled background cleanup arriving while a window is open — says so and stands aside, rather than letting two cleanups take the same build directory apart at once."
+      ],
+      "fixed": [
+        "Cleaning works when Kruftle is opened from Finder, the Dock or the Start menu. Every clean command failed with “No such file or directory” there, because an app launched by the desktop does not inherit the PATH your shell sets up, so `cargo`, `flutter`, `mvn` and the rest could not be started at all — even though the scan, which asks your login shell, had just found them. The commands are now run at the exact path the scan found. A run that reported ninety-five failures and nothing reclaimed now cleans.",
+        "The “log exported” message takes itself off the screen again after five seconds, instead of sitting over the report until it was clicked."
+      ]
+    },
+    {
       "version": "0.2.0",
       "date": "2026-08-25",
       "added": [

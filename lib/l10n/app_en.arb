@@ -24,6 +24,12 @@
   "actionRetry": "Retry",
   "actionNotNow": "Not now",
 
+  "alreadyRunningTitle": "Kruftle is already open",
+  "alreadyRunningBody": "Another Kruftle window is running. Two of them cleaning at once could leave a build directory half removed, so this one will not open.",
+  "@alreadyRunningTitle": {
+    "description": "Heading of the window shown when a second Kruftle is launched"
+  },
+
   "titleBarGlobalCaches": "Global SDK caches",
   "titleBarSettings": "Settings",
   "titleBarDiskUsage": "Disk usage",

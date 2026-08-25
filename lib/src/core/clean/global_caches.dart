@@ -246,7 +246,7 @@ class GlobalCacheCleaner {
     this.stepTimeout = const Duration(minutes: 10),
   }) : _runner = runner ?? SystemProcessRunner(),
        _sizer = sizer ?? Sizer(),
-       _toolchain = toolchain ?? ToolchainProbe();
+       _toolchain = toolchain ?? ToolchainProbe.shared;
 
   final ProcessRunner _runner;
   final Sizer _sizer;

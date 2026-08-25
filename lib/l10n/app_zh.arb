@@ -21,6 +21,9 @@
   "actionRetry": "重试",
   "actionNotNow": "暂不",
 
+  "alreadyRunningTitle": "Kruftle 已在运行",
+  "alreadyRunningBody": "另一个 Kruftle 窗口正在运行。两个同时清理可能导致构建目录被删除到一半，因此不会打开此窗口。",
+
   "titleBarGlobalCaches": "全局 SDK 缓存",
   "titleBarSettings": "设置",
   "titleBarDiskUsage": "磁盘占用",

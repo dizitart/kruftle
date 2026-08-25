@@ -63,6 +63,13 @@ class LEs extends L {
   String get actionNotNow => 'Ahora no';
 
   @override
+  String get alreadyRunningTitle => 'Kruftle ya está abierto';
+
+  @override
+  String get alreadyRunningBody =>
+      'Ya hay otra ventana de Kruftle en ejecución. Si dos limpian a la vez, un directorio de compilación puede quedar a medio borrar, así que esta ventana no se abrirá.';
+
+  @override
   String get titleBarGlobalCaches => 'Cachés globales de SDK';
 
   @override

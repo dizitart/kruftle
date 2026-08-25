@@ -21,6 +21,9 @@
   "actionRetry": "Reintentar",
   "actionNotNow": "Ahora no",
 
+  "alreadyRunningTitle": "Kruftle ya está abierto",
+  "alreadyRunningBody": "Ya hay otra ventana de Kruftle en ejecución. Si dos limpian a la vez, un directorio de compilación puede quedar a medio borrar, así que esta ventana no se abrirá.",
+
   "titleBarGlobalCaches": "Cachés globales de SDK",
   "titleBarSettings": "Ajustes",
   "titleBarDiskUsage": "Uso del disco",

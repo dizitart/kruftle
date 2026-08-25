@@ -21,6 +21,9 @@
   "actionRetry": "إعادة المحاولة",
   "actionNotNow": "ليس الآن",
 
+  "alreadyRunningTitle": "\u200fKruftle مفتوح بالفعل",
+  "alreadyRunningBody": "توجد نافذة أخرى من Kruftle قيد التشغيل. تنظيف نافذتين في الوقت نفسه قد يترك مجلد بناء محذوفًا جزئيًا، لذلك لن تُفتح هذه النافذة.",
+
   "titleBarGlobalCaches": "ذاكرات SDK العامة",
   "titleBarSettings": "الإعدادات",
   "titleBarDiskUsage": "استخدام القرص",

@@ -14,12 +14,12 @@ check in §3 to confirm the tree is in the state this document claims.
 
 | | |
 |---|---|
-| **Current milestone** | M24, M25 and M26 done — **v0.2.0 is published**, and self-update is proved; the first-run consent gate landed and v0.2.0 was re-cut |
+| **Current milestone** | **v0.2.1** — the bug that made v0.2.0 clean nothing when launched from Finder is fixed, and Kruftle is now single-instance |
 | **Last updated** | 2026-08-25 |
-| **Build green?** | Yes — 556 tests, analyzer clean, formatter clean, all five release targets green |
+| **Build green?** | Yes — 573 tests, analyzer clean, formatter clean, all five release targets green |
 | **Repo** | https://github.com/dizitart/kruftle (public, GPL-3.0) |
 | **CI** | Green — analyze/test plus release builds on all three OSs |
-| **Released** | [v0.2.0](https://github.com/dizitart/kruftle/releases/tag/v0.2.0) — .dmg, two .exe, two .AppImage, two .deb, checksums.txt |
+| **Released** | [v0.2.1](https://github.com/dizitart/kruftle/releases/tag/v0.2.1) — .dmg, two .exe, two .AppImage, two .deb, checksums.txt |
 
 ---
 
@@ -120,6 +120,46 @@ it is there to be looked at. Regenerate the app icon's rasters with:
 ## 4. Session log
 
 Newest first.
+
+### Session 7 — 2026-08-25
+
+**Landed** — v0.2.1: the reason v0.2.0 reclaimed nothing, the toast that would
+not leave, and one instance at a time.
+
+- **The bug worth the release.** A run over the owner's whole codebase planned
+  96 clean commands and 95 of them failed in about ten milliseconds each with
+  `No such file or directory`. Nothing was reclaimed out of an estimated
+  311 GiB. The one step that worked was `make distclean` — and `make` is the
+  only tool in that list living in `/usr/bin`. The app had been opened from
+  Finder, so its PATH was `/usr/bin:/bin:/usr/sbin:/sbin`, and
+  `Process.start('cargo', …)` could not find a thing. §6 has carried a note
+  about this since session 1 — but only about *probing*. `ToolchainProbe` had
+  known the absolute path of every one of those binaries all along; the
+  cleaner then threw it away and spawned the bare name.
+- **The fix** is three lines: `SystemProcessRunner` asks the probe where the
+  binary is and spawns that path, and the probe is now a shared instance so
+  the login shell is asked once per process rather than once per object.
+  `./gradlew` and `./mvnw` are left alone — they are paths already, and mean
+  the working directory.
+- **Proved against the real bug**, not just in a unit test: the release
+  `.app` was run with `env -i PATH=/usr/bin:/bin:/usr/sbin:/sbin SHELL=/bin/zsh`
+  — a Finder launch in every way that matters — over a tree holding a real
+  `cargo` target and a Flutter `build/`. Both were cleaned. Before the fix the
+  same binary would have failed both.
+- **The toast that never went away.** `SnackBar` has a `persist` flag whose
+  default is `action != null`, and a persistent snack bar *ignores its own
+  duration*. The export toast carries a "Show" action, so it sat over the
+  report until it was clicked. All toasts now go through `showToast`, which
+  pins `persist: false` and five seconds.
+- **One Kruftle at a time.** `InstanceLock` — an advisory `flock` on a file in
+  the support directory, taken by the window and by the background run alike.
+  The OS releases it however the process dies, so there is no stale lock to
+  reason about and no port to collide with. A second launch gets a small
+  window saying so; a scheduled run that arrives while a window is open writes
+  `Background run declined: Kruftle is already open` and stops.
+- **Driven by hand on macOS**: two copies launched, and the window list read
+  back through `CGWindowListCopyWindowInfo` — 1160x780 for the app, 560x340
+  for the notice.
 
 ### Session 6 — 2026-08-25
 
@@ -437,7 +477,9 @@ Append-only. Record *why*, so a future session does not undo it.
 | 2026-08-25 | The screen shots come from a widget test, not a screen recorder | `test/tools/shots.dart` renders the real tree offscreen at a real size. It runs in any locale and either palette without a person, a window server or a video, and the fonts are loaded from the machine so the text is legible rather than the harness's blank boxes |
 | 2026-08-24 | Release notes are English only | Translating every line of every release for ever is not sustainable at this size, and stale translations are worse than English. The parser accepts a per-locale shape should that change |
 | 2026-08-24 | The core carries its own `kSupportedLocaleCodes` list | `Settings` must validate a stored locale but cannot import Flutter. A test asserts it equals the generated `L.supportedLocales`, so the copy cannot drift |
-
+| 2026-08-25 | Clean commands are spawned at the **absolute path the probe found**, never by bare name | A desktop-launched app has a four-directory PATH. Resolving at plan time and spawning at run time were two different answers to the same question, and the app shipped for a release with the second one wrong |
+| 2026-08-25 | One instance, enforced by an advisory file lock in the support directory | Two cleanups over one tree means two build tools writing one directory. A lock file is released by the OS on any exit, unlike a pid file; a loopback socket would risk a firewall prompt for no gain |
+| 2026-08-25 | Every toast goes through `showToast`, which sets `persist: false` | The Material default makes any snack bar with an action permanent, which is never what Kruftle wants, and it is invisible at the call site |
 ---
 
 ## 6. Known gotchas
@@ -466,7 +508,25 @@ Hard-won. Read before debugging something that looks impossible.
 - **A GUI app does not inherit the login shell's `PATH`.** `cargo`, `flutter`
   and friends are put there by shell rc files, so a naive `which` reports every
   SDK as missing and the app silently offers raw deletion for everything.
-  `ToolchainProbe` asks `$SHELL -lic` for the real PATH, once per scan.
+  `ToolchainProbe` asks `$SHELL -lic` for the real PATH, once per scan. **And the answer has to
+  be carried through to `Process.start`** — a resolved path that is then not
+  used is exactly the shape of the v0.2.0 bug: every command failed with
+  `No such file or directory` while the review screen cheerfully reported
+  every toolchain as installed.
+
+- **A `SnackBar` with an action never times out.** `persist` defaults to
+  `action != null`, and a persistent snack bar ignores `duration` entirely.
+  Use `showToast`; do not call `showSnackBar` directly.
+
+- **Dart's file locks exclude processes, not isolates.** POSIX locks are held
+  per process, so a second `lockSync` inside the same Kruftle is granted. That
+  is why `InstanceLock` keeps the granted lock in a static — a
+  `RandomAccessFile` closes itself when collected, and a closed file is an
+  unlocked file — and why its test spawns a real child process.
+
+- **`Platform.resolvedExecutable` under `flutter test` is `flutter_tester`,**
+  which cannot run a script. A test that needs a child Dart process wants
+  `$FLUTTER_ROOT/bin/dart` with `--packages=.dart_tool/package_config.json`.
 
 - **Measuring is far slower than walking.** One Rust `target/` in this codebase
   holds 262,280 files. Never block a screen on sizing; stream it in. Row order

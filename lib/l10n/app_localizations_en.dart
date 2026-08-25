@@ -63,6 +63,13 @@ class LEn extends L {
   String get actionNotNow => 'Not now';
 
   @override
+  String get alreadyRunningTitle => 'Kruftle is already open';
+
+  @override
+  String get alreadyRunningBody =>
+      'Another Kruftle window is running. Two of them cleaning at once could leave a build directory half removed, so this one will not open.';
+
+  @override
   String get titleBarGlobalCaches => 'Global SDK caches';
 
   @override

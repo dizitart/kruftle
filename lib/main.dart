@@ -12,6 +12,8 @@ import 'package:window_manager/window_manager.dart';
 
 import 'src/background_run.dart';
 import 'src/core/schedule/background_service.dart';
+import 'src/core/single_instance.dart';
+import 'src/ui/already_running_page.dart';
 import 'src/ui/app.dart';
 import 'src/ui/state/app_state.dart';
 
@@ -34,6 +36,31 @@ Future<void> main(List<String> args) async {
   // loaded, and the language picker can choose any of the ten.
   await initializeDateFormatting();
 
+  // One Kruftle at a time. Two windows cleaning the same tree would have two
+  // build tools writing one directory, which is how a half-deleted `target/`
+  // happens. Held for the life of the process; the operating system drops it
+  // when we exit, however we exit.
+  final supportDirectory = await getApplicationSupportDirectory();
+  if (InstanceLock.tryAcquire(supportDirectory.path) == null) {
+    await windowManager.waitUntilReadyToShow(
+      const WindowOptions(
+        // Small, but not so small that a long translation of the notice runs
+        // out of room — `already_running_test.dart` holds the minimum to it.
+        size: Size(560, 340),
+        minimumSize: Size(480, 300),
+        center: true,
+        title: 'Kruftle',
+        titleBarStyle: TitleBarStyle.normal,
+      ),
+      () async {
+        await windowManager.show();
+        await windowManager.focus();
+      },
+    );
+    runApp(const AlreadyRunningApp());
+    return;
+  }
+
   // A results table is unreadable below this width, so the window refuses to
   // go there rather than reflowing into something cramped.
   await windowManager.waitUntilReadyToShow(
@@ -52,7 +79,6 @@ Future<void> main(List<String> args) async {
 
   // Both of these are only available asynchronously, and every provider wants
   // them synchronously, so they are resolved once here and injected.
-  final supportDirectory = await getApplicationSupportDirectory();
   final preferences = await SharedPreferences.getInstance();
   final packageInfo = await PackageInfo.fromPlatform();
 

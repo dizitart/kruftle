@@ -114,7 +114,7 @@ class ScanFailed extends ScanEvent {
 class ProjectScanner {
   ProjectScanner({StackRegistry? registry, ToolchainProbe? toolchain})
     : _registry = registry ?? const StackRegistry(),
-      _toolchain = toolchain ?? ToolchainProbe();
+      _toolchain = toolchain ?? ToolchainProbe.shared;
 
   final StackRegistry _registry;
   final ToolchainProbe _toolchain;

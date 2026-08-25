@@ -7,6 +7,28 @@ import '../../core/models/stack.dart';
 import '../../core/scan/toolchain.dart';
 import '../theme.dart';
 
+/// Shows a floating message that takes itself away again.
+///
+/// Kruftle's own function rather than `showSnackBar` at each call site because
+/// of one default: a `SnackBar` carrying an action has `persist` true, and a
+/// persistent snack bar ignores its own `duration` and stays on screen until
+/// the user dismisses it. The export toast sat over the report indefinitely.
+void showToast(
+  BuildContext context,
+  String message, {
+  SnackBarAction? action,
+  Duration duration = const Duration(seconds: 5),
+}) => ScaffoldMessenger.of(context).showSnackBar(
+  SnackBar(
+    content: Text(message),
+    behavior: SnackBarBehavior.floating,
+    width: 420,
+    duration: duration,
+    persist: false,
+    action: action,
+  ),
+);
+
 /// A small, quiet label. Used for stack names and statuses, where a full
 /// Material chip would dominate a dense table row.
 class Tag extends StatelessWidget {

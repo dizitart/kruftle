@@ -21,6 +21,9 @@
   "actionRetry": "再試行",
   "actionNotNow": "後で",
 
+  "alreadyRunningTitle": "Kruftle はすでに起動しています",
+  "alreadyRunningBody": "別の Kruftle ウィンドウが実行中です。同時に 2 つがクリーンアップすると、ビルドディレクトリが中途半端に削除される恐れがあるため、このウィンドウは開きません。",
+
   "titleBarGlobalCaches": "グローバル SDK キャッシュ",
   "titleBarSettings": "設定",
   "titleBarDiskUsage": "ディスク使用量",

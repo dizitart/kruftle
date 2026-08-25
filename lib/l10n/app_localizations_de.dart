@@ -63,6 +63,13 @@ class LDe extends L {
   String get actionNotNow => 'Jetzt nicht';
 
   @override
+  String get alreadyRunningTitle => 'Kruftle ist bereits geöffnet';
+
+  @override
+  String get alreadyRunningBody =>
+      'Ein anderes Kruftle-Fenster läuft bereits. Wenn zwei gleichzeitig aufräumen, kann ein Build-Verzeichnis halb gelöscht zurückbleiben — dieses Fenster wird daher nicht geöffnet.';
+
+  @override
   String get titleBarGlobalCaches => 'Globale SDK-Caches';
 
   @override

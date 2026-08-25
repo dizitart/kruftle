@@ -63,6 +63,13 @@ class LAr extends L {
   String get actionNotNow => 'ليس الآن';
 
   @override
+  String get alreadyRunningTitle => '‏Kruftle مفتوح بالفعل';
+
+  @override
+  String get alreadyRunningBody =>
+      'توجد نافذة أخرى من Kruftle قيد التشغيل. تنظيف نافذتين في الوقت نفسه قد يترك مجلد بناء محذوفًا جزئيًا، لذلك لن تُفتح هذه النافذة.';
+
+  @override
   String get titleBarGlobalCaches => 'ذاكرات SDK العامة';
 
   @override

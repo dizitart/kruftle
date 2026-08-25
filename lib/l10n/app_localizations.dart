@@ -221,6 +221,18 @@ abstract class L {
   /// **'Not now'**
   String get actionNotNow;
 
+  /// Heading of the window shown when a second Kruftle is launched
+  ///
+  /// In en, this message translates to:
+  /// **'Kruftle is already open'**
+  String get alreadyRunningTitle;
+
+  /// No description provided for @alreadyRunningBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Another Kruftle window is running. Two of them cleaning at once could leave a build directory half removed, so this one will not open.'**
+  String get alreadyRunningBody;
+
   /// No description provided for @titleBarGlobalCaches.
   ///
   /// In en, this message translates to:

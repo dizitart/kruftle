@@ -21,6 +21,9 @@
   "actionRetry": "Erneut versuchen",
   "actionNotNow": "Jetzt nicht",
 
+  "alreadyRunningTitle": "Kruftle ist bereits geöffnet",
+  "alreadyRunningBody": "Ein anderes Kruftle-Fenster läuft bereits. Wenn zwei gleichzeitig aufräumen, kann ein Build-Verzeichnis halb gelöscht zurückbleiben — dieses Fenster wird daher nicht geöffnet.",
+
   "titleBarGlobalCaches": "Globale SDK-Caches",
   "titleBarSettings": "Einstellungen",
   "titleBarDiskUsage": "Speicherbelegung",

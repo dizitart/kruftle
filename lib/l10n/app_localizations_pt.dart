@@ -63,6 +63,13 @@ class LPt extends L {
   String get actionNotNow => 'Agora não';
 
   @override
+  String get alreadyRunningTitle => 'O Kruftle já está aberto';
+
+  @override
+  String get alreadyRunningBody =>
+      'Outra janela do Kruftle está em execução. Se duas limparem ao mesmo tempo, um diretório de compilação pode ficar meio apagado, por isso esta janela não será aberta.';
+
+  @override
   String get titleBarGlobalCaches => 'Caches globais de SDK';
 
   @override
