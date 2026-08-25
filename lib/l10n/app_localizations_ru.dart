@@ -490,7 +490,7 @@ class LRu extends L {
 
   @override
   String updateReady(String version) {
-    return 'Kruftle $version проверен и готов. Установщик открыт.';
+    return 'Kruftle $version проверен. Идёт установка…';
   }
 
   @override

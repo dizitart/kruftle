@@ -483,7 +483,7 @@ class LDe extends L {
 
   @override
   String updateReady(String version) {
-    return 'Kruftle $version ist geprüft und bereit. Das Installationsprogramm wurde geöffnet.';
+    return 'Kruftle $version ist geprüft. Es wird jetzt installiert…';
   }
 
   @override

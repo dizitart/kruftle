@@ -489,7 +489,7 @@ class LAr extends L {
 
   @override
   String updateReady(String version) {
-    return '‏Kruftle $version مُتحقَّق منه وجاهز. فُتح المثبِّت.';
+    return '‏Kruftle $version مُتحقَّق منه. يجري تثبيته الآن…';
   }
 
   @override

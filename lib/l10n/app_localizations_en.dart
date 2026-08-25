@@ -480,7 +480,7 @@ class LEn extends L {
 
   @override
   String updateReady(String version) {
-    return 'Kruftle $version is verified and ready. The installer has been opened.';
+    return 'Kruftle $version is verified. Installing it now…';
   }
 
   @override

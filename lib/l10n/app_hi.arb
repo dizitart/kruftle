@@ -141,7 +141,7 @@
 
   "updateAvailable": "Kruftle {version} उपलब्ध है ({size})।",
   "updateDownloading": "{version} डाउनलोड हो रहा है… {percent}%",
-  "updateReady": "Kruftle {version} सत्यापित और तैयार है। इंस्टॉलर खुल गया है।",
+  "updateReady": "Kruftle {version} सत्यापित है। इसे अभी इंस्टॉल किया जा रहा है…",
   "updateFailed": "अपडेट विफल रहा।",
   "updateAction": "अपडेट करें",
 

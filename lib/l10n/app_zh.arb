@@ -141,7 +141,7 @@
 
   "updateAvailable": "Kruftle {version} 可用（{size}）。",
   "updateDownloading": "正在下载 {version}… {percent}%",
-  "updateReady": "Kruftle {version} 已校验完毕，安装程序已打开。",
+  "updateReady": "Kruftle {version} 已校验完毕，正在安装…",
   "updateFailed": "更新失败。",
   "updateAction": "更新",
 

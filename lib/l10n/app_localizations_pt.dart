@@ -482,7 +482,7 @@ class LPt extends L {
 
   @override
   String updateReady(String version) {
-    return 'Kruftle $version está verificado e pronto. O instalador foi aberto.';
+    return 'Kruftle $version está verificado. A instalar agora…';
   }
 
   @override

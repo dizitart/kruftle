@@ -14,9 +14,9 @@ check in §3 to confirm the tree is in the state this document claims.
 
 | | |
 |---|---|
-| **Current milestone** | **v0.2.1** — the bug that made v0.2.0 clean nothing when launched from Finder is fixed, and Kruftle is now single-instance |
+| **Current milestone** | **v0.2.1** (re-cut) — the Finder-launch bug that made v0.2.0 clean nothing, single-instance, and a macOS self-update that installs itself instead of asking for a drag |
 | **Last updated** | 2026-08-25 |
-| **Build green?** | Yes — 573 tests, analyzer clean, formatter clean, all five release targets green |
+| **Build green?** | Yes — 577 tests, analyzer clean, formatter clean, all five release targets green |
 | **Repo** | https://github.com/dizitart/kruftle (public, GPL-3.0) |
 | **CI** | Green — analyze/test plus release builds on all three OSs |
 | **Released** | [v0.2.1](https://github.com/dizitart/kruftle/releases/tag/v0.2.1) — .dmg, two .exe, two .AppImage, two .deb, checksums.txt |
@@ -63,10 +63,11 @@ Legend: `[ ]` not started · `[~]` in progress · `[x]` done & green
 
 ### What is left
 
-1. **`Updater.install` on Windows and Linux.** The macOS half is now proved
-   end to end — see session 5 — but running the `.exe` silently and replacing
-   a running AppImage in place have still never happened. Both need a machine
-   of that kind with an older build installed on it.
+1. **`Updater.install` on Windows and Linux.** macOS now replaces its own
+   bundle, and the swap script is driven against a real `.dmg` and a real
+   process in `mac_swap_test.dart` — but running the `.exe` silently and
+   replacing a running AppImage in place have still never happened. Both need
+   a machine of that kind with an older build installed on it.
 2. **Windows and Linux run-throughs generally** — only macOS has been driven
    by hand. Worth checking: PATH probing without a login shell on Windows, the
    `\\?\` long-path case noted in §6, and the background job on both — the
@@ -90,7 +91,7 @@ Run this first, every session. It is the definition of "the tree is healthy".
 cd /Volumes/External/codebase/kruftle && dart format --output=none --set-exit-if-changed lib test tool && flutter analyze --fatal-infos && flutter test
 ```
 
-Expected: formatter reports 0 changed, `No issues found!`, then 554 passing.
+Expected: formatter reports 0 changed, `No issues found!`, then 577 passing.
 
 `lib/l10n/app_localizations*.dart` is generated and committed. Regenerate it
 with `flutter gen-l10n` after editing any `.arb`; the analyzer will not warn if
@@ -120,6 +121,34 @@ it is there to be looked at. Regenerate the app icon's rasters with:
 ## 4. Session log
 
 Newest first.
+
+### Session 8 — 2026-08-25
+
+**Landed** — v0.2.1 re-cut: the macOS update installs itself.
+
+- **The bug.** `Updater.install` on macOS did one thing: `open` the `.dmg`.
+  Finder then refused the drag into Applications — *the app is already
+  running* — because it was: Kruftle had opened the image and stayed up. The
+  update could not be completed by the only route the app offered.
+- **The fix** is what Sparkle does, minus Sparkle: `Updater.macSwapScript`, a
+  detached `/bin/sh` that waits for our PID to go, mounts the image, `ditto`s
+  the new bundle beside the old one, swaps them, and `open`s the result.
+  `install()` now returns whether the caller must quit, and
+  `UpdateController` calls `exit(0)` when it says so — the quit is the
+  precondition for the swap, not a courtesy.
+- **Nothing is lost when it fails.** The old bundle is moved aside, not
+  deleted, and moved back if the new one will not take its place. An
+  Applications folder this user cannot write to, an unreadable image, a
+  process that will not exit within ten seconds — every one of those ends at
+  `open "$dmg"`, which is precisely the old behaviour.
+- **No shell interpolation.** Paths go in as `$1 $2 $3`, so a release asset
+  cannot name itself into a command.
+- **Tested against the real thing.** `mac_swap_test.dart` builds a `.dmg` with
+  `hdiutil`, installs a fake old bundle, holds it with a live process, and
+  asserts nothing moves until that process dies — the bug itself, as an
+  assertion. `open` is stubbed through `PATH` so the suite launches nothing.
+- **The banner no longer says the installer has been opened**, in all ten
+  locales, because on macOS it now has not been.
 
 ### Session 7 — 2026-08-25
 

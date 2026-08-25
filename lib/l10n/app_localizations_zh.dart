@@ -463,7 +463,7 @@ class LZh extends L {
 
   @override
   String updateReady(String version) {
-    return 'Kruftle $version 已校验完毕，安装程序已打开。';
+    return 'Kruftle $version 已校验完毕，正在安装…';
   }
 
   @override

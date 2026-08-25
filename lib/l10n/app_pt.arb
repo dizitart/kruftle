@@ -141,7 +141,7 @@
 
   "updateAvailable": "Kruftle {version} está disponível ({size}).",
   "updateDownloading": "Baixando {version}… {percent}%",
-  "updateReady": "Kruftle {version} está verificado e pronto. O instalador foi aberto.",
+  "updateReady": "Kruftle {version} está verificado. A instalar agora…",
   "updateFailed": "A atualização falhou.",
   "updateAction": "Atualizar",
 

@@ -484,7 +484,7 @@ class LEs extends L {
 
   @override
   String updateReady(String version) {
-    return 'Kruftle $version está verificado y listo. Se ha abierto el instalador.';
+    return 'Kruftle $version está verificado. Instalándolo ahora…';
   }
 
   @override

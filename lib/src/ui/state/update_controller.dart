@@ -76,7 +76,10 @@ class UpdateController extends Notifier<UpdateState> {
         update: update,
         installer: installer,
       );
-      await updater.install(installer);
+      // On macOS the swap is waiting for this process to go away before it can
+      // replace the bundle we are running out of; staying alive is exactly the
+      // "the app is already running" failure.
+      if (await updater.install(installer)) exit(0);
     } on UpdateFailure catch (e) {
       ref.read(activityLogProvider).error('Update failed', {
         'reason': e.message,

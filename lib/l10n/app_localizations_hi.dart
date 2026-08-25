@@ -481,7 +481,7 @@ class LHi extends L {
 
   @override
   String updateReady(String version) {
-    return 'Kruftle $version सत्यापित और तैयार है। इंस्टॉलर खुल गया है।';
+    return 'Kruftle $version सत्यापित है। इसे अभी इंस्टॉल किया जा रहा है…';
   }
 
   @override

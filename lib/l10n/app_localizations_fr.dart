@@ -484,7 +484,7 @@ class LFr extends L {
 
   @override
   String updateReady(String version) {
-    return 'Kruftle $version est vérifié et prêt. L’installateur a été ouvert.';
+    return 'Kruftle $version est vérifié. Installation en cours…';
   }
 
   @override

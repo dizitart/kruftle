@@ -141,7 +141,7 @@
 
   "updateAvailable": "Доступен Kruftle {version} ({size}).",
   "updateDownloading": "Загрузка {version}… {percent} %",
-  "updateReady": "Kruftle {version} проверен и готов. Установщик открыт.",
+  "updateReady": "Kruftle {version} проверен. Идёт установка…",
   "updateFailed": "Не удалось обновить.",
   "updateAction": "Обновить",
 

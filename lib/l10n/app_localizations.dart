@@ -878,7 +878,7 @@ abstract class L {
   /// No description provided for @updateReady.
   ///
   /// In en, this message translates to:
-  /// **'Kruftle {version} is verified and ready. The installer has been opened.'**
+  /// **'Kruftle {version} is verified. Installing it now…'**
   String updateReady(String version);
 
   /// No description provided for @updateFailed.

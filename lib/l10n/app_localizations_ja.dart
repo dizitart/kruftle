@@ -467,7 +467,7 @@ class LJa extends L {
 
   @override
   String updateReady(String version) {
-    return 'Kruftle $version の検証が完了しました。インストーラを開きました。';
+    return 'Kruftle $version の検証が完了しました。インストール中です…';
   }
 
   @override

@@ -141,7 +141,7 @@
 
   "updateAvailable": "‏Kruftle {version} متاح ({size}).",
   "updateDownloading": "جارٍ تنزيل {version}… {percent}٪",
-  "updateReady": "‏Kruftle {version} مُتحقَّق منه وجاهز. فُتح المثبِّت.",
+  "updateReady": "‏Kruftle {version} مُتحقَّق منه. يجري تثبيته الآن…",
   "updateFailed": "أخفق التحديث.",
   "updateAction": "تحديث",
 

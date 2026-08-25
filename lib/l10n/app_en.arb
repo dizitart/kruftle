@@ -241,7 +241,7 @@
       "percent": { "type": "int" }
     }
   },
-  "updateReady": "Kruftle {version} is verified and ready. The installer has been opened.",
+  "updateReady": "Kruftle {version} is verified. Installing it now…",
   "@updateReady": {
     "placeholders": { "version": { "type": "String" } }
   },

@@ -48,8 +48,9 @@ class UpdateFailure implements Exception {
 ///
 /// Deliberately not Sparkle/WinSparkle: those need an appcast and, on macOS, a
 /// Developer ID signature to work smoothly. This does the same job identically
-/// on all three platforms with no extra infrastructure, at the cost of handing
-/// off to the platform installer rather than swapping the binary in place.
+/// on all three platforms with no extra infrastructure: the installer is
+/// fetched, verified against the release's own checksum, and applied without
+/// the user having to drag anything anywhere.
 class Updater {
   Updater({
     required this.currentVersion,
@@ -294,11 +295,69 @@ class Updater {
     return file;
   }
 
+  /// The `.app` bundle [executable] is running out of, or null when this build
+  /// is not inside one — a `flutter run`, or a bare binary.
+  ///
+  /// `/Applications/Kruftle.app/Contents/MacOS/Kruftle` is three directories
+  /// below the bundle, and that layout is fixed by macOS.
+  static String? bundlePath(String executable) {
+    final bundle = p.dirname(p.dirname(p.dirname(executable)));
+    return p.extension(bundle) == '.app' ? bundle : null;
+  }
+
+  /// Replaces the running `.app` with the one inside the mounted disk image,
+  /// then starts it again.
+  ///
+  /// Run detached, by `/bin/sh`, because nothing in it can happen while Kruftle
+  /// is alive: macOS will not let a bundle be replaced underneath a process
+  /// running out of it, which is the "the app is already running" refusal
+  /// Finder gives when the drag is done by hand. So it waits for us to go, and
+  /// only then swaps. This is what Sparkle does with its own helper tool; the
+  /// helper here is nine lines of shell because there is nothing else to do.
+  ///
+  /// Every path arrives as a positional argument, never interpolated, so a
+  /// release asset cannot name itself into a shell command.
+  ///
+  /// The old bundle is moved aside rather than deleted, and moved back if the
+  /// new one cannot take its place — a failed update leaves the working Kruftle
+  /// where it was. If the swap cannot even be attempted (`/Applications` not
+  /// writable by this user), the disk image is opened instead and the user is
+  /// where they would have been anyway.
+  static const macSwapScript = r'''
+      dmg=$1; app=$2; pid=$3
+      waited=0
+      while kill -0 "$pid" 2>/dev/null && [ "$waited" -lt 100 ]; do
+        sleep 0.1; waited=$((waited + 1))
+      done
+      kill -0 "$pid" 2>/dev/null && { open "$dmg"; exit 0; }
+
+      mount=$(mktemp -d /tmp/kruftle-update.XXXXXX)
+      hdiutil attach -nobrowse -readonly -noverify -mountpoint "$mount" "$dmg" \
+        >/dev/null || { rmdir "$mount"; open "$dmg"; exit 0; }
+      new=$(ls -d "$mount"/*.app 2>/dev/null | head -1)
+
+      staging=$app.new
+      swapped=
+      rm -rf "$staging" "$app.old"
+      if [ -n "$new" ] && ditto "$new" "$staging" 2>/dev/null &&
+         mv "$app" "$app.old" 2>/dev/null; then
+        if mv "$staging" "$app" 2>/dev/null; then
+          swapped=1
+        else
+          mv "$app.old" "$app"
+        fi
+      fi
+      rm -rf "$staging" "$app.old"
+      hdiutil detach "$mount" -quiet 2>/dev/null; rmdir "$mount" 2>/dev/null
+
+      if [ -n "$swapped" ]; then open "$app"; else open "$dmg"; fi
+''';
+
   /// Hands the verified installer to the OS.
   ///
-  /// The app is expected to exit immediately afterwards: on every platform the
-  /// installer needs to replace files this process is holding open.
-  Future<void> install(File installer) async {
+  /// Returns true when Kruftle must quit for the install to finish, which on
+  /// macOS it must: the swap is waiting for this process to exit.
+  Future<bool> install(File installer) async {
     if (_windows) {
       // Inno Setup: run silently, restart the app when finished.
       await Process.start(installer.path, [
@@ -307,12 +366,24 @@ class Updater {
         '/RESTARTAPPLICATIONS',
       ], mode: ProcessStartMode.detached);
     } else if (_macOS) {
-      // Mounting the .dmg and showing it is as far as we go: dragging the app
-      // to /Applications is the user's decision, and doing it for them means
-      // writing into a directory we were never granted.
-      await Process.start('open', [
+      final bundle = bundlePath(Platform.resolvedExecutable);
+      if (bundle == null) {
+        // Not running out of a bundle we could replace. Show the disk image
+        // and let the drag be done by hand, as before.
+        await Process.start('open', [
+          installer.path,
+        ], mode: ProcessStartMode.detached);
+        return false;
+      }
+      await Process.start('/bin/sh', [
+        '-c',
+        macSwapScript,
+        'kruftle-update',
         installer.path,
+        bundle,
+        '$pid',
       ], mode: ProcessStartMode.detached);
+      return true;
     } else {
       // AppImage: make it executable and replace the running one in place.
       await Process.run('chmod', ['+x', installer.path]);
@@ -325,5 +396,6 @@ class Updater {
         ], mode: ProcessStartMode.detached);
       }
     }
+    return false;
   }
 }
