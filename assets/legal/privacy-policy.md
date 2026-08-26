@@ -54,7 +54,12 @@ Scanning, detection, measurement, planning, cleaning and reporting all run
 entirely locally. Kruftle reads directory listings under the folder you
 choose, works out which build tools produced what it finds, and runs those
 tools' own clean commands or deletes their allow-listed output directories.
-No part of this involves a network.
+On a separate screen, and with its own confirmation, it can also empty the
+shared build-tool caches in your home directory — the Gradle caches, the
+Cargo registry, the local Maven repository, the pub cache, the npm cache,
+the Go module cache and Xcode's DerivedData. Those sit outside any folder
+you choose; the Terms of Service describe what that means and what it
+costs. No part of any of this involves a network.
 
 The following are stored on your computer only, in the App's own settings
 and support directories:

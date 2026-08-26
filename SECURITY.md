@@ -23,9 +23,17 @@ wrong ones:
   SHA-256 does not match the digest published in the release's `checksums.txt`.
 
 Untrusted input worth noting: Kruftle reads directory names and lockfiles from
-whatever tree it is pointed at, and runs build tools it finds on `PATH`. A
-crafted directory tree that makes it run something unintended, or delete
-outside its allow-list, is a valid report.
+whatever tree it is pointed at, and two of the commands it runs come from that
+tree rather than from `PATH` — a project's own `./gradlew` or `./mvnw` wrapper,
+and the `clean` script a `package.json` declares. Both execute under the user's
+account. That is deliberate (it is the version of the tool the project expects),
+and it is documented in the Terms, but it means a crafted repository is inside
+the threat model: anything that widens what those commands can reach, or that
+makes Kruftle run one where it should not, is a valid report.
+
+Cleanup profiles imported from a file are untrusted input too. A profile carries
+a command, and the path validation is what stands between an imported profile
+and an arbitrary deletion — a profile that defeats it is a valid report.
 
 ## What is out of scope
 
