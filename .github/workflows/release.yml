@@ -267,3 +267,22 @@ jobs:
             --generate-notes \
             --verify-tag || \
           gh release upload "v$VERSION" dist/* --repo "$GITHUB_REPOSITORY" --clobber
+
+      # kruftle.dizitart.com rewrites its download links, changelog and legal
+      # pages from this release and redeploys itself. GITHUB_TOKEN cannot reach
+      # another repository, so this needs a token that can. Without the secret
+      # the step says so and stands down; the site's own six-hourly check picks
+      # the release up instead.
+      - name: Tell the site there is a new release
+        env:
+          GH_TOKEN: ${{ secrets.SITE_SYNC_TOKEN }}
+          VERSION: ${{ needs.version.outputs.version }}
+        run: |
+          if [ -z "$GH_TOKEN" ]; then
+            echo "no SITE_SYNC_TOKEN set; the site will pick this release up"
+            echo "on its own six-hourly check instead."
+            exit 0
+          fi
+          gh api repos/dizitart/kruftle-site/dispatches --input - <<JSON
+          {"event_type":"kruftle-release","client_payload":{"version":"$VERSION"}}
+          JSON
