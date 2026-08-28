@@ -104,6 +104,21 @@ jobs:
           lipo -archs "$BINARY" | grep -q arm64
           lipo -archs "$BINARY" | grep -q x86_64
 
+      # The archive the in-app updater applies, and the reason a macOS update no
+      # longer opens a disk image. `ditto`, not `zip`: it is the only archiver
+      # on macOS that keeps a bundle's symlinks, resource forks and executable
+      # bits intact, and `ditto -x -k` on the other end restores them.
+      # Made after the ad-hoc signature, so the signature travels with it.
+      - name: Package update archive
+        run: |
+          VERSION=${{ needs.version.outputs.version }}
+          mkdir -p dist
+          ditto -c -k --sequesterRsrc --keepParent \
+            build/macos/Build/Products/Release/Kruftle.app \
+            "dist/Kruftle-$VERSION-macos.zip"
+
+      # Still published: it is how someone installs Kruftle the first time, and
+      # it is what a copy running from an older release knows how to apply.
       - name: Package .dmg
         run: |
           VERSION=${{ needs.version.outputs.version }}
@@ -114,7 +129,11 @@ jobs:
             -format UDZO "dist/Kruftle-$VERSION-macos.dmg"
 
       - uses: actions/upload-artifact@v7
-        with: { name: macos, path: dist/*.dmg }
+        with:
+          name: macos
+          path: |
+            dist/*.dmg
+            dist/*.zip
 
   windows:
     name: Windows ${{ matrix.arch }}

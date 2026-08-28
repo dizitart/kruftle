@@ -149,12 +149,16 @@ knew what operating system it was on but not how it had been *installed*.
   helpers, and every one of them puts the old copy back if it cannot finish.
 - **`InstallTarget` is the new idea.** Not "what platform is this" but "where
   does this copy live and can it write there". It answers with the asset
-  extensions this copy can actually apply, best first. A per-user Windows
-  install gets `['.zip', '.exe']`; `C:\Program Files` gets `['.exe']` alone; a
-  running AppImage gets `['.AppImage']`; a tarball install gets `['.tar.gz']`; a
-  `.deb` under `/usr` gets `['.deb']`. The probe is a write, not a permission
-  bit, and it tests the install directory's **parent**, because that is what the
-  rename needs.
+  extensions this copy can actually apply, best first. A macOS bundle gets
+  `['.zip', '.dmg']`; a per-user Windows install gets `['.zip', '.exe']`;
+  `C:\Program Files` gets `['.exe']` alone; a running AppImage gets
+  `['.AppImage']`; a tarball install gets `['.tar.gz']`; a `.deb` under `/usr`
+  gets `['.deb']`. The probe is a write, not a permission bit, and it tests the
+  install directory's **parent**, because that is what the rename needs.
+  It also carries a `HostPlatform`: macOS and Windows both publish a `.zip` now,
+  so the extension alone can no longer say which helper unpacks one, and a
+  Windows build must not take the universal macOS archive when its own is
+  missing from a release. A test holds that last one.
 - **The `.deb` bug falls straight out of that.** A Debian install was being
   offered an AppImage it had nowhere to put — the old code asked "not Windows,
   not macOS, so AppImage". It now asks for a `.deb` and hands it to the
@@ -703,6 +707,8 @@ Append-only. Record *why*, so a future session does not undo it.
 | 2026-08-25 | Every toast goes through `showToast`, which sets `persist: false` | The Material default makes any snack bar with an action permanent, which is never what Kruftle wants, and it is invisible at the call site |
 ---
 | 2026-08-28 | The updater asks *how Kruftle is installed*, not what OS it is on | "Not Windows, not macOS, therefore AppImage" is what handed a `.deb` install a file it had nowhere to put. `InstallTarget` answers the only question that matters: what can this copy actually apply, given where it lives and whether it can write there |
+| 2026-08-28 | The updater sorts candidate releases by version, not by GitHub's listing order | GitHub lists by publication date. A patch cut on an older line after a newer release sorts first there, so taking the first newer entry offers a stale release and an out-of-date app climbs back one at a time instead of arriving at the latest |
+| 2026-08-28 | macOS updates from a `ditto` archive, with the `.dmg` only as a fallback | The disk-image swap worked, but mounting an image at every update is the thing this feature exists to stop. `ditto` because it is the only macOS archiver that preserves a bundle's symlinks, resource forks and executable bits |
 | 2026-08-28 | Update by unpacking an archive over the install, not by running an installer | An installer is a second UI, a second set of prompts and, on Windows, an elevation prompt for something the user already agreed to. Where the copy is writable — which per-user installs make the normal case — a rename is enough, and the next launch is the new version |
 | 2026-08-28 | A copy that cannot write next to itself is offered its own packaging's installer | `C:\Program Files` and `/usr` need a password. Downloading an archive we cannot unpack there would be a progress bar that ends in nothing; asking is the honest failure |
 | 2026-08-28 | Windows installs per-user by default | It is what makes the no-installer path work without elevation, and it is what VS Code does for the same reason. `/ALLUSERS` still gives a machine-wide install for the Store and for managed fleets |

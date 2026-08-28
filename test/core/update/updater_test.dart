@@ -90,6 +90,7 @@ void main() {
       client: client,
       includePreReleases: preReleases,
       target: const InstallTarget(
+        platform: HostPlatform.macOS,
         assetSuffixes: ['.dmg'],
         swapDirectory: '/Applications/Kruftle.app',
       ),
@@ -114,6 +115,91 @@ void main() {
         await updaterWith(clientFor(releasesJson()), current: '2.0.0').check(),
         isNull,
       );
+    });
+
+    group('picks the latest release, not the next one up', () {
+      /// Several releases at once, in the order GitHub lists them: by
+      /// publication date, newest first.
+      String manyReleases(List<String> tags) => jsonEncode([
+        for (final tag in tags)
+          {
+            'tag_name': tag,
+            'draft': false,
+            'prerelease': false,
+            'body': '',
+            'assets': [
+              for (final name in [
+                'Kruftle-${tag.substring(1)}-macos.dmg',
+                'checksums.txt',
+              ])
+                {
+                  'name': name,
+                  'size': 1024,
+                  'browser_download_url': 'https://example.test/$name',
+                },
+            ],
+          },
+      ]);
+
+      MockClient clientForMany(String releases) => MockClient((request) async {
+        if (request.url.host == 'api.github.com') {
+          return http.Response(releases, 200);
+        }
+        // Every asset is listed, so whichever release is chosen verifies.
+        return http.Response(
+          [
+            for (final v in const ['1.1.0', '1.2.0', '1.3.0', '2.0.0'])
+              '$digest  Kruftle-$v-macos.dmg',
+          ].join('\n'),
+          200,
+        );
+      });
+
+      test('several versions ahead, it offers the newest', () async {
+        final update = await updaterWith(
+          clientForMany(manyReleases(['v2.0.0', 'v1.3.0', 'v1.2.0', 'v1.1.0'])),
+        ).check();
+
+        expect(update!.version.toString(), '2.0.0');
+      });
+
+      test('a patch published after a newer release does not win', () async {
+        // The real trap. GitHub lists by publication date, so 1.1.0 cut on an
+        // old branch *after* 2.0.0 shipped comes back first. Taking the first
+        // newer entry would offer 1.1.0, and an app would climb one stale
+        // release at a time instead of arriving at the latest.
+        final update = await updaterWith(
+          clientForMany(manyReleases(['v1.1.0', 'v2.0.0', 'v1.3.0'])),
+        ).check();
+
+        expect(update!.version.toString(), '2.0.0');
+      });
+
+      test('it drops to the next one down when the newest has no asset', () {
+        // Not the same thing as preferring an older release: a release this
+        // platform cannot install is not an upgrade it can be offered.
+        final releases = jsonEncode([
+          {
+            'tag_name': 'v3.0.0',
+            'draft': false,
+            'prerelease': false,
+            'body': '',
+            'assets': const <Map<String, Object?>>[],
+          },
+          ...(jsonDecode(manyReleases(['v2.0.0'])) as List<dynamic>),
+        ]);
+
+        expectLater(
+          updaterWith(clientForMany(releases)).check(),
+          completion(
+            isA<AvailableUpdate>().having(
+              (u) => u.version.toString(),
+              'version',
+              '2.0.0',
+            ),
+          ),
+        );
+      });
     });
 
     test('ignores drafts', () async {
@@ -168,16 +254,31 @@ void main() {
       }
 
       expect(
-        await assetFor(const InstallTarget(assetSuffixes: ['.dmg'])),
+        await assetFor(
+          const InstallTarget(
+            platform: HostPlatform.macOS,
+            assetSuffixes: ['.dmg'],
+          ),
+        ),
         endsWith('.dmg'),
       );
       expect(
-        await assetFor(const InstallTarget(assetSuffixes: ['.zip', '.exe'])),
+        await assetFor(
+          const InstallTarget(
+            platform: HostPlatform.windows,
+            assetSuffixes: ['.zip', '.exe'],
+          ),
+        ),
         endsWith('.exe'),
         reason: 'this release carries no archive, so the installer stands in',
       );
       expect(
-        await assetFor(const InstallTarget(assetSuffixes: ['.AppImage'])),
+        await assetFor(
+          const InstallTarget(
+            platform: HostPlatform.linux,
+            assetSuffixes: ['.AppImage'],
+          ),
+        ),
         endsWith('.AppImage'),
       );
     });
@@ -230,7 +331,10 @@ void main() {
 
     Updater downloaderFor(int status) => Updater(
       currentVersion: Version.tryParse('1.0.0')!,
-      target: const InstallTarget(assetSuffixes: ['.dmg']),
+      target: const InstallTarget(
+        platform: HostPlatform.macOS,
+        assetSuffixes: ['.dmg'],
+      ),
       client: MockClient((_) async => http.Response.bytes(payload, status)),
     );
 

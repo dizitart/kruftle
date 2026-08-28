@@ -201,6 +201,125 @@ void main() {
     );
   });
 
+  group('macArchiveSwapScript', () {
+    /// A `.app` is a directory with a fixed shape, which is all the swap cares
+    /// about. The nested symlink is the reason `ditto` is used rather than
+    /// `zip`: an archiver that flattens it produces a bundle that will not
+    /// launch.
+    String bundle(String directory, String marker) {
+      final app = p.join(directory, 'Kruftle.app');
+      writeKruftle(p.join(app, 'Contents', 'MacOS', 'Kruftle'), marker);
+      File(p.join(app, 'Contents', 'Info.plist'))
+        ..createSync(recursive: true)
+        ..writeAsStringSync(marker);
+      final versions = Directory(
+        p.join(app, 'Contents', 'Frameworks', 'A.framework', 'Versions', 'A'),
+      )..createSync(recursive: true);
+      Link(p.join(versions.parent.path, 'Current')).createSync('A');
+      return app;
+    }
+
+    Future<String> archive(String marker) async {
+      final staging = Directory(p.join(work.path, 'staging'))
+        ..createSync(recursive: true);
+      final app = bundle(staging.path, marker);
+      final zip = p.join(work.path, 'Kruftle-9.9.9-macos.zip');
+      final packed = await Process.run('ditto', [
+        '-c',
+        '-k',
+        '--sequesterRsrc',
+        '--keepParent',
+        app,
+        zip,
+      ]);
+      expect(packed.exitCode, 0, reason: packed.stderr.toString());
+      staging.deleteSync(recursive: true);
+      return zip;
+    }
+
+    /// Runs the script with `open` stubbed out, so a test launches nothing.
+    Future<String> run(String zip, String app, int owner) async {
+      final stub = Directory(p.join(work.path, 'bin'))..createSync();
+      final opened = p.join(work.path, 'opened');
+      File(
+        p.join(stub.path, 'open'),
+      ).writeAsStringSync('#!/bin/sh\necho "\$1" >> "$opened"\n');
+      await Process.run('chmod', ['+x', p.join(stub.path, 'open')]);
+
+      await Process.run(
+        '/bin/sh',
+        ['-c', macArchiveSwapScript, 'kruftle-update', zip, app, '$owner'],
+        environment: {'PATH': '${stub.path}:/bin:/usr/bin:/usr/sbin'},
+      );
+
+      final log = File(opened);
+      return log.existsSync() ? log.readAsStringSync().trim() : '';
+    }
+
+    test('replaces the bundle once the old process has gone', () async {
+      final zip = await archive('new');
+      final installed = Directory(p.join(work.path, 'Applications'))
+        ..createSync();
+      final app = bundle(installed.path, 'old');
+      final binary = p.join(app, 'Contents', 'MacOS', 'Kruftle');
+      final running = await holder();
+
+      final swap = run(zip, app, running.pid);
+      // macOS will not let a bundle be replaced underneath a process running
+      // out of it — the "app is already running" refusal Finder gives.
+      await Future<void>.delayed(const Duration(milliseconds: 300));
+      expect(File(binary).readAsStringSync(), contains('old'));
+
+      running.kill();
+      await running.exitCode;
+
+      expect(await swap, app, reason: 'the new Kruftle is what gets opened');
+      expect(File(binary).readAsStringSync(), contains('new'));
+      expect(
+        File(p.join(app, 'Contents', 'Info.plist')).readAsStringSync(),
+        'new',
+      );
+      expect(
+        Link(
+          p.join(
+            app,
+            'Contents',
+            'Frameworks',
+            'A.framework',
+            'Versions',
+            'Current',
+          ),
+        ).targetSync(),
+        'A',
+        reason: 'ditto keeps the symlinks that make a bundle loadable',
+      );
+      expect(
+        FileStat.statSync(binary).modeString().contains('x'),
+        isTrue,
+        reason: 'and the executable bit',
+      );
+      expect(Directory('$app.new').existsSync(), isFalse);
+      expect(Directory('$app.old').existsSync(), isFalse);
+      expect(File(zip).existsSync(), isFalse, reason: 'download cleaned up');
+    });
+
+    test('an unreadable archive leaves the installed bundle alone', () async {
+      final zip = p.join(work.path, 'broken.zip');
+      File(zip).writeAsStringSync('not an archive');
+      final installed = Directory(p.join(work.path, 'Applications'))
+        ..createSync();
+      final app = bundle(installed.path, 'old');
+
+      expect(await run(zip, app, 999999), app);
+      expect(
+        File(p.join(app, 'Contents', 'MacOS', 'Kruftle')).readAsStringSync(),
+        contains('old'),
+      );
+      expect(Directory('$app.new').existsSync(), isFalse);
+      expect(Directory('$app.old').existsSync(), isFalse);
+    });
+  }, skip: !Platform.isMacOS);
+
   group('appImageSwapScript', () {
     Future<ProcessResult> run(String fresh, String current, int pid) =>
         Process.run('/bin/sh', [

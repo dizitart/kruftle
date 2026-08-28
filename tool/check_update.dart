@@ -15,23 +15,33 @@ import 'package:kruftle/src/core/update/version.dart';
 /// The shapes a released Kruftle is actually installed in.
 const _shapes = <String, InstallTarget>{
   'macOS .app': InstallTarget(
-    assetSuffixes: ['.dmg'],
+    platform: HostPlatform.macOS,
+    assetSuffixes: ['.zip', '.dmg'],
     swapDirectory: '/Applications/Kruftle.app',
   ),
   'Windows, per-user': InstallTarget(
+    platform: HostPlatform.windows,
     assetSuffixes: ['.zip', '.exe'],
     swapDirectory: r'C:\Users\me\AppData\Local\Programs\Kruftle',
   ),
-  'Windows, Program Files': InstallTarget(assetSuffixes: ['.exe']),
+  'Windows, Program Files': InstallTarget(
+    platform: HostPlatform.windows,
+    assetSuffixes: ['.exe'],
+  ),
   'Linux AppImage': InstallTarget(
+    platform: HostPlatform.linux,
     assetSuffixes: ['.AppImage'],
     appImage: '/home/me/Applications/Kruftle.AppImage',
   ),
   'Linux tarball': InstallTarget(
+    platform: HostPlatform.linux,
     assetSuffixes: ['.tar.gz'],
     swapDirectory: '/home/me/kruftle',
   ),
-  'Linux .deb': InstallTarget(assetSuffixes: ['.deb']),
+  'Linux .deb': InstallTarget(
+    platform: HostPlatform.linux,
+    assetSuffixes: ['.deb'],
+  ),
 };
 
 Future<void> main(List<String> args) async {

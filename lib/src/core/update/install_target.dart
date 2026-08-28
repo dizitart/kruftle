@@ -4,6 +4,23 @@ import 'dart:io';
 
 import 'package:path/path.dart' as p;
 
+/// The operating system a build was made for, as its release assets spell it.
+///
+/// A discriminator rather than a pair of booleans, because two of the three now
+/// ship the same kind of archive: `Kruftle-1.2.3-macos.zip` and
+/// `Kruftle-1.2.3-windows-x64.zip` are unpacked by different helpers, and the
+/// extension alone can no longer say which.
+enum HostPlatform {
+  macOS('macos'),
+  windows('windows'),
+  linux('linux');
+
+  const HostPlatform(this.token);
+
+  /// The word this platform's assets carry in their name.
+  final String token;
+}
+
 /// How this copy of Kruftle is installed, and therefore what it is able to
 /// replace itself with.
 ///
@@ -21,10 +38,15 @@ import 'package:path/path.dart' as p;
 /// had nowhere to put.
 class InstallTarget {
   const InstallTarget({
+    required this.platform,
     required this.assetSuffixes,
     this.swapDirectory,
     this.appImage,
   });
+
+  /// What this build is, which decides both the assets it will accept and the
+  /// helper that applies them.
+  final HostPlatform platform;
 
   /// The release asset extensions this copy can update itself from, best
   /// first. `.zip` before `.exe` means a release that still carries only an
@@ -69,11 +91,13 @@ class InstallTarget {
     final writable = canWrite ?? canWriteInto;
 
     if (isMacOS) {
-      // The disk image already carries the whole bundle, and the swap already
-      // replaces it in place without the user dragging anything. A separate
-      // archive would be a second way to do a thing that works.
+      // The `.zip` first, and the `.dmg` only when a release does not carry
+      // one. A disk image has to be attached, copied out of and detached, and
+      // it is a thing the user recognises as an installer — the point of this
+      // is that updating stops looking like installing.
       return InstallTarget(
-        assetSuffixes: const ['.dmg'],
+        platform: HostPlatform.macOS,
+        assetSuffixes: const ['.zip', '.dmg'],
         swapDirectory: bundlePath(exe),
       );
     }
@@ -82,6 +106,7 @@ class InstallTarget {
       final image = appImage ?? Platform.environment['APPIMAGE'];
       if (image != null && image.isNotEmpty) {
         return InstallTarget(
+          platform: HostPlatform.linux,
           assetSuffixes: const ['.AppImage'],
           appImage: image,
         );
@@ -98,14 +123,17 @@ class InstallTarget {
     // aside, so it is the *parent* that has to be writable, not the install
     // directory itself.
     final directory = path.dirname(exe);
+    final platform = isWindows ? HostPlatform.windows : HostPlatform.linux;
     if (writable(path.dirname(directory))) {
       return InstallTarget(
+        platform: platform,
         assetSuffixes: isWindows ? const ['.zip', '.exe'] : const ['.tar.gz'],
         swapDirectory: directory,
       );
     }
 
     return InstallTarget(
+      platform: platform,
       assetSuffixes: isWindows ? const ['.exe'] : const ['.deb'],
     );
   }

@@ -25,26 +25,30 @@ void main() {
   );
 
   group('macOS', () {
-    test('a bundle is replaced from the disk image it already ships', () {
+    test('a bundle is replaced from the archive, not the disk image', () {
+      // The `.dmg` still works and is still offered, but only for a release
+      // published before the archive existed. Mounting a disk image at every
+      // update is the thing this feature is for getting rid of.
       final target = detect(
         windows: false,
         macOS: true,
         executable: '/Applications/Kruftle.app/Contents/MacOS/Kruftle',
       );
-      expect(target.assetSuffixes, ['.dmg']);
+      expect(target.platform, HostPlatform.macOS);
+      expect(target.assetSuffixes, ['.zip', '.dmg']);
       expect(target.swapDirectory, '/Applications/Kruftle.app');
       expect(target.isSelfReplacing, isTrue);
     });
 
     test('a bare binary has no bundle to replace', () {
-      // `flutter run`, or the binary invoked directly. The disk image is still
-      // offered; it is opened rather than swapped in.
+      // `flutter run`, or the binary invoked directly. The download is still
+      // offered; it is revealed rather than swapped in.
       final target = detect(
         windows: false,
         macOS: true,
         executable: '/tmp/build/kruftle',
       );
-      expect(target.assetSuffixes, ['.dmg']);
+      expect(target.assetSuffixes, ['.zip', '.dmg']);
       expect(target.swapDirectory, isNull);
       expect(target.isSelfReplacing, isFalse);
     });
@@ -55,6 +59,7 @@ void main() {
 
     test('a per-user install replaces itself from the archive', () {
       final target = detect(windows: true, macOS: false, executable: perUser);
+      expect(target.platform, HostPlatform.windows);
       expect(target.assetSuffixes.first, '.zip');
       expect(target.swapDirectory, endsWith('Kruftle'));
       expect(target.isSelfReplacing, isTrue);
@@ -88,6 +93,7 @@ void main() {
         executable: '/tmp/.mount_Kruftabc/usr/lib/kruftle/kruftle',
         appImage: '/home/me/Applications/Kruftle.AppImage',
       );
+      expect(target.platform, HostPlatform.linux);
       expect(target.assetSuffixes, ['.AppImage']);
       expect(target.appImage, '/home/me/Applications/Kruftle.AppImage');
       expect(target.swapDirectory, isNull);

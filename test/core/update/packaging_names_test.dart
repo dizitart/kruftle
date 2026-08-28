@@ -43,6 +43,16 @@ void main() {
     expect(release, contains(r'Kruftle-$VERSION-macos.dmg'));
     expect(
       release,
+      contains(r'Kruftle-$VERSION-macos.zip'),
+      reason: 'the archive a macOS update applies without a disk image',
+    );
+    expect(
+      release,
+      contains('ditto -c -k'),
+      reason: 'zip would not preserve the bundle',
+    );
+    expect(
+      release,
       contains(r'Kruftle-$env:VERSION-windows-$env:ARCH.zip'),
       reason: 'the archive the updater applies on Windows',
     );
@@ -51,6 +61,7 @@ void main() {
   /// Everything a v9.9.9 release would publish.
   const published = [
     'Kruftle-$_version-macos.dmg',
+    'Kruftle-$_version-macos.zip',
     'Kruftle-$_version-windows-x64-setup.exe',
     'Kruftle-$_version-windows-arm64-setup.exe',
     'Kruftle-$_version-windows-x64.zip',
@@ -127,8 +138,10 @@ void main() {
 
   test('every install shape and processor finds its own asset', () {
     const expected = {
-      ('macOS .app', 'x64'): 'Kruftle-$_version-macos.dmg',
-      ('macOS .app', 'arm64'): 'Kruftle-$_version-macos.dmg',
+      // The archive, not the disk image: an update should not look like an
+      // installation.
+      ('macOS .app', 'x64'): 'Kruftle-$_version-macos.zip',
+      ('macOS .app', 'arm64'): 'Kruftle-$_version-macos.zip',
       // Per-user Windows and a Linux tarball or AppImage replace themselves,
       // so they take the plain archive and never run an installer.
       ('Windows per-user', 'x64'): 'Kruftle-$_version-windows-x64.zip',
@@ -171,6 +184,22 @@ void main() {
     }
   });
 
+  test('a Windows build never takes the macOS archive', () {
+    // Both are `.zip`, and the macOS one names no processor because it is
+    // universal — which is exactly the shape an unlabelled asset has, so
+    // without a platform check a Windows build whose own archive was missing
+    // from a release would take it and unpack a .app over Program Files.
+    const noWindowsZip = [
+      'Kruftle-$_version-macos.zip',
+      'Kruftle-$_version-windows-x64-setup.exe',
+      'checksums.txt',
+    ];
+    expect(
+      chosenBy(shapes['Windows per-user']!, 'x64', noWindowsZip),
+      'Kruftle-$_version-windows-x64-setup.exe',
+    );
+  });
+
   test('a release older than the archives still offers its installer', () {
     // Every release up to 0.2.3 carried only installers. A Windows copy that
     // prefers the .zip must still find the .exe, or updating from one of those
@@ -183,6 +212,15 @@ void main() {
     expect(
       chosenBy(shapes['Windows per-user']!, 'arm64', legacy),
       'Kruftle-$_version-windows-arm64-setup.exe',
+    );
+
+    // And macOS falls back to the disk image the same way.
+    expect(
+      chosenBy(shapes['macOS .app']!, 'arm64', const [
+        'Kruftle-$_version-macos.dmg',
+        'checksums.txt',
+      ]),
+      'Kruftle-$_version-macos.dmg',
     );
   });
 

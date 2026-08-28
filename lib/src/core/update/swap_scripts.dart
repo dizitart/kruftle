@@ -17,7 +17,53 @@
 /// that fails. A failed update leaves the working Kruftle exactly where it was.
 library;
 
+/// Replaces the running `.app` with the one inside a `.zip`, then starts it.
+///
+/// Arguments: archive, `.app` bundle, our pid.
+///
+/// `ditto -x -k` rather than `unzip`: it is what made the archive, and it is
+/// the only extractor on macOS that restores a bundle's symlinks, resource
+/// forks and executable bits intact — an `unzip`ped `.app` is a broken `.app`.
+///
+/// The staging directory is a sibling of the installed bundle, so the move into
+/// place is a rename on the same filesystem rather than a copy, and a directory
+/// this user cannot create is the same answer as a bundle they cannot replace.
+const macArchiveSwapScript = r'''
+      cd / || exit 1
+      zip=$1; app=$2; pid=$3
+      waited=0
+      while kill -0 "$pid" 2>/dev/null && [ "$waited" -lt 600 ]; do
+        sleep 0.1; waited=$((waited + 1))
+      done
+      kill -0 "$pid" 2>/dev/null && exit 1
+
+      staging=$app.new
+      swapped=
+      rm -rf "$staging" "$app.old"
+      if mkdir -p "$staging" && ditto -x -k "$zip" "$staging" 2>/dev/null; then
+        new=$(ls -d "$staging"/*.app 2>/dev/null | head -1)
+        if [ -n "$new" ] && mv "$app" "$app.old" 2>/dev/null; then
+          if mv "$new" "$app" 2>/dev/null; then
+            swapped=1
+            # Nothing here was quarantined -- the download never went through
+            # LaunchServices -- but an archive can carry the attribute, and a
+            # quarantined bundle is one Gatekeeper stops rather than opens.
+            xattr -dr com.apple.quarantine "$app" 2>/dev/null
+          else
+            mv "$app.old" "$app"
+          fi
+        fi
+      fi
+      rm -rf "$staging" "$app.old"
+      [ -n "$swapped" ] && rm -f "$zip"
+
+      open "$app"
+''';
+
 /// Replaces the running `.app` with the one inside the mounted disk image.
+///
+/// The fallback for a release published before [macArchiveSwapScript]'s `.zip`
+/// existed. Same swap, with `hdiutil` in front of it.
 ///
 /// Arguments: disk image, `.app` bundle, our pid.
 ///

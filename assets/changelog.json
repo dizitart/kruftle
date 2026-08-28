@@ -5,7 +5,7 @@
       "version": "0.2.4",
       "date": "2026-08-28",
       "changed": [
-        "Kruftle now updates itself without running an installer. It fetches the new version as a plain archive, checks it against the release's published SHA-256, and unpacks it over the installed copy when you restart \u2014 nothing to run, nothing to drag. If Kruftle is installed somewhere you cannot write, such as a machine-wide install under C:\\Program Files or a .deb under /usr, it still offers you that packaging's installer, because replacing those files needs a password.",
+        "Kruftle now updates itself without running an installer, on all three platforms. It fetches the new version as a plain archive, checks it against the release's published SHA-256, and unpacks it over the installed copy when you restart \u2014 nothing to run, nothing to mount, nothing to drag. On macOS this replaces the old behaviour of opening a disk image at every update: Kruftle is now replaced in place, exactly as it is on Windows and Linux. If Kruftle is installed somewhere you cannot write, such as a machine-wide install under C:\\Program Files or a .deb under /usr, it still offers you that packaging's installer, because replacing those files needs a password.",
         "Settings \u2192 Updates has a Check for updates now button, and it says what happened \u2014 including when the check itself could not be made. The check at launch stays quiet, as before.",
         "Windows installs for you alone by default, under %LOCALAPPDATA%\\Programs, and no longer asks for an administrator. Add /ALLUSERS for a machine-wide install. The installer also accepts /VERYSILENT and /NORESTART, and never asks to reboot.",
         "Kruftle no longer keeps the installers it has already applied. Downloads are cleared before each update."
@@ -15,7 +15,8 @@
         "On Ubuntu and other GNOME desktops, Kruftle appeared in the dock as a blank generic icon. The window announces itself as com.dizitart.kruftle, but the desktop entry that shipped was called kruftle.desktop, so the desktop could not tell which application the window belonged to. The entry and the icons carry the right name now, and the .deb refreshes the icon cache when it installs.",
         "A Kruftle installed from the .deb package was being offered an AppImage it had nowhere to put. It is now offered a .deb.",
         "A Kruftle installed as an AppImage tried to overwrite its own file while it was running, which could leave a half-written binary behind. The replacement now happens after Kruftle has exited, and the working copy is put back if it fails.",
-        "The update check on Windows could give up before it started, and say nothing, because of how the running version was read back out of the packaged app. The version is built in now and cannot come back unreadable."
+        "The update check on Windows could give up before it started, and say nothing, because of how the running version was read back out of the packaged app. The version is built in now and cannot come back unreadable.",
+        "An out-of-date Kruftle is now offered the newest release rather than the next one above it. Releases were being read in the order they were published, so a patch cut on an older line after a newer release had already shipped would be offered first \u2014 and a copy several versions behind would have climbed back one stale release at a time. Kruftle now compares the version numbers themselves."
       ]
     },
     {

@@ -84,7 +84,8 @@ Adding another is one file and one list entry — see
 Download the build for your platform from
 [Releases](https://github.com/dizitart/kruftle/releases).
 
-- **macOS** — the `.dmg`; drag Kruftle to Applications.
+- **macOS** — the `.dmg`; drag Kruftle to Applications. Only for the first
+  install: updates after that replace the app in place, with no disk image.
 - **Windows** — the `-setup.exe`. It installs for you alone, under
   `%LOCALAPPDATA%\Programs`, and needs no administrator. Add `/ALLUSERS` for a
   machine-wide install.

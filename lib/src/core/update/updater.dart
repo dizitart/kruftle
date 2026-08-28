@@ -12,7 +12,7 @@ import 'install_target.dart';
 import 'swap_scripts.dart';
 import 'version.dart';
 
-export 'install_target.dart' show InstallTarget;
+export 'install_target.dart' show HostPlatform, InstallTarget;
 
 /// A release newer than what is running, with the asset for this platform.
 class AvailableUpdate {
@@ -98,8 +98,13 @@ class Updater {
     return 'x64';
   }
 
-  Uri get _releasesUrl =>
-      Uri.https('api.github.com', '/repos/$repository/releases');
+  /// `per_page`, because the default is thirty and the answer has to contain
+  /// the newest release however many have been cut since.
+  Uri get _releasesUrl => Uri.https(
+    'api.github.com',
+    '/repos/$repository/releases',
+    const {'per_page': '100'},
+  );
 
   /// The names this architecture answers to in a release asset.
   ///
@@ -138,18 +143,27 @@ class Updater {
     List<Map<String, Object?>> assets,
     String suffix,
   ) {
-    final wanted = suffix.toLowerCase();
-    final candidates = assets
-        .where(
-          (a) => (a['name'] as String? ?? '').toLowerCase().endsWith(wanted),
-        )
-        .toList();
-    if (candidates.isEmpty) return const {};
-
     bool mentions(String name, Iterable<String> words) {
       final lower = name.toLowerCase();
       return words.any(lower.contains);
     }
+
+    // Another platform's asset is never a candidate, whatever its extension.
+    // macOS and Windows both publish a `.zip` now, and the macOS one carries no
+    // processor in its name — it is universal — so without this a Windows build
+    // whose own archive was missing would happily take it.
+    final foreign = [
+      for (final other in HostPlatform.values)
+        if (other != target.platform) other.token,
+    ];
+
+    final wanted = suffix.toLowerCase();
+    final candidates = assets
+        .map((a) => (a, (a['name'] as String? ?? '').toLowerCase()))
+        .where((e) => e.$2.endsWith(wanted) && !mentions(e.$2, foreign))
+        .map((e) => e.$1)
+        .toList();
+    if (candidates.isEmpty) return const {};
 
     // Every architecture name any of our assets could carry, so an asset can
     // be told apart from one that simply does not mention a processor.
@@ -211,14 +225,25 @@ class Updater {
       throw UpdateFailure('Could not reach the update server: $e');
     }
 
-    for (final entry in releases) {
-      final release = entry as Map<String, Object?>;
-      if (release['draft'] == true) continue;
-      if (release['prerelease'] == true && !includePreReleases) continue;
+    // Highest version first, not the order GitHub happened to list them in.
+    //
+    // That order is by publication date, and the two come apart: a patch cut on
+    // an older line after a newer release — 0.2.9 published after 0.3.0 — sorts
+    // first there, and an app on 0.2.8 would be offered 0.2.9 and stay a whole
+    // minor version behind, one release at a time. Sorting by what the tag
+    // actually means costs nothing and cannot drift from the API's ordering.
+    final newer =
+        releases
+            .cast<Map<String, Object?>>()
+            .where((r) => r['draft'] != true)
+            .where((r) => r['prerelease'] != true || includePreReleases)
+            .map((r) => (Version.tryParse(r['tag_name'] as String? ?? ''), r))
+            .where((e) => e.$1 != null && e.$1! > currentVersion)
+            .map((e) => (e.$1!, e.$2))
+            .toList()
+          ..sort((a, b) => b.$1.compareTo(a.$1));
 
-      final version = Version.tryParse(release['tag_name'] as String? ?? '');
-      if (version == null || !(version > currentVersion)) continue;
-
+    for (final (version, release) in newer) {
       final assets = (release['assets'] as List<dynamic>? ?? const [])
           .cast<Map<String, Object?>>();
 
@@ -230,7 +255,8 @@ class Updater {
       final digest = checksums[name];
       if (digest == null) {
         // A release without a checksum for our asset is not installable. We do
-        // not fall back to installing it unverified.
+        // not fall back to installing it unverified, and we do not stop
+        // looking: the next one down is still an upgrade.
         continue;
       }
 
@@ -340,16 +366,13 @@ class Updater {
   /// it can replace the files we are running out of. It relaunches us when it
   /// is done.
   ///
-  /// Dispatches on the asset's own extension rather than on the platform, so
-  /// what runs is decided by what was actually downloaded.
+  /// An installer is recognised by its own extension, since each belongs to
+  /// exactly one platform. An *archive* is not: macOS and Windows both publish
+  /// a `.zip`, unpacked by different helpers, so what applies one is decided by
+  /// where this copy lives rather than by what it is called.
   Future<bool> install(File asset) async {
     final path = asset.path;
     final name = path.toLowerCase();
-
-    if (name.endsWith('.dmg')) return _applyMacImage(path);
-    if (name.endsWith('.zip')) return _applyWindowsArchive(path);
-    if (name.endsWith('.tar.gz')) return _applyLinuxArchive(path);
-    if (name.endsWith('.appimage')) return _applyAppImage(path);
 
     if (name.endsWith('.exe')) {
       // Inno Setup. `/NORESTART` because an app update is never a reason to
@@ -363,10 +386,35 @@ class Updater {
       return false;
     }
 
-    // A .deb, which needs a package manager and root. Hand it to the desktop's
-    // own installer rather than asking for a password behind a progress bar.
-    await Process.start('xdg-open', [path], mode: ProcessStartMode.detached);
-    return false;
+    if (name.endsWith('.deb')) {
+      // Needs a package manager and root. Hand it to the desktop's own
+      // installer rather than asking for a password behind a progress bar.
+      await Process.start('xdg-open', [path], mode: ProcessStartMode.detached);
+      return false;
+    }
+
+    if (name.endsWith('.dmg')) return _applyMacImage(path);
+    if (name.endsWith('.appimage')) return _applyAppImage(path);
+
+    return switch (target.platform) {
+      HostPlatform.macOS => _applyMacArchive(path),
+      HostPlatform.windows => _applyWindowsArchive(path),
+      HostPlatform.linux => _applyLinuxArchive(path),
+    };
+  }
+
+  Future<bool> _applyMacArchive(String archive) async {
+    final bundle = target.swapDirectory;
+    if (bundle == null) return _reveal(archive);
+    await Process.start('/bin/sh', [
+      '-c',
+      macArchiveSwapScript,
+      'kruftle-update',
+      archive,
+      bundle,
+      '$pid',
+    ], mode: ProcessStartMode.detached);
+    return true;
   }
 
   Future<bool> _applyMacImage(String image) async {

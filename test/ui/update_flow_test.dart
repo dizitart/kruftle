@@ -68,6 +68,7 @@ void main() {
     WidgetTester tester,
     http.Client stub, {
     InstallTarget target = const InstallTarget(
+      platform: HostPlatform.linux,
       assetSuffixes: ['.tar.gz'],
       swapDirectory: '/home/me/kruftle',
     ),
@@ -197,7 +198,10 @@ void main() {
         releases(asset: 'Kruftle-99.0.0-amd64.deb'),
         sums: '$digest  Kruftle-99.0.0-amd64.deb\n',
       ),
-      target: const InstallTarget(assetSuffixes: ['.deb']),
+      target: const InstallTarget(
+        platform: HostPlatform.linux,
+        assetSuffixes: ['.deb'],
+      ),
     );
 
     // `runAsync`: the download writes a real file, and real I/O does not
