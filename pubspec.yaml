@@ -4,7 +4,7 @@ homepage: https://github.com/dizitart/kruftle
 repository: https://github.com/dizitart/kruftle
 publish_to: 'none'
 
-version: 0.2.3+1
+version: 0.2.4+1
 
 environment:
   sdk: ^3.12.2
@@ -28,7 +28,6 @@ dependencies:
   url_launcher: ^6.3.1
   path_provider: ^2.1.5
   shared_preferences: ^2.3.3
-  package_info_plus: ^10.2.1
   ffi: ^2.2.0
   flutter_localizations:
     sdk: flutter

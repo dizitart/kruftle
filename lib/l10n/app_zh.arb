@@ -147,9 +147,12 @@
 
   "updateAvailable": "Kruftle {version} 可用（{size}）。",
   "updateDownloading": "正在下载 {version}… {percent}%",
-  "updateReady": "Kruftle {version} 已校验完毕，正在安装…",
+  "updateReady": "Kruftle {version} 已就绪。重启以完成更新。",
   "updateFailed": "更新失败。",
   "updateAction": "更新",
+  "updateRestart": "立即重启",
+  "updateChecking": "正在检查更新…",
+  "updateUpToDate": "Kruftle 已是最新版本。",
 
   "settingsTitle": "设置",
   "settingsSectionAppearance": "外观",
@@ -190,6 +193,7 @@
   "settingsSectionUpdates": "更新",
   "settingsCheckUpdates": "自动检查更新",
   "settingsCheckUpdatesHelp": "Kruftle 会在启动时询问 GitHub Releases，并提供经过校验的下载。未经许可绝不安装。",
+  "settingsCheckNow": "立即检查更新",
   "settingsSectionSizes": "大小",
   "settingsSizeMode": "大小如何计算",
   "settingsSizeModeOnDisk": "磁盘上实际占用的空间",

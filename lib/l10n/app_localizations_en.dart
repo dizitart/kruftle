@@ -502,7 +502,7 @@ class LEn extends L {
 
   @override
   String updateReady(String version) {
-    return 'Kruftle $version is verified. Installing it now…';
+    return 'Kruftle $version is ready. Restart to finish.';
   }
 
   @override
@@ -510,6 +510,15 @@ class LEn extends L {
 
   @override
   String get updateAction => 'Update';
+
+  @override
+  String get updateRestart => 'Restart now';
+
+  @override
+  String get updateChecking => 'Checking for updates…';
+
+  @override
+  String get updateUpToDate => 'Kruftle is up to date.';
 
   @override
   String get settingsTitle => 'Settings';
@@ -643,6 +652,9 @@ class LEn extends L {
   @override
   String get settingsCheckUpdatesHelp =>
       'Kruftle asks GitHub Releases on launch and offers a verified download. It never installs without asking.';
+
+  @override
+  String get settingsCheckNow => 'Check for updates now';
 
   @override
   String get settingsSectionSizes => 'Sizes';

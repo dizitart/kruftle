@@ -511,7 +511,7 @@ class LAr extends L {
 
   @override
   String updateReady(String version) {
-    return '‏Kruftle $version مُتحقَّق منه. يجري تثبيته الآن…';
+    return '‏Kruftle $version جاهز. أعد التشغيل للإنهاء.';
   }
 
   @override
@@ -519,6 +519,15 @@ class LAr extends L {
 
   @override
   String get updateAction => 'تحديث';
+
+  @override
+  String get updateRestart => 'إعادة التشغيل الآن';
+
+  @override
+  String get updateChecking => 'جارٍ البحث عن التحديثات…';
+
+  @override
+  String get updateUpToDate => '‏Kruftle محدَّث.';
 
   @override
   String get settingsTitle => 'الإعدادات';
@@ -652,6 +661,9 @@ class LAr extends L {
   @override
   String get settingsCheckUpdatesHelp =>
       'يسأل Kruftle خدمة إصدارات GitHub عند التشغيل ويعرض تنزيلًا مُتحقَّقًا منه. ولا يثبّت شيئًا دون أن يسأل.';
+
+  @override
+  String get settingsCheckNow => 'ابحث عن التحديثات الآن';
 
   @override
   String get settingsSectionSizes => 'الأحجام';

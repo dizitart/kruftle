@@ -506,7 +506,7 @@ class LFr extends L {
 
   @override
   String updateReady(String version) {
-    return 'Kruftle $version est vérifié. Installation en cours…';
+    return 'Kruftle $version est prêt. Redémarrez pour terminer.';
   }
 
   @override
@@ -514,6 +514,15 @@ class LFr extends L {
 
   @override
   String get updateAction => 'Mettre à jour';
+
+  @override
+  String get updateRestart => 'Redémarrer maintenant';
+
+  @override
+  String get updateChecking => 'Recherche de mises à jour…';
+
+  @override
+  String get updateUpToDate => 'Kruftle est à jour.';
 
   @override
   String get settingsTitle => 'Réglages';
@@ -649,6 +658,9 @@ class LFr extends L {
   @override
   String get settingsCheckUpdatesHelp =>
       'Kruftle interroge GitHub Releases au démarrage et propose un téléchargement vérifié. Il n’installe jamais sans demander.';
+
+  @override
+  String get settingsCheckNow => 'Rechercher des mises à jour maintenant';
 
   @override
   String get settingsSectionSizes => 'Tailles';

@@ -147,9 +147,12 @@
 
   "updateAvailable": "Kruftle {version} está disponible ({size}).",
   "updateDownloading": "Descargando {version}… {percent} %",
-  "updateReady": "Kruftle {version} está verificado. Instalándolo ahora…",
+  "updateReady": "Kruftle {version} está listo. Reinicia para terminar.",
   "updateFailed": "La actualización falló.",
   "updateAction": "Actualizar",
+  "updateRestart": "Reiniciar ahora",
+  "updateChecking": "Buscando actualizaciones…",
+  "updateUpToDate": "Kruftle está actualizado.",
 
   "settingsTitle": "Ajustes",
   "settingsSectionAppearance": "Apariencia",
@@ -190,6 +193,7 @@
   "settingsSectionUpdates": "Actualizaciones",
   "settingsCheckUpdates": "Buscar actualizaciones automáticamente",
   "settingsCheckUpdatesHelp": "Kruftle consulta GitHub Releases al arrancar y ofrece una descarga verificada. Nunca instala sin preguntar.",
+  "settingsCheckNow": "Buscar actualizaciones ahora",
   "settingsSectionSizes": "Tamaños",
   "settingsSizeMode": "Cómo se cuentan los tamaños",
   "settingsSizeModeOnDisk": "Espacio realmente ocupado en el disco",

@@ -28,12 +28,24 @@ jobs:
     outputs:
       version: ${{ steps.resolve.outputs.version }}
     steps:
+      - uses: actions/checkout@v7
       - id: resolve
         run: |
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            echo "version=${{ inputs.version }}" >> "$GITHUB_OUTPUT"
+            VERSION="${{ inputs.version }}"
           else
-            echo "version=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+            VERSION="${GITHUB_REF_NAME#v}"
+          fi
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+          # The running app compares itself against release tags using
+          # `kAppVersion`, which a test holds equal to pubspec.yaml. If the tag
+          # disagreed with either, the release would either be invisible to
+          # everyone running it or offered to the very build it came from.
+          PUBSPEC=$(sed -n 's/^version: \([^+]*\).*/\1/p' pubspec.yaml)
+          if [ "$VERSION" != "$PUBSPEC" ]; then
+            echo "tag $VERSION does not match pubspec.yaml ($PUBSPEC)" >&2
+            exit 1
           fi
 
   macos:
@@ -168,10 +180,28 @@ jobs:
             "/DTargetArch=${{ matrix.arch }}" `
             "/Odist" packaging\windows\kruftle.iss
 
+      # The archive the in-app updater actually applies: the Release directory
+      # and nothing else, so unpacking it over an install replaces that install
+      # exactly. The installer stays for first-time installs and for machine-wide
+      # copies, which cannot replace themselves.
+      - name: Package update archive
+        shell: pwsh
+        env:
+          VERSION: ${{ needs.version.outputs.version }}
+          ARCH: ${{ matrix.arch }}
+        run: |
+          $src = "build\windows\$env:ARCH\runner\Release"
+          if (-not (Test-Path $src)) { throw "no release build at $src" }
+          Compress-Archive -Path "$src\*" `
+            -DestinationPath "dist\Kruftle-$env:VERSION-windows-$env:ARCH.zip" `
+            -CompressionLevel Optimal
+
       - uses: actions/upload-artifact@v7
         with:
           name: windows-${{ matrix.arch }}
-          path: dist/*.exe
+          path: |
+            dist/*.exe
+            dist/*.zip
 
   linux:
     name: Linux ${{ matrix.arch }}
@@ -235,6 +265,7 @@ jobs:
           path: |
             dist/*.AppImage
             dist/*.deb
+            dist/*.tar.gz
 
   publish:
     name: Publish release

@@ -24,6 +24,7 @@ void main() {
     final linux = _read('packaging/linux/build-packages.sh');
     expect(linux, contains(r'Kruftle-$VERSION-$APPIMAGE_ARCH.AppImage'));
     expect(linux, contains(r'Kruftle-$VERSION-$DEB_ARCH.deb'));
+    expect(linux, contains(r'Kruftle-$VERSION-linux-$APPIMAGE_ARCH.tar.gz'));
     expect(linux, contains('APPIMAGE_ARCH=x86_64'));
     expect(linux, contains('APPIMAGE_ARCH=aarch64'));
     expect(linux, contains('DEB_ARCH=amd64'));
@@ -40,6 +41,11 @@ void main() {
 
     final release = _read('.github/workflows/release.yml');
     expect(release, contains(r'Kruftle-$VERSION-macos.dmg'));
+    expect(
+      release,
+      contains(r'Kruftle-$env:VERSION-windows-$env:ARCH.zip'),
+      reason: 'the archive the updater applies on Windows',
+    );
   });
 
   /// Everything a v9.9.9 release would publish.
@@ -47,10 +53,14 @@ void main() {
     'Kruftle-$_version-macos.dmg',
     'Kruftle-$_version-windows-x64-setup.exe',
     'Kruftle-$_version-windows-arm64-setup.exe',
+    'Kruftle-$_version-windows-x64.zip',
+    'Kruftle-$_version-windows-arm64.zip',
     'Kruftle-$_version-x86_64.AppImage',
     'Kruftle-$_version-aarch64.AppImage',
     'Kruftle-$_version-amd64.deb',
     'Kruftle-$_version-arm64.deb',
+    'Kruftle-$_version-linux-x86_64.tar.gz',
+    'Kruftle-$_version-linux-aarch64.tar.gz',
     'checksums.txt',
   ];
 
@@ -60,61 +70,120 @@ void main() {
     'size': 1,
   };
 
-  String? chosenBy({
-    required bool windows,
-    required bool macOS,
-    required String architecture,
-  }) {
+  String? chosenBy(
+    InstallTarget target,
+    String architecture, [
+    List<String>? from,
+  ]) {
     final chosen = Updater(
       currentVersion: const Version(0, 1, 0),
-      windows: windows,
-      macOS: macOS,
+      target: target,
       architecture: architecture,
-    ).selectAsset([for (final name in published) asset(name)]);
+    ).selectAsset([for (final name in from ?? published) asset(name)]);
     return chosen.isEmpty ? null : chosen['name'] as String;
   }
 
-  test('every supported platform and processor finds its own asset', () {
-    expect(
-      chosenBy(windows: false, macOS: true, architecture: 'arm64'),
-      'Kruftle-$_version-macos.dmg',
-    );
-    expect(
-      chosenBy(windows: false, macOS: true, architecture: 'x64'),
-      'Kruftle-$_version-macos.dmg',
-    );
-    expect(
-      chosenBy(windows: true, macOS: false, architecture: 'x64'),
-      'Kruftle-$_version-windows-x64-setup.exe',
-    );
-    expect(
-      chosenBy(windows: true, macOS: false, architecture: 'arm64'),
-      'Kruftle-$_version-windows-arm64-setup.exe',
-    );
-    expect(
-      chosenBy(windows: false, macOS: false, architecture: 'x64'),
-      'Kruftle-$_version-x86_64.AppImage',
-    );
-    expect(
-      chosenBy(windows: false, macOS: false, architecture: 'arm64'),
-      'Kruftle-$_version-aarch64.AppImage',
-    );
+  /// Every shape a released Kruftle is actually installed in, and what
+  /// `InstallTarget.detect` decides for it.
+  final shapes = <String, InstallTarget>{
+    'macOS .app': InstallTarget.detect(
+      macOS: true,
+      windows: false,
+      executable: '/Applications/Kruftle.app/Contents/MacOS/Kruftle',
+      canWrite: (_) => true,
+    ),
+    'Windows per-user': InstallTarget.detect(
+      macOS: false,
+      windows: true,
+      executable: r'C:\Users\me\AppData\Local\Programs\Kruftle\kruftle.exe',
+      canWrite: (_) => true,
+    ),
+    'Windows Program Files': InstallTarget.detect(
+      macOS: false,
+      windows: true,
+      executable: r'C:\Program Files\Kruftle\kruftle.exe',
+      canWrite: (_) => false,
+    ),
+    'Linux AppImage': InstallTarget.detect(
+      macOS: false,
+      windows: false,
+      executable: '/tmp/.mount_Kruftxyz/usr/lib/kruftle/kruftle',
+      appImage: '/home/me/Applications/Kruftle.AppImage',
+      canWrite: (_) => true,
+    ),
+    'Linux tarball': InstallTarget.detect(
+      macOS: false,
+      windows: false,
+      executable: '/home/me/kruftle/kruftle',
+      canWrite: (_) => true,
+    ),
+    'Linux .deb': InstallTarget.detect(
+      macOS: false,
+      windows: false,
+      executable: '/usr/lib/kruftle/kruftle',
+      canWrite: (_) => false,
+    ),
+  };
+
+  test('every install shape and processor finds its own asset', () {
+    const expected = {
+      ('macOS .app', 'x64'): 'Kruftle-$_version-macos.dmg',
+      ('macOS .app', 'arm64'): 'Kruftle-$_version-macos.dmg',
+      // Per-user Windows and a Linux tarball or AppImage replace themselves,
+      // so they take the plain archive and never run an installer.
+      ('Windows per-user', 'x64'): 'Kruftle-$_version-windows-x64.zip',
+      ('Windows per-user', 'arm64'): 'Kruftle-$_version-windows-arm64.zip',
+      ('Linux tarball', 'x64'): 'Kruftle-$_version-linux-x86_64.tar.gz',
+      ('Linux tarball', 'arm64'): 'Kruftle-$_version-linux-aarch64.tar.gz',
+      ('Linux AppImage', 'x64'): 'Kruftle-$_version-x86_64.AppImage',
+      ('Linux AppImage', 'arm64'): 'Kruftle-$_version-aarch64.AppImage',
+      // These two live where this user cannot write, so the only thing that
+      // can update them is their own packaging's installer. Offering a .deb
+      // install an AppImage — which is what used to happen — gave it a file
+      // it had nowhere to put.
+      ('Windows Program Files', 'x64'):
+          'Kruftle-$_version-windows-x64-setup.exe',
+      ('Windows Program Files', 'arm64'):
+          'Kruftle-$_version-windows-arm64-setup.exe',
+      ('Linux .deb', 'x64'): 'Kruftle-$_version-amd64.deb',
+      ('Linux .deb', 'arm64'): 'Kruftle-$_version-arm64.deb',
+    };
+
+    for (final MapEntry(key: (shape, architecture), value: name)
+        in expected.entries) {
+      expect(
+        chosenBy(shapes[shape]!, architecture),
+        name,
+        reason: '$shape on $architecture',
+      );
+    }
   });
 
-  test('no platform is left without an asset', () {
-    for (final (windows, macOS) in const [
-      (true, false),
-      (false, true),
-      (false, false),
-    ]) {
+  test('no install shape is left without an asset', () {
+    for (final MapEntry(key: shape, value: target) in shapes.entries) {
       for (final architecture in const ['x64', 'arm64']) {
         expect(
-          chosenBy(windows: windows, macOS: macOS, architecture: architecture),
+          chosenBy(target, architecture),
           isNotNull,
-          reason: 'windows=$windows macOS=$macOS arch=$architecture',
+          reason: '$shape on $architecture',
         );
       }
     }
+  });
+
+  test('a release older than the archives still offers its installer', () {
+    // Every release up to 0.2.3 carried only installers. A Windows copy that
+    // prefers the .zip must still find the .exe, or updating from one of those
+    // would offer nothing at all.
+    const legacy = [
+      'Kruftle-$_version-windows-x64-setup.exe',
+      'Kruftle-$_version-windows-arm64-setup.exe',
+      'checksums.txt',
+    ];
+    expect(
+      chosenBy(shapes['Windows per-user']!, 'arm64', legacy),
+      'Kruftle-$_version-windows-arm64-setup.exe',
+    );
   });
 
   test('the release workflow publishes a checksum file', () {
@@ -123,6 +192,16 @@ void main() {
     expect(
       _read('.github/workflows/release.yml'),
       contains('sha256sum * > checksums.txt'),
+    );
+  });
+
+  test('the release workflow refuses a tag pubspec disagrees with', () {
+    // `kAppVersion` is what the updater compares against. A build whose tag
+    // says 0.3.0 while the constant still says 0.2.9 would ship an app that
+    // offers itself its own release, forever.
+    expect(
+      _read('.github/workflows/release.yml'),
+      contains('does not match pubspec.yaml'),
     );
   });
 

@@ -483,7 +483,7 @@ class LZh extends L {
 
   @override
   String updateReady(String version) {
-    return 'Kruftle $version 已校验完毕，正在安装…';
+    return 'Kruftle $version 已就绪。重启以完成更新。';
   }
 
   @override
@@ -491,6 +491,15 @@ class LZh extends L {
 
   @override
   String get updateAction => '更新';
+
+  @override
+  String get updateRestart => '立即重启';
+
+  @override
+  String get updateChecking => '正在检查更新…';
+
+  @override
+  String get updateUpToDate => 'Kruftle 已是最新版本。';
 
   @override
   String get settingsTitle => '设置';
@@ -619,6 +628,9 @@ class LZh extends L {
   @override
   String get settingsCheckUpdatesHelp =>
       'Kruftle 会在启动时询问 GitHub Releases，并提供经过校验的下载。未经许可绝不安装。';
+
+  @override
+  String get settingsCheckNow => '立即检查更新';
 
   @override
   String get settingsSectionSizes => '大小';

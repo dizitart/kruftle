@@ -504,7 +504,7 @@ class LPt extends L {
 
   @override
   String updateReady(String version) {
-    return 'Kruftle $version está verificado. A instalar agora…';
+    return 'O Kruftle $version está pronto. Reinicie para concluir.';
   }
 
   @override
@@ -512,6 +512,15 @@ class LPt extends L {
 
   @override
   String get updateAction => 'Atualizar';
+
+  @override
+  String get updateRestart => 'Reiniciar agora';
+
+  @override
+  String get updateChecking => 'Procurando atualizações…';
+
+  @override
+  String get updateUpToDate => 'O Kruftle está atualizado.';
 
   @override
   String get settingsTitle => 'Configurações';
@@ -646,6 +655,9 @@ class LPt extends L {
   @override
   String get settingsCheckUpdatesHelp =>
       'O Kruftle consulta o GitHub Releases ao iniciar e oferece um download verificado. Nunca instala sem perguntar.';
+
+  @override
+  String get settingsCheckNow => 'Procurar atualizações agora';
 
   @override
   String get settingsSectionSizes => 'Tamanhos';

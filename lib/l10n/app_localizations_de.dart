@@ -505,7 +505,7 @@ class LDe extends L {
 
   @override
   String updateReady(String version) {
-    return 'Kruftle $version ist geprüft. Es wird jetzt installiert…';
+    return 'Kruftle $version ist bereit. Zum Abschließen neu starten.';
   }
 
   @override
@@ -513,6 +513,15 @@ class LDe extends L {
 
   @override
   String get updateAction => 'Aktualisieren';
+
+  @override
+  String get updateRestart => 'Jetzt neu starten';
+
+  @override
+  String get updateChecking => 'Suche nach Updates…';
+
+  @override
+  String get updateUpToDate => 'Kruftle ist auf dem neuesten Stand.';
 
   @override
   String get settingsTitle => 'Einstellungen';
@@ -647,6 +656,9 @@ class LDe extends L {
   @override
   String get settingsCheckUpdatesHelp =>
       'Kruftle fragt beim Start GitHub Releases und bietet einen geprüften Download an. Es installiert nie ungefragt.';
+
+  @override
+  String get settingsCheckNow => 'Jetzt nach Updates suchen';
 
   @override
   String get settingsSectionSizes => 'Größen';

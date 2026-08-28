@@ -5,7 +5,6 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/date_symbol_data_local.dart';
-import 'package:package_info_plus/package_info_plus.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:window_manager/window_manager.dart';
@@ -77,17 +76,15 @@ Future<void> main(List<String> args) async {
     },
   );
 
-  // Both of these are only available asynchronously, and every provider wants
-  // them synchronously, so they are resolved once here and injected.
+  // Only available asynchronously, and every provider wants it synchronously,
+  // so it is resolved once here and injected.
   final preferences = await SharedPreferences.getInstance();
-  final packageInfo = await PackageInfo.fromPlatform();
 
   runApp(
     ProviderScope(
       overrides: [
         appSupportDirectoryProvider.overrideWithValue(supportDirectory.path),
         sharedPreferencesProvider.overrideWithValue(preferences),
-        appVersionProvider.overrideWithValue(packageInfo.version),
       ],
       child: const KruftleApp(),
     ),

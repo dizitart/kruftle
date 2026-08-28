@@ -1,11 +1,20 @@
 [Desktop Entry]
 Type=Application
+Version=1.0
 Name=Kruftle
 GenericName=Build Artifact Cleaner
 Comment=Reclaim disk space from build artifacts across every project on your machine
 Exec=kruftle
-Icon=kruftle
+Icon=com.dizitart.kruftle
 Terminal=false
 Categories=Development;Utility;
 Keywords=disk;cleanup;build;cache;developer;
-StartupWMClass=kruftle
+# The desktop entry, the icon and this key are all named for the GTK
+# application id, because that is the only name the desktop ever sees.
+# `linux/runner/my_application.cc` calls `g_set_prgname(APPLICATION_ID)`, so the window
+# announces itself as `com.dizitart.kruftle` — as a Wayland app_id, as the X11
+# WM_CLASS, and as `_GTK_APPLICATION_ID`. GNOME matches a window to an app by
+# looking for `<that name>.desktop` and then by StartupWMClass. A file called
+# `kruftle.desktop` saying `StartupWMClass=kruftle` matches on neither, which
+# is why Kruftle showed up in the Ubuntu dock as a blank generic icon.
+StartupWMClass=com.dizitart.kruftle

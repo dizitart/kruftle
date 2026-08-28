@@ -147,9 +147,12 @@
 
   "updateAvailable": "‏Kruftle {version} متاح ({size}).",
   "updateDownloading": "جارٍ تنزيل {version}… {percent}٪",
-  "updateReady": "‏Kruftle {version} مُتحقَّق منه. يجري تثبيته الآن…",
+  "updateReady": "‏Kruftle {version} جاهز. أعد التشغيل للإنهاء.",
   "updateFailed": "أخفق التحديث.",
   "updateAction": "تحديث",
+  "updateRestart": "إعادة التشغيل الآن",
+  "updateChecking": "جارٍ البحث عن التحديثات…",
+  "updateUpToDate": "‏Kruftle محدَّث.",
 
   "settingsTitle": "الإعدادات",
   "settingsSectionAppearance": "المظهر",
@@ -190,6 +193,7 @@
   "settingsSectionUpdates": "التحديثات",
   "settingsCheckUpdates": "التحقق من التحديثات تلقائيًا",
   "settingsCheckUpdatesHelp": "يسأل Kruftle خدمة إصدارات GitHub عند التشغيل ويعرض تنزيلًا مُتحقَّقًا منه. ولا يثبّت شيئًا دون أن يسأل.",
+  "settingsCheckNow": "ابحث عن التحديثات الآن",
   "settingsSectionSizes": "الأحجام",
   "settingsSizeMode": "كيف تُحتسب الأحجام",
   "settingsSizeModeOnDisk": "المساحة المشغولة فعليًا على القرص",

@@ -506,7 +506,7 @@ class LEs extends L {
 
   @override
   String updateReady(String version) {
-    return 'Kruftle $version está verificado. Instalándolo ahora…';
+    return 'Kruftle $version está listo. Reinicia para terminar.';
   }
 
   @override
@@ -514,6 +514,15 @@ class LEs extends L {
 
   @override
   String get updateAction => 'Actualizar';
+
+  @override
+  String get updateRestart => 'Reiniciar ahora';
+
+  @override
+  String get updateChecking => 'Buscando actualizaciones…';
+
+  @override
+  String get updateUpToDate => 'Kruftle está actualizado.';
 
   @override
   String get settingsTitle => 'Ajustes';
@@ -648,6 +657,9 @@ class LEs extends L {
   @override
   String get settingsCheckUpdatesHelp =>
       'Kruftle consulta GitHub Releases al arrancar y ofrece una descarga verificada. Nunca instala sin preguntar.';
+
+  @override
+  String get settingsCheckNow => 'Buscar actualizaciones ahora';
 
   @override
   String get settingsSectionSizes => 'Tamaños';

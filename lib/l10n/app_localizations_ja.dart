@@ -487,7 +487,7 @@ class LJa extends L {
 
   @override
   String updateReady(String version) {
-    return 'Kruftle $version の検証が完了しました。インストール中です…';
+    return 'Kruftle $version の準備ができました。再起動すると完了します。';
   }
 
   @override
@@ -495,6 +495,15 @@ class LJa extends L {
 
   @override
   String get updateAction => '更新';
+
+  @override
+  String get updateRestart => '今すぐ再起動';
+
+  @override
+  String get updateChecking => 'アップデートを確認しています…';
+
+  @override
+  String get updateUpToDate => 'Kruftle は最新です。';
 
   @override
   String get settingsTitle => '設定';
@@ -627,6 +636,9 @@ class LJa extends L {
   @override
   String get settingsCheckUpdatesHelp =>
       'Kruftle は起動時に GitHub Releases を確認し、検証済みのダウンロードを提示します。確認なしにインストールすることはありません。';
+
+  @override
+  String get settingsCheckNow => '今すぐアップデートを確認';
 
   @override
   String get settingsSectionSizes => 'サイズ';

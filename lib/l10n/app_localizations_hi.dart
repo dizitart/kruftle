@@ -503,7 +503,7 @@ class LHi extends L {
 
   @override
   String updateReady(String version) {
-    return 'Kruftle $version सत्यापित है। इसे अभी इंस्टॉल किया जा रहा है…';
+    return 'Kruftle $version तैयार है। पूरा करने के लिए पुनः आरंभ करें।';
   }
 
   @override
@@ -511,6 +511,15 @@ class LHi extends L {
 
   @override
   String get updateAction => 'अपडेट करें';
+
+  @override
+  String get updateRestart => 'अभी पुनः आरंभ करें';
+
+  @override
+  String get updateChecking => 'अपडेट देखे जा रहे हैं…';
+
+  @override
+  String get updateUpToDate => 'Kruftle नवीनतम है।';
 
   @override
   String get settingsTitle => 'सेटिंग्स';
@@ -645,6 +654,9 @@ class LHi extends L {
   @override
   String get settingsCheckUpdatesHelp =>
       'Kruftle शुरू होते समय GitHub Releases से पूछता है और एक सत्यापित डाउनलोड सुझाता है। यह पूछे बिना कभी इंस्टॉल नहीं करता।';
+
+  @override
+  String get settingsCheckNow => 'अभी अपडेट देखें';
 
   @override
   String get settingsSectionSizes => 'आकार';

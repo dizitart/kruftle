@@ -14,9 +14,9 @@ check in §3 to confirm the tree is in the state this document claims.
 
 | | |
 |---|---|
-| **Current milestone** | **v0.2.3** — a codebase on a mapped drive or a mounted volume can be scanned, behind a consent gate |
+| **Current milestone** | **v0.2.4 (unreleased)** — self-update without an installer, and the platform-integration bugs behind it |
 | **Last updated** | 2026-08-28 |
-| **Build green?** | Yes — 591 tests, analyzer clean, formatter clean |
+| **Build green?** | Yes — 649 tests, analyzer clean (`--fatal-infos`), formatter clean |
 | **Repo** | https://github.com/dizitart/kruftle (public, GPL-3.0) |
 | **CI** | Green — analyze/test plus release builds on all three OSs |
 | **Released** | [v0.2.2](https://github.com/dizitart/kruftle/releases/tag/v0.2.2) — .dmg, two .exe, two .AppImage, two .deb, checksums.txt |
@@ -60,26 +60,37 @@ Legend: `[ ]` not started · `[~]` in progress · `[x]` done & green
 
 - [x] **M25** Background cleanups — launchd / systemd / Task Scheduler, headless run
 - [x] **M26** Interface polish — new mark, colophon, one dropdown, sorted caches
+- [x] **M27** Self-update without an installer — archive payloads, in-place swap
+      on all three platforms, install-shape detection, manual check
 
 ### What is left
 
-1. **`Updater.install` on Windows and Linux.** macOS now replaces its own
-   bundle, and the swap script is driven against a real `.dmg` and a real
-   process in `mac_swap_test.dart` — but running the `.exe` silently and
-   replacing a running AppImage in place have still never happened. Both need
-   a machine of that kind with an older build installed on it.
-2. **Windows and Linux run-throughs generally** — only macOS has been driven
+1. **A real self-update on Windows and Linux, machine to machine.** Every swap
+   helper is now driven against real archives, real files and a real process in
+   `swap_scripts_test.dart` — the Windows one through PowerShell, which exists
+   on Windows and on GitHub's Ubuntu runners alike. What has still never
+   happened is the whole round trip on those platforms: an installed older
+   build noticing a release, fetching it and coming back up as the new one.
+   That needs v0.2.4 published and a machine of each kind.
+2. **Why the Windows update check was silent is still not known.** It was
+   `PackageInfo.fromPlatform()` or the version resource it reads — that lookup
+   is gone, replaced by `kAppVersion`, so the failure cannot recur by that
+   route. But the cause was never reproduced, only removed. If a Windows
+   machine still sees nothing, **Settings → Updates → Check for updates now**
+   now reports the reason instead of failing in silence; that message is the
+   next piece of evidence.
+3. **Windows and Linux run-throughs generally** — only macOS has been driven
    by hand. Worth checking: PATH probing without a login shell on Windows, the
    `\\?\` long-path case noted in §6, and the background job on both — the
    generated unit, argv and plist are asserted against each other in
    `background_service_test.dart`, but only launchd has actually been asked to
    load one.
-3. **v0.1.0 users on Windows cannot auto-update correctly.** The updater that
+4. **v0.1.0 users on Windows cannot auto-update correctly.** The updater that
    shipped in v0.1.0 takes the *first* asset ending in `.exe`, and v0.2.0
    publishes two — x64 and arm64. Half of them will be offered the wrong one.
    Nothing can be done to the released v0.1.0; v0.2.0's updater picks by
    processor, so this ends with v0.2.0. Worth a line in the release notes.
-4. ~~Tier-2 stacks~~ — done in M15.
+5. ~~Tier-2 stacks~~ — done in M15.
 
 ---
 
@@ -121,6 +132,78 @@ it is there to be looked at. Regenerate the app icon's rasters with:
 ## 4. Session log
 
 Newest first.
+
+### Session 13 — 2026-08-28
+
+**Landed** — self-update the way VS Code does it, and the three platform bugs
+that were hiding behind the old one. Four reports, one shared root: the updater
+knew what operating system it was on but not how it had been *installed*.
+
+- **Kruftle now replaces itself, no installer.** Releases carry a plain archive
+  of the build alongside the installers — a `.zip` per Windows architecture, a
+  `.tar.gz` per Linux architecture; macOS keeps using the `.dmg` it already
+  ships, since that swap already worked. The app fetches it, verifies the
+  published SHA-256, and unpacks it *beside* the installed copy. On restart a
+  detached helper waits for the process to exit, renames the new build into
+  place, and starts it. `lib/src/core/update/swap_scripts.dart` holds all four
+  helpers, and every one of them puts the old copy back if it cannot finish.
+- **`InstallTarget` is the new idea.** Not "what platform is this" but "where
+  does this copy live and can it write there". It answers with the asset
+  extensions this copy can actually apply, best first. A per-user Windows
+  install gets `['.zip', '.exe']`; `C:\Program Files` gets `['.exe']` alone; a
+  running AppImage gets `['.AppImage']`; a tarball install gets `['.tar.gz']`; a
+  `.deb` under `/usr` gets `['.deb']`. The probe is a write, not a permission
+  bit, and it tests the install directory's **parent**, because that is what the
+  rename needs.
+- **The `.deb` bug falls straight out of that.** A Debian install was being
+  offered an AppImage it had nowhere to put — the old code asked "not Windows,
+  not macOS, so AppImage". It now asks for a `.deb` and hands it to the
+  desktop's own installer. Verified against the live v0.2.3 release with
+  `tool/check_update.dart`, which now walks all six install shapes.
+- **The Ubuntu dock icon.** `linux/runner/my_application.cc` calls
+  `g_set_prgname(APPLICATION_ID)`, so a Kruftle window announces itself as
+  `com.dizitart.kruftle` — Wayland app_id, X11 WM_CLASS and `_GTK_APPLICATION_ID`
+  alike. We shipped `kruftle.desktop` with `StartupWMClass=kruftle`. GNOME
+  matches a window by desktop-entry name and then by StartupWMClass, and that
+  matched on **neither**, so the window belonged to no application and got the
+  generic icon. Entry, icon and StartupWMClass are all named for the
+  application id now. The `.deb` also grew a `postinst`/`postrm` that refresh
+  the icon and desktop caches, and the packaging script runs
+  `desktop-file-validate` — an invalid entry is not an install error, it is
+  silently ignored at runtime, which looks exactly like this bug.
+- **The macOS dock icon was 24% oversized.** macOS puts the body of an app icon
+  in the middle 824 of 1024 points and leaves the rest transparent; the Dock
+  lays every icon out on that assumption and does *not* scale a full-bleed one
+  down. Ours was drawn to the edge — measured 1.000 against the grid's 0.805,
+  confirmed on the shipped v0.2.3 `.icns`. `tool/make_icons.sh` now renders the
+  macOS catalogue at 80.5% on a transparent canvas. Linux and Windows stay
+  full-bleed, which is right for them.
+- **The version no longer comes from the bundle.** `PackageInfo.fromPlatform()`
+  reads it back out of the packaged app at runtime — the executable's version
+  resource on Windows via FFI, a generated JSON file on Linux, `Info.plist` on
+  macOS. Three platform paths, and each fails the same way: `tryParse` returns
+  null and the check gives up before it starts, silently. That is the shape of
+  the Windows report. It is a `const kAppVersion` now, held to `pubspec.yaml` by
+  a test and to the git tag by the release workflow, and `package_info_plus` is
+  gone from the dependency list.
+- **Silence is now a choice, not an accident.** `Updater.check()` throws
+  `UpdateFailure` instead of returning null on a failure. The check at launch
+  still swallows it — an app that nags about its own update server is worse
+  than one that waits — but **Settings → Updates → Check for updates now**
+  reports it. That button is what turns "it never says anything" into a
+  sentence somebody can act on.
+- **Inno Setup, for the Microsoft Store.** `/VERYSILENT /NORESTART` work and
+  are documented at the top of the script, with `RestartIfNeededByRun=no` so a
+  reboot is never asked for and `CloseApplications` so a running Kruftle is
+  closed rather than blocking. The default install is now per-user
+  (`PrivilegesRequired=lowest`), which is what makes the no-installer update
+  path the normal one on Windows; `/ALLUSERS` still gives a machine-wide
+  install, and `UsePreviousPrivileges` keeps an existing one that way.
+- **Downloads are no longer hoarded.** The updates directory is emptied before
+  each download. A real machine had 66 MB of superseded `.dmg`s in it, in an
+  app whose whole subject is not leaving build output lying around.
+- **Not verified by hand:** the round trip on Windows and Linux — see §2. The
+  swap helpers themselves are exercised for real, including the PowerShell one.
 
 ### Session 12 — 2026-08-28
 
@@ -619,9 +702,33 @@ Append-only. Record *why*, so a future session does not undo it.
 | 2026-08-25 | One instance, enforced by an advisory file lock in the support directory | Two cleanups over one tree means two build tools writing one directory. A lock file is released by the OS on any exit, unlike a pid file; a loopback socket would risk a firewall prompt for no gain |
 | 2026-08-25 | Every toast goes through `showToast`, which sets `persist: false` | The Material default makes any snack bar with an action permanent, which is never what Kruftle wants, and it is invisible at the call site |
 ---
+| 2026-08-28 | The updater asks *how Kruftle is installed*, not what OS it is on | "Not Windows, not macOS, therefore AppImage" is what handed a `.deb` install a file it had nowhere to put. `InstallTarget` answers the only question that matters: what can this copy actually apply, given where it lives and whether it can write there |
+| 2026-08-28 | Update by unpacking an archive over the install, not by running an installer | An installer is a second UI, a second set of prompts and, on Windows, an elevation prompt for something the user already agreed to. Where the copy is writable — which per-user installs make the normal case — a rename is enough, and the next launch is the new version |
+| 2026-08-28 | A copy that cannot write next to itself is offered its own packaging's installer | `C:\Program Files` and `/usr` need a password. Downloading an archive we cannot unpack there would be a progress bar that ends in nothing; asking is the honest failure |
+| 2026-08-28 | Windows installs per-user by default | It is what makes the no-installer path work without elevation, and it is what VS Code does for the same reason. `/ALLUSERS` still gives a machine-wide install for the Store and for managed fleets |
+| 2026-08-28 | The version is a compile-time constant, not read back out of the bundle | `PackageInfo.fromPlatform()` has a different implementation per platform and each one fails by returning something `Version.tryParse` rejects — after which the update check gives up in silence. A constant cannot. A test holds it to `pubspec.yaml`, the release workflow holds it to the tag |
+| 2026-08-28 | The check at launch stays silent on failure; the one a person asks for does not | Both are right for their caller. What was wrong was having only the silent one |
+| 2026-08-28 | The Linux desktop entry, its icon and StartupWMClass are named for the GTK application id | It is the only name a Kruftle window ever announces, because the runner sets prgname to it. Anything else matches no window, and an unmatched window has no icon |
 
 ## 6. Known gotchas
 
+- **macOS is the only one of the three that wants an inset app icon.** Its grid
+  puts the body in the middle 824 of 1024 points and the Dock lays every icon
+  out on that assumption — a full-bleed icon is drawn a quarter oversized, not
+  scaled down. Windows and GNOME want full bleed. `test/ui/icons_test.dart`
+  holds both, per size.
+- **`actool` emits a four-entry `AppIcon.icns` and that is fine.** The full ten
+  renditions are in `Assets.car`, which is what macOS actually reads; the
+  `.icns` is a legacy fallback. Checked with `assetutil --info` before assuming
+  something was wrong with it.
+- **Real file I/O inside `testWidgets` hangs.** The fake clock a widget test
+  runs on will not complete it. Anything that touches the disk — the updater's
+  download, for one — has to be inside `tester.runAsync`. It presents as a test
+  that never finishes rather than one that fails.
+- **`p.dirname` splits with the *host's* path style.** `p.dirname(r'C:\x\y.exe')`
+  is `.` on a Mac, so any code deciding something about a Windows layout has to
+  build a `p.Context(style: p.Style.windows)` rather than use the top-level
+  functions. `InstallTarget.detect` does; a test caught it not doing so.
 - **Reading a bundled asset in a widget test poisons the next test that reads
   the same one.** The bundle caches it as a buffer the following test cannot
   read back, and its `FutureBuilder` silently renders the error branch — so a

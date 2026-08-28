@@ -512,7 +512,7 @@ class LRu extends L {
 
   @override
   String updateReady(String version) {
-    return 'Kruftle $version проверен. Идёт установка…';
+    return 'Kruftle $version готов. Перезапустите, чтобы завершить.';
   }
 
   @override
@@ -520,6 +520,15 @@ class LRu extends L {
 
   @override
   String get updateAction => 'Обновить';
+
+  @override
+  String get updateRestart => 'Перезапустить';
+
+  @override
+  String get updateChecking => 'Проверка обновлений…';
+
+  @override
+  String get updateUpToDate => 'Установлена последняя версия Kruftle.';
 
   @override
   String get settingsTitle => 'Настройки';
@@ -654,6 +663,9 @@ class LRu extends L {
   @override
   String get settingsCheckUpdatesHelp =>
       'При запуске Kruftle обращается к GitHub Releases и предлагает проверенную загрузку. Он никогда не устанавливает ничего без спроса.';
+
+  @override
+  String get settingsCheckNow => 'Проверить обновления сейчас';
 
   @override
   String get settingsSectionSizes => 'Размеры';

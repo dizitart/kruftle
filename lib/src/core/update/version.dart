@@ -1,5 +1,21 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
+/// The version this build of Kruftle is.
+///
+/// A plain constant, not `PackageInfo.fromPlatform()`. That reads the version
+/// back out of the packaged app at runtime — the executable's version resource
+/// on Windows, a generated JSON file beside the bundle on Linux, `Info.plist`
+/// on macOS. Three platform paths, three ways to come back empty or
+/// unparseable, and every one of them fails the same way: `tryParse` returns
+/// null, the update check gives up before it starts, and the user is told
+/// nothing at all — which is what Windows was doing, with no way to tell from
+/// the outside which of the three had gone wrong.
+///
+/// A constant is identical on every platform, needs no plugin, and cannot come
+/// back wrong. `version_test.dart` holds it to `pubspec.yaml`, and the release
+/// workflow refuses to build a tag that disagrees with it.
+const kAppVersion = '0.2.4';
+
 /// A semantic version, enough of one to decide whether a release is newer.
 ///
 /// Deliberately not a package dependency: comparing three integers and an

@@ -147,9 +147,12 @@
 
   "updateAvailable": "Доступен Kruftle {version} ({size}).",
   "updateDownloading": "Загрузка {version}… {percent} %",
-  "updateReady": "Kruftle {version} проверен. Идёт установка…",
+  "updateReady": "Kruftle {version} готов. Перезапустите, чтобы завершить.",
   "updateFailed": "Не удалось обновить.",
   "updateAction": "Обновить",
+  "updateRestart": "Перезапустить",
+  "updateChecking": "Проверка обновлений…",
+  "updateUpToDate": "Установлена последняя версия Kruftle.",
 
   "settingsTitle": "Настройки",
   "settingsSectionAppearance": "Внешний вид",
@@ -190,6 +193,7 @@
   "settingsSectionUpdates": "Обновления",
   "settingsCheckUpdates": "Проверять обновления автоматически",
   "settingsCheckUpdatesHelp": "При запуске Kruftle обращается к GitHub Releases и предлагает проверенную загрузку. Он никогда не устанавливает ничего без спроса.",
+  "settingsCheckNow": "Проверить обновления сейчас",
   "settingsSectionSizes": "Размеры",
   "settingsSizeMode": "Как считаются размеры",
   "settingsSizeModeOnDisk": "Место, реально занятое на диске",

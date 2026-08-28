@@ -3,7 +3,8 @@
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:kruftle/src/core/update/updater.dart';
+import 'package:kruftle/src/core/update/install_target.dart';
+import 'package:kruftle/src/core/update/swap_scripts.dart';
 import 'package:path/path.dart' as p;
 
 /// Drives the real script against a real disk image and a real process, because
@@ -13,14 +14,16 @@ void main() {
   group('bundlePath', () {
     test('finds the .app a bundled executable runs out of', () {
       expect(
-        Updater.bundlePath('/Applications/Kruftle.app/Contents/MacOS/Kruftle'),
+        InstallTarget.bundlePath(
+          '/Applications/Kruftle.app/Contents/MacOS/Kruftle',
+        ),
         '/Applications/Kruftle.app',
       );
     });
 
     test('reports nothing for a binary that is not in a bundle', () {
-      expect(Updater.bundlePath('/tmp/build/kruftle'), isNull);
-      expect(Updater.bundlePath('/usr/local/bin/kruftle'), isNull);
+      expect(InstallTarget.bundlePath('/tmp/build/kruftle'), isNull);
+      expect(InstallTarget.bundlePath('/usr/local/bin/kruftle'), isNull);
     });
   });
 
@@ -50,7 +53,7 @@ void main() {
 
       await Process.run(
         '/bin/sh',
-        ['-c', Updater.macSwapScript, 'kruftle-update', dmg, app, '$pid'],
+        ['-c', macSwapScript, 'kruftle-update', dmg, app, '$pid'],
         environment: {'PATH': '${stub.path}:/bin:/usr/bin:/usr/sbin'},
       );
 
@@ -80,7 +83,7 @@ void main() {
       final installed = Directory(p.join(work.path, 'Applications'))
         ..createSync();
       final binary = writeBundle(installed.path, 'old');
-      final app = Updater.bundlePath(binary)!;
+      final app = InstallTarget.bundlePath(binary)!;
       final holder = await Process.start('/bin/sleep', ['30']);
 
       final swap = runSwap(dmg, app, holder.pid);
@@ -108,7 +111,10 @@ void main() {
         final binary = writeBundle(installed.path, 'old');
 
         // Falls back to showing the disk image, exactly as it used to.
-        expect(await runSwap(dmg, Updater.bundlePath(binary)!, 999999), dmg);
+        expect(
+          await runSwap(dmg, InstallTarget.bundlePath(binary)!, 999999),
+          dmg,
+        );
         expect(File(binary).readAsStringSync(), 'old');
       },
     );

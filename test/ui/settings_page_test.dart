@@ -90,8 +90,8 @@ void main() {
     testWidgets('leaves the version out rather than showing a blank', (
       tester,
     ) async {
-      // A test, or a platform where PackageInfo has not resolved yet, has no
-      // version. The licence and the credit still stand on their own.
+      // A test, or a screenshot run, can pin the version to nothing. The
+      // licence and the credit still stand on their own.
       await pumpSettings(tester, version: null);
       await tester.scrollUntilVisible(
         find.textContaining('Kolkata'),

@@ -8,9 +8,13 @@ import 'package:crypto/crypto.dart';
 import 'package:http/http.dart' as http;
 import 'package:path/path.dart' as p;
 
+import 'install_target.dart';
+import 'swap_scripts.dart';
 import 'version.dart';
 
-/// A release newer than what is running, with the installer for this platform.
+export 'install_target.dart' show InstallTarget;
+
+/// A release newer than what is running, with the asset for this platform.
 class AvailableUpdate {
   const AvailableUpdate({
     required this.version,
@@ -31,9 +35,15 @@ class AvailableUpdate {
 
   final String notes;
   final int sizeBytes;
+
+  /// True when applying this lands without an installer running — the archive
+  /// is unpacked over the installed copy and the next launch is the new
+  /// version.
+  bool get isSelfReplacing =>
+      !const ['.exe', '.deb'].any(assetName.toLowerCase().endsWith);
 }
 
-/// Why an update could not be applied.
+/// Why an update could not be checked for, downloaded, or applied.
 class UpdateFailure implements Exception {
   const UpdateFailure(this.message);
 
@@ -43,34 +53,33 @@ class UpdateFailure implements Exception {
   String toString() => message;
 }
 
-/// Checks GitHub Releases, downloads the right installer, verifies it, and
-/// hands it to the operating system.
+/// Checks GitHub Releases, downloads the right build, verifies it, and replaces
+/// the installed Kruftle with it.
 ///
 /// Deliberately not Sparkle/WinSparkle: those need an appcast and, on macOS, a
 /// Developer ID signature to work smoothly. This does the same job identically
-/// on all three platforms with no extra infrastructure: the installer is
-/// fetched, verified against the release's own checksum, and applied without
-/// the user having to drag anything anywhere.
+/// on all three platforms with no extra infrastructure, and — where the
+/// installed copy is somewhere this user can write, which is the normal case —
+/// with no installer at all. See [InstallTarget].
 class Updater {
   Updater({
     required this.currentVersion,
+    required this.target,
     http.Client? client,
     this.repository = 'dizitart/kruftle',
     this.includePreReleases = false,
-    bool? windows,
-    bool? macOS,
     String? architecture,
   }) : _client = client ?? http.Client(),
-       _windows = windows ?? Platform.isWindows,
-       _macOS = macOS ?? Platform.isMacOS,
        _architecture = architecture ?? currentArchitecture();
 
   final Version currentVersion;
+
+  /// Where this copy of Kruftle lives, which decides what it can update from.
+  final InstallTarget target;
+
   final String repository;
   final bool includePreReleases;
   final http.Client _client;
-  final bool _windows;
-  final bool _macOS;
   final String _architecture;
 
   /// The processor this build is running on, as it appears in an asset name:
@@ -92,13 +101,6 @@ class Updater {
   Uri get _releasesUrl =>
       Uri.https('api.github.com', '/repos/$repository/releases');
 
-  /// The installer extension this platform can run.
-  String get _assetSuffix => _windows
-      ? '.exe'
-      : _macOS
-      ? '.dmg'
-      : '.AppImage';
-
   /// The names this architecture answers to in a release asset.
   ///
   /// One processor goes by several names depending on who packaged it —
@@ -113,16 +115,34 @@ class Updater {
     _ => const ['x64', 'x86_64', 'amd64'],
   };
 
-  /// Picks the installer for this platform *and* processor.
+  /// Picks the asset for this install *and* this processor.
   ///
-  /// A universal or unlabelled asset — which is what the macOS .dmg is, since
+  /// [InstallTarget.assetSuffixes] is in preference order, so a copy that can
+  /// replace itself takes the plain archive and only falls back to an installer
+  /// when the release does not carry one — which is what every release before
+  /// archives existed looks like.
+  Map<String, Object?> selectAsset(List<Map<String, Object?>> assets) {
+    for (final suffix in target.assetSuffixes) {
+      final chosen = _selectBySuffix(assets, suffix);
+      if (chosen.isNotEmpty) return chosen;
+    }
+    return const {};
+  }
+
+  /// A universal or unlabelled asset — which is what the macOS `.dmg` is, since
   /// it carries both architectures in one bundle — is accepted by any
   /// processor. An asset labelled for a different processor is not: offering
   /// an arm64 machine an x64 build is worse than offering it nothing, because
   /// it looks like it worked until it does not run.
-  Map<String, Object?> selectAsset(List<Map<String, Object?>> assets) {
+  Map<String, Object?> _selectBySuffix(
+    List<Map<String, Object?>> assets,
+    String suffix,
+  ) {
+    final wanted = suffix.toLowerCase();
     final candidates = assets
-        .where((a) => (a['name'] as String? ?? '').endsWith(_assetSuffix))
+        .where(
+          (a) => (a['name'] as String? ?? '').toLowerCase().endsWith(wanted),
+        )
         .toList();
     if (candidates.isEmpty) return const {};
 
@@ -158,15 +178,17 @@ class Updater {
         .toList();
     if (unlabelled.isNotEmpty) return unlabelled.first;
 
-    // Everything on offer is for some other processor.
+    // Everything on offer with this extension is for some other processor.
     return const {};
   }
 
-  /// Null when already up to date, or when the check simply could not be made.
+  /// Null when already up to date.
   ///
-  /// A failed check is not an error the user needs to see: an app that nags
-  /// about its own update server being unreachable is worse than one that
-  /// quietly tries again tomorrow.
+  /// Throws [UpdateFailure] when the check could not be made at all. Whether
+  /// that is worth telling the user about depends on who asked: a background
+  /// check that nags about its own update server being unreachable is worse
+  /// than one that quietly tries again tomorrow, but a person who just pressed
+  /// "check for updates" is owed an answer.
   Future<AvailableUpdate?> check() async {
     final List<dynamic> releases;
     try {
@@ -176,10 +198,17 @@ class Updater {
             headers: const {'Accept': 'application/vnd.github+json'},
           )
           .timeout(const Duration(seconds: 15));
-      if (response.statusCode != 200) return null;
+      if (response.statusCode != 200) {
+        throw UpdateFailure(
+          'GitHub answered HTTP ${response.statusCode} when asked for the '
+          'list of releases.',
+        );
+      }
       releases = jsonDecode(response.body) as List<dynamic>;
-    } on Object {
-      return null;
+    } on UpdateFailure {
+      rethrow;
+    } on Object catch (e) {
+      throw UpdateFailure('Could not reach the update server: $e');
     }
 
     for (final entry in releases) {
@@ -193,11 +222,11 @@ class Updater {
       final assets = (release['assets'] as List<dynamic>? ?? const [])
           .cast<Map<String, Object?>>();
 
-      final installer = selectAsset(assets);
-      if (installer.isEmpty) continue;
+      final chosen = selectAsset(assets);
+      if (chosen.isEmpty) continue;
 
       final checksums = await _fetchChecksums(assets);
-      final name = installer['name']! as String;
+      final name = chosen['name']! as String;
       final digest = checksums[name];
       if (digest == null) {
         // A release without a checksum for our asset is not installable. We do
@@ -208,10 +237,10 @@ class Updater {
       return AvailableUpdate(
         version: version,
         assetName: name,
-        downloadUrl: installer['browser_download_url']! as String,
+        downloadUrl: chosen['browser_download_url']! as String,
         sha256: digest,
         notes: release['body'] as String? ?? '',
-        sizeBytes: (installer['size'] as num?)?.toInt() ?? 0,
+        sizeBytes: (chosen['size'] as num?)?.toInt() ?? 0,
       );
     }
 
@@ -250,6 +279,10 @@ class Updater {
   /// Throws [UpdateFailure] on a mismatch and deletes the file. A binary that
   /// does not match its published digest is either corrupt or substituted, and
   /// there is no version of "install it anyway" that is acceptable here.
+  ///
+  /// [directory] is emptied first. Kruftle is an app about not leaving build
+  /// output lying around; leaving a shelf of superseded installers in its own
+  /// support directory would be a poor joke.
   Future<File> download(
     AvailableUpdate update, {
     required String directory,
@@ -267,8 +300,13 @@ class Updater {
       throw UpdateFailure('Download failed with HTTP ${response.statusCode}.');
     }
 
-    Directory(directory).createSync(recursive: true);
-    final file = File(p.join(directory, update.assetName));
+    final into = Directory(directory);
+    if (into.existsSync()) into.deleteSync(recursive: true);
+    into.createSync(recursive: true);
+
+    // `basename`, because the name comes off the network: an asset called
+    // `../../kruftle.exe` must land in the updates directory like any other.
+    final file = File(p.join(directory, p.basename(update.assetName)));
     final sink = file.openWrite();
     final total = response.contentLength ?? update.sizeBytes;
     var received = 0;
@@ -295,107 +333,124 @@ class Updater {
     return file;
   }
 
-  /// The `.app` bundle [executable] is running out of, or null when this build
-  /// is not inside one — a `flutter run`, or a bare binary.
+  /// Applies the verified download.
   ///
-  /// `/Applications/Kruftle.app/Contents/MacOS/Kruftle` is three directories
-  /// below the bundle, and that layout is fixed by macOS.
-  static String? bundlePath(String executable) {
-    final bundle = p.dirname(p.dirname(p.dirname(executable)));
-    return p.extension(bundle) == '.app' ? bundle : null;
-  }
-
-  /// Replaces the running `.app` with the one inside the mounted disk image,
-  /// then starts it again.
+  /// Returns true when Kruftle has to quit for it to finish, which it does for
+  /// every in-place swap: the helper is waiting for this process to exit before
+  /// it can replace the files we are running out of. It relaunches us when it
+  /// is done.
   ///
-  /// Run detached, by `/bin/sh`, because nothing in it can happen while Kruftle
-  /// is alive: macOS will not let a bundle be replaced underneath a process
-  /// running out of it, which is the "the app is already running" refusal
-  /// Finder gives when the drag is done by hand. So it waits for us to go, and
-  /// only then swaps. This is what Sparkle does with its own helper tool; the
-  /// helper here is nine lines of shell because there is nothing else to do.
-  ///
-  /// Every path arrives as a positional argument, never interpolated, so a
-  /// release asset cannot name itself into a shell command.
-  ///
-  /// The old bundle is moved aside rather than deleted, and moved back if the
-  /// new one cannot take its place — a failed update leaves the working Kruftle
-  /// where it was. If the swap cannot even be attempted (`/Applications` not
-  /// writable by this user), the disk image is opened instead and the user is
-  /// where they would have been anyway.
-  static const macSwapScript = r'''
-      dmg=$1; app=$2; pid=$3
-      waited=0
-      while kill -0 "$pid" 2>/dev/null && [ "$waited" -lt 100 ]; do
-        sleep 0.1; waited=$((waited + 1))
-      done
-      kill -0 "$pid" 2>/dev/null && { open "$dmg"; exit 0; }
+  /// Dispatches on the asset's own extension rather than on the platform, so
+  /// what runs is decided by what was actually downloaded.
+  Future<bool> install(File asset) async {
+    final path = asset.path;
+    final name = path.toLowerCase();
 
-      mount=$(mktemp -d /tmp/kruftle-update.XXXXXX)
-      hdiutil attach -nobrowse -readonly -noverify -mountpoint "$mount" "$dmg" \
-        >/dev/null || { rmdir "$mount"; open "$dmg"; exit 0; }
-      new=$(ls -d "$mount"/*.app 2>/dev/null | head -1)
+    if (name.endsWith('.dmg')) return _applyMacImage(path);
+    if (name.endsWith('.zip')) return _applyWindowsArchive(path);
+    if (name.endsWith('.tar.gz')) return _applyLinuxArchive(path);
+    if (name.endsWith('.appimage')) return _applyAppImage(path);
 
-      staging=$app.new
-      swapped=
-      rm -rf "$staging" "$app.old"
-      if [ -n "$new" ] && ditto "$new" "$staging" 2>/dev/null &&
-         mv "$app" "$app.old" 2>/dev/null; then
-        if mv "$staging" "$app" 2>/dev/null; then
-          swapped=1
-        else
-          mv "$app.old" "$app"
-        fi
-      fi
-      rm -rf "$staging" "$app.old"
-      hdiutil detach "$mount" -quiet 2>/dev/null; rmdir "$mount" 2>/dev/null
-
-      if [ -n "$swapped" ]; then open "$app"; else open "$dmg"; fi
-''';
-
-  /// Hands the verified installer to the OS.
-  ///
-  /// Returns true when Kruftle must quit for the install to finish, which on
-  /// macOS it must: the swap is waiting for this process to exit.
-  Future<bool> install(File installer) async {
-    if (_windows) {
-      // Inno Setup: run silently, restart the app when finished.
-      await Process.start(installer.path, [
+    if (name.endsWith('.exe')) {
+      // Inno Setup. `/NORESTART` because an app update is never a reason to
+      // reboot somebody's machine.
+      await Process.start(path, [
         '/SILENT',
+        '/NORESTART',
         '/CLOSEAPPLICATIONS',
         '/RESTARTAPPLICATIONS',
       ], mode: ProcessStartMode.detached);
-    } else if (_macOS) {
-      final bundle = bundlePath(Platform.resolvedExecutable);
-      if (bundle == null) {
-        // Not running out of a bundle we could replace. Show the disk image
-        // and let the drag be done by hand, as before.
-        await Process.start('open', [
-          installer.path,
-        ], mode: ProcessStartMode.detached);
-        return false;
-      }
-      await Process.start('/bin/sh', [
-        '-c',
-        macSwapScript,
-        'kruftle-update',
-        installer.path,
-        bundle,
-        '$pid',
-      ], mode: ProcessStartMode.detached);
-      return true;
-    } else {
-      // AppImage: make it executable and replace the running one in place.
-      await Process.run('chmod', ['+x', installer.path]);
-      final current = Platform.environment['APPIMAGE'];
-      if (current != null && current.isNotEmpty) {
-        await installer.copy(current);
-      } else {
-        await Process.start('xdg-open', [
-          installer.parent.path,
-        ], mode: ProcessStartMode.detached);
-      }
+      return false;
     }
+
+    // A .deb, which needs a package manager and root. Hand it to the desktop's
+    // own installer rather than asking for a password behind a progress bar.
+    await Process.start('xdg-open', [path], mode: ProcessStartMode.detached);
+    return false;
+  }
+
+  Future<bool> _applyMacImage(String image) async {
+    final bundle = target.swapDirectory;
+    if (bundle == null) {
+      // Not running out of a bundle we could replace. Show the disk image and
+      // let the drag be done by hand.
+      await Process.start('open', [image], mode: ProcessStartMode.detached);
+      return false;
+    }
+    await Process.start('/bin/sh', [
+      '-c',
+      macSwapScript,
+      'kruftle-update',
+      image,
+      bundle,
+      '$pid',
+    ], mode: ProcessStartMode.detached);
+    return true;
+  }
+
+  Future<bool> _applyLinuxArchive(String archive) async {
+    final directory = target.swapDirectory;
+    if (directory == null) return _reveal(archive);
+    await Process.start('/bin/sh', [
+      '-c',
+      linuxSwapScript,
+      'kruftle-update',
+      archive,
+      directory,
+      '$pid',
+      Platform.resolvedExecutable,
+    ], mode: ProcessStartMode.detached);
+    return true;
+  }
+
+  Future<bool> _applyAppImage(String image) async {
+    final current = target.appImage;
+    if (current == null) return _reveal(image);
+    await Process.start('/bin/sh', [
+      '-c',
+      appImageSwapScript,
+      'kruftle-update',
+      image,
+      current,
+      '$pid',
+    ], mode: ProcessStartMode.detached);
+    return true;
+  }
+
+  Future<bool> _applyWindowsArchive(String archive) async {
+    final directory = target.swapDirectory;
+    if (directory == null) return _reveal(archive);
+
+    // Written out rather than passed inline: `powershell -File` takes named
+    // arguments, which keeps every path out of the script text.
+    final script = File(p.join(p.dirname(archive), 'apply-update.ps1'))
+      ..writeAsStringSync(windowsSwapScript);
+
+    await Process.start('powershell', [
+      '-NoProfile',
+      '-NonInteractive',
+      '-ExecutionPolicy',
+      'Bypass',
+      '-File',
+      script.path,
+      '-Archive',
+      archive,
+      '-Dir',
+      directory,
+      '-Owner',
+      '$pid',
+      '-Exe',
+      Platform.resolvedExecutable,
+    ], mode: ProcessStartMode.detached);
+    return true;
+  }
+
+  /// The last resort: show the user what was downloaded. Reached only when the
+  /// install shape changed underneath us between the check and the install.
+  Future<bool> _reveal(String path) async {
+    await Process.start(Platform.isWindows ? 'explorer' : 'xdg-open', [
+      p.dirname(path),
+    ], mode: ProcessStartMode.detached);
     return false;
   }
 }

@@ -14,6 +14,7 @@ import '../core/scan/sizer.dart';
 import '../core/settings/settings.dart';
 import 'about_pages.dart';
 import 'state/app_state.dart';
+import 'state/update_controller.dart';
 import 'theme.dart';
 import 'tour_page.dart';
 import 'widgets/common.dart';
@@ -238,6 +239,18 @@ class SettingsPage extends ConsumerWidget {
                 value: settings.checkForUpdates,
                 onChanged: (v) =>
                     controller.update((s) => s.copyWith(checkForUpdates: v)),
+              ),
+              // Asking by hand answers a question the automatic check cannot:
+              // whether it ran at all. A background check that fails says
+              // nothing, which is right for a background check and useless for
+              // somebody wondering why they were never offered a new version.
+              _LinkRow(
+                label: l.settingsCheckNow,
+                icon: Icons.refresh_rounded,
+                onTap: () {
+                  ref.read(updateProvider.notifier).check(byHand: true);
+                  Navigator.of(context).maybePop();
+                },
               ),
             ],
           ),

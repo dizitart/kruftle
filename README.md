@@ -81,15 +81,33 @@ Adding another is one file and one list entry — see
 
 ## Install
 
-Download the installer for your platform from
-[Releases](https://github.com/dizitart/kruftle/releases). Kruftle updates itself
-from there afterwards.
+Download the build for your platform from
+[Releases](https://github.com/dizitart/kruftle/releases).
+
+- **macOS** — the `.dmg`; drag Kruftle to Applications.
+- **Windows** — the `-setup.exe`. It installs for you alone, under
+  `%LOCALAPPDATA%\Programs`, and needs no administrator. Add `/ALLUSERS` for a
+  machine-wide install.
+- **Linux** — the `.deb`, the `.AppImage` (`chmod +x` it first), or the
+  `.tar.gz` unpacked anywhere you can write.
 
 Builds are currently unsigned, so the first launch needs one extra step:
 
 - **macOS** — `xattr -dr com.apple.quarantine /Applications/Kruftle.app`
 - **Windows** — SmartScreen → *More info* → *Run anyway*
-- **Linux** — `chmod +x Kruftle-*.AppImage`
+
+### Updating
+
+Kruftle updates itself. It checks Releases at launch, offers the new version,
+verifies the download against the release's published SHA-256, and unpacks it
+over the installed copy when you restart — no installer, nothing to drag. You
+can also ask at any time: **Settings → Updates → Check for updates now**.
+
+The one case that still needs an installer is a copy installed somewhere you
+cannot write — a machine-wide `C:\Program Files` install, or a `.deb` under
+`/usr`. Those are offered their own packaging's installer instead, because
+replacing those files needs a password and doing that behind a progress bar
+would be worse than asking.
 
 ## Building from source
 

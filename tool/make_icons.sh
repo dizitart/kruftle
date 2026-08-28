@@ -24,14 +24,26 @@ for size in 16 32 48 64 128 256 512; do
 done
 
 # macOS asset catalogue.
+#
+# Alone among the three, macOS does not want the mark drawn to the edge of the
+# canvas. Its icon grid puts the body of an app icon in the middle 824 of 1024
+# points and leaves the rest transparent, and every icon in the Dock is laid
+# out on that assumption. A full-bleed icon is not clipped to fit — it is drawn
+# at the size it was given, which is why Kruftle stood a quarter taller than
+# everything beside it. Same artwork, 80.5% of the canvas, centred.
 MAC="$ROOT/macos/Runner/Assets.xcassets/AppIcon.appiconset"
+MACTMP="$(mktemp -d)"
+trap 'rm -rf "$MACTMP"' EXIT
 for size in 16 32 64 128 256 512 1024; do
-  render "$size" "$MAC/app_icon_${size}.png"
+  body=$(( (size * 824 + 512) / 1024 ))   # rounded, not truncated
+  render "$body" "$MACTMP/body.png"
+  magick "$MACTMP/body.png" -background none -gravity center \
+    -extent "${size}x${size}" "$MAC/app_icon_${size}.png"
 done
 
-# Windows .ico — every size Explorer picks from, in one file.
-TMP="$(mktemp -d)"
-trap 'rm -rf "$TMP"' EXIT
+# Windows .ico — every size Explorer picks from, in one file. Full-bleed:
+# Windows and GNOME both lay out square icons edge to edge.
+TMP="$MACTMP"
 for size in 16 24 32 48 64 128 256; do render "$size" "$TMP/$size.png"; done
 magick "$TMP"/16.png "$TMP"/24.png "$TMP"/32.png "$TMP"/48.png \
        "$TMP"/64.png "$TMP"/128.png "$TMP"/256.png \

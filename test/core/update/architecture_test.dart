@@ -10,16 +10,12 @@ Map<String, Object?> asset(String name) => {
   'size': 1024,
 };
 
-Updater on({
-  required bool windows,
-  required bool macOS,
-  required String architecture,
-}) => Updater(
-  currentVersion: const Version(0, 1, 0),
-  windows: windows,
-  macOS: macOS,
-  architecture: architecture,
-);
+Updater on({required List<String> suffixes, required String architecture}) =>
+    Updater(
+      currentVersion: const Version(0, 1, 0),
+      target: InstallTarget(assetSuffixes: suffixes),
+      architecture: architecture,
+    );
 
 String? pick(Updater updater, List<String> names) {
   final chosen = updater.selectAsset([for (final n in names) asset(n)]);
@@ -37,8 +33,9 @@ void main() {
   });
 
   group('Windows', () {
-    final arm = on(windows: true, macOS: false, architecture: 'arm64');
-    final x64 = on(windows: true, macOS: false, architecture: 'x64');
+    // A Program Files install, which can only be updated by its installer.
+    final arm = on(suffixes: const ['.exe'], architecture: 'arm64');
+    final x64 = on(suffixes: const ['.exe'], architecture: 'x64');
 
     const both = [
       'Kruftle-0.2.0-windows-x64.exe',
@@ -87,8 +84,8 @@ void main() {
   });
 
   group('macOS', () {
-    final arm = on(windows: false, macOS: true, architecture: 'arm64');
-    final intel = on(windows: false, macOS: true, architecture: 'x64');
+    final arm = on(suffixes: const ['.dmg'], architecture: 'arm64');
+    final intel = on(suffixes: const ['.dmg'], architecture: 'x64');
 
     test('the universal .dmg is taken by both processors', () {
       // The macOS bundle carries both architectures, so its name says nothing
@@ -109,14 +106,17 @@ void main() {
   });
 
   group('Linux', () {
-    final arm = on(windows: false, macOS: false, architecture: 'arm64');
-    final x64 = on(windows: false, macOS: false, architecture: 'x64');
+    // A running AppImage, which replaces its own file.
+    final arm = on(suffixes: const ['.AppImage'], architecture: 'arm64');
+    final x64 = on(suffixes: const ['.AppImage'], architecture: 'x64');
 
     const both = [
       'Kruftle-0.2.0-x86_64.AppImage',
       'Kruftle-0.2.0-aarch64.AppImage',
       'Kruftle-0.2.0-amd64.deb',
       'Kruftle-0.2.0-arm64.deb',
+      'Kruftle-0.2.0-linux-x86_64.tar.gz',
+      'Kruftle-0.2.0-linux-aarch64.tar.gz',
       'checksums.txt',
     ];
 
@@ -128,12 +128,17 @@ void main() {
       expect(pick(x64, both), 'Kruftle-0.2.0-x86_64.AppImage');
     });
 
-    test('the AppImage is preferred over the .deb', () {
-      // The updater replaces a running AppImage in place; a .deb needs a
-      // package manager and root, which is not something to do behind a
-      // progress bar.
-      expect(pick(x64, both)!.endsWith('.AppImage'), isTrue);
-      expect(pick(arm, both)!.endsWith('.AppImage'), isTrue);
+    test('an install asks only for the shape it can actually apply', () {
+      // Which shape that is comes from `InstallTarget`, not from the release:
+      // a .deb under /usr needs a package manager and root, and a tarball
+      // install replaces its own directory. Handing either the other one is
+      // how a Debian install ended up downloading an AppImage it had nowhere
+      // to put.
+      final deb = on(suffixes: const ['.deb'], architecture: 'x64');
+      expect(pick(deb, both), 'Kruftle-0.2.0-amd64.deb');
+
+      final tarball = on(suffixes: const ['.tar.gz'], architecture: 'arm64');
+      expect(pick(tarball, both), 'Kruftle-0.2.0-linux-aarch64.tar.gz');
     });
 
     test('an arm machine is offered nothing when only x86_64 was built', () {
@@ -142,7 +147,7 @@ void main() {
   });
 
   test('an empty release offers nothing rather than throwing', () {
-    final updater = on(windows: false, macOS: true, architecture: 'arm64');
+    final updater = on(suffixes: const ['.dmg'], architecture: 'arm64');
     expect(pick(updater, const []), isNull);
     expect(pick(updater, const ['checksums.txt']), isNull);
   });

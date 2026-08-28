@@ -147,9 +147,12 @@
 
   "updateAvailable": "Kruftle {version} उपलब्ध है ({size})।",
   "updateDownloading": "{version} डाउनलोड हो रहा है… {percent}%",
-  "updateReady": "Kruftle {version} सत्यापित है। इसे अभी इंस्टॉल किया जा रहा है…",
+  "updateReady": "Kruftle {version} तैयार है। पूरा करने के लिए पुनः आरंभ करें।",
   "updateFailed": "अपडेट विफल रहा।",
   "updateAction": "अपडेट करें",
+  "updateRestart": "अभी पुनः आरंभ करें",
+  "updateChecking": "अपडेट देखे जा रहे हैं…",
+  "updateUpToDate": "Kruftle नवीनतम है।",
 
   "settingsTitle": "सेटिंग्स",
   "settingsSectionAppearance": "रूप-रंग",
@@ -190,6 +193,7 @@
   "settingsSectionUpdates": "अपडेट",
   "settingsCheckUpdates": "अपने आप अपडेट जाँचें",
   "settingsCheckUpdatesHelp": "Kruftle शुरू होते समय GitHub Releases से पूछता है और एक सत्यापित डाउनलोड सुझाता है। यह पूछे बिना कभी इंस्टॉल नहीं करता।",
+  "settingsCheckNow": "अभी अपडेट देखें",
   "settingsSectionSizes": "आकार",
   "settingsSizeMode": "आकार कैसे गिने जाएँ",
   "settingsSizeModeOnDisk": "डिस्क पर वास्तव में घिरी जगह",

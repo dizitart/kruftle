@@ -914,7 +914,7 @@ abstract class L {
   /// No description provided for @updateReady.
   ///
   /// In en, this message translates to:
-  /// **'Kruftle {version} is verified. Installing it now…'**
+  /// **'Kruftle {version} is ready. Restart to finish.'**
   String updateReady(String version);
 
   /// No description provided for @updateFailed.
@@ -928,6 +928,24 @@ abstract class L {
   /// In en, this message translates to:
   /// **'Update'**
   String get updateAction;
+
+  /// No description provided for @updateRestart.
+  ///
+  /// In en, this message translates to:
+  /// **'Restart now'**
+  String get updateRestart;
+
+  /// No description provided for @updateChecking.
+  ///
+  /// In en, this message translates to:
+  /// **'Checking for updates…'**
+  String get updateChecking;
+
+  /// No description provided for @updateUpToDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Kruftle is up to date.'**
+  String get updateUpToDate;
 
   /// No description provided for @settingsTitle.
   ///
@@ -1162,6 +1180,12 @@ abstract class L {
   /// In en, this message translates to:
   /// **'Kruftle asks GitHub Releases on launch and offers a verified download. It never installs without asking.'**
   String get settingsCheckUpdatesHelp;
+
+  /// No description provided for @settingsCheckNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Check for updates now'**
+  String get settingsCheckNow;
 
   /// No description provided for @settingsSectionSizes.
   ///

@@ -8,6 +8,8 @@ import '../../core/log/activity_log.dart';
 import '../../core/profiles/profile.dart';
 import '../../core/registry/stack_registry.dart';
 import '../../core/settings/settings.dart';
+import '../../core/update/install_target.dart';
+import '../../core/update/version.dart';
 
 /// Filled in by `main()` via a ProviderScope override, because both of these
 /// are only obtainable asynchronously and every other provider wants them
@@ -20,13 +22,21 @@ final sharedPreferencesProvider = Provider<SharedPreferences>(
   (_) => throw StateError('sharedPreferencesProvider was not overridden'),
 );
 
-/// The running version, from the bundle. Overridden in `main()` for the same
-/// reason as the two above: `PackageInfo.fromPlatform()` is asynchronous and
-/// the widgets that want the version want it synchronously.
+/// The running version.
 ///
-/// Null in a test that does not supply one, which the callers treat as "say
-/// nothing" rather than as an error.
-final appVersionProvider = Provider<String?>((_) => null);
+/// A provider rather than a bare `kAppVersion` reference because tests and the
+/// screenshot tool pin it to a fixed string, and because the About page treats
+/// null as "say nothing" rather than as an error.
+final appVersionProvider = Provider<String?>((_) => kAppVersion);
+
+/// Where this copy of Kruftle is installed, worked out once. The probe touches
+/// the filesystem, and the answer cannot change while the process is running.
+///
+/// Overridden in tests, which must not be told they can overwrite the Flutter
+/// tester binary's own directory.
+final installTargetProvider = Provider<InstallTarget>(
+  (_) => InstallTarget.detect(),
+);
 
 // Profiles are stored under their own key rather than inside `Settings`: they
 // are exported and shared as a file, so they already have their own

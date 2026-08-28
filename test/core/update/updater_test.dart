@@ -89,8 +89,10 @@ void main() {
       currentVersion: Version.tryParse(current)!,
       client: client,
       includePreReleases: preReleases,
-      windows: false,
-      macOS: true,
+      target: const InstallTarget(
+        assetSuffixes: ['.dmg'],
+        swapDirectory: '/Applications/Kruftle.app',
+      ),
     );
 
     test('finds a newer release and its verified installer', () async {
@@ -155,41 +157,56 @@ void main() {
       // machine runs the tests: asset selection is architecture-aware now, and
       // a test whose result depends on the build host is not a test.
       // `test/core/update/architecture_test.dart` covers that dimension.
-      Future<String?> assetFor({
-        required bool windows,
-        required bool mac,
-      }) async {
+      Future<String?> assetFor(InstallTarget target) async {
         final update = await Updater(
           currentVersion: Version.tryParse('1.0.0')!,
           client: clientFor(releasesJson(assets: assets), checksums: checksums),
-          windows: windows,
-          macOS: mac,
+          target: target,
           architecture: 'x64',
         ).check();
         return update?.assetName;
       }
 
-      expect(await assetFor(windows: false, mac: true), endsWith('.dmg'));
-      expect(await assetFor(windows: true, mac: false), endsWith('.exe'));
-      expect(await assetFor(windows: false, mac: false), endsWith('.AppImage'));
+      expect(
+        await assetFor(const InstallTarget(assetSuffixes: ['.dmg'])),
+        endsWith('.dmg'),
+      );
+      expect(
+        await assetFor(const InstallTarget(assetSuffixes: ['.zip', '.exe'])),
+        endsWith('.exe'),
+        reason: 'this release carries no archive, so the installer stands in',
+      );
+      expect(
+        await assetFor(const InstallTarget(assetSuffixes: ['.AppImage'])),
+        endsWith('.AppImage'),
+      );
     });
 
-    test(
-      'a network failure is silent, not an error the user must dismiss',
-      () async {
-        final client = MockClient(
-          (_) async => throw const SocketException('no route'),
-        );
-        expect(await updaterWith(client).check(), isNull);
-      },
-    );
+    // A check that could not be made is reported as a failure rather than as
+    // "up to date". Whether the user is shown it is the caller's call —
+    // `UpdateController` swallows it for the check at launch and surfaces it
+    // for the one a person asked for. Saying "up to date" when we never got an
+    // answer is the one thing neither caller could recover from.
+    test('a network failure is a failure, not an up-to-date answer', () async {
+      final client = MockClient(
+        (_) async => throw const SocketException('no route'),
+      );
+      await expectLater(
+        updaterWith(client).check(),
+        throwsA(isA<UpdateFailure>()),
+      );
+    });
 
-    test('a rate-limited or broken API is silent too', () async {
-      expect(
-        await updaterWith(
-          MockClient((_) async => http.Response('{}', 403)),
-        ).check(),
-        isNull,
+    test('a rate-limited or broken API is a failure too', () async {
+      await expectLater(
+        updaterWith(MockClient((_) async => http.Response('{}', 403))).check(),
+        throwsA(
+          isA<UpdateFailure>().having(
+            (e) => e.message,
+            'message',
+            contains('403'),
+          ),
+        ),
       );
     });
   });
@@ -213,6 +230,7 @@ void main() {
 
     Updater downloaderFor(int status) => Updater(
       currentVersion: Version.tryParse('1.0.0')!,
+      target: const InstallTarget(assetSuffixes: ['.dmg']),
       client: MockClient((_) async => http.Response.bytes(payload, status)),
     );
 

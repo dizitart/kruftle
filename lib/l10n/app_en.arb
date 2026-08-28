@@ -247,12 +247,15 @@
       "percent": { "type": "int" }
     }
   },
-  "updateReady": "Kruftle {version} is verified. Installing it now…",
+  "updateReady": "Kruftle {version} is ready. Restart to finish.",
   "@updateReady": {
     "placeholders": { "version": { "type": "String" } }
   },
   "updateFailed": "The update failed.",
   "updateAction": "Update",
+  "updateRestart": "Restart now",
+  "updateChecking": "Checking for updates…",
+  "updateUpToDate": "Kruftle is up to date.",
 
   "settingsTitle": "Settings",
   "settingsSectionAppearance": "Appearance",
@@ -305,6 +308,7 @@
   "settingsSectionUpdates": "Updates",
   "settingsCheckUpdates": "Check for updates automatically",
   "settingsCheckUpdatesHelp": "Kruftle asks GitHub Releases on launch and offers a verified download. It never installs without asking.",
+  "settingsCheckNow": "Check for updates now",
   "settingsSectionSizes": "Sizes",
   "settingsSizeMode": "How sizes are counted",
   "settingsSizeModeOnDisk": "Space actually used on disk",
