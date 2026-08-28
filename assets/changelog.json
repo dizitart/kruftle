@@ -2,6 +2,13 @@
   "kruftle.changelog": 1,
   "versions": [
     {
+      "version": "0.2.7",
+      "date": "2026-08-29",
+      "fixed": [
+        "Kruftle on Windows never found an update. It reported \u201cup to date\u201d against releases that existed, from the day the updater shipped. Verifying a download needed a second request, for the checksums file \u2014 and because release downloads are redirected to a different server, that was a second request to a host the machine could not reach. Every build then looked unverifiable and the check quietly gave up. Kruftle now uses the checksum GitHub sends with the release listing it has already fetched, so there is nothing extra to reach. The download is still verified against it before anything is replaced, exactly as before."
+      ]
+    },
+    {
       "version": "0.2.6",
       "date": "2026-08-28",
       "fixed": [

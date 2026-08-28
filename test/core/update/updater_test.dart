@@ -86,6 +86,9 @@ void main() {
       bool prerelease = false,
       bool draft = false,
       List<String> assets = const [installer, 'checksums.txt'],
+      // GitHub publishes the SHA-256 of every asset in the listing itself.
+      // Releases predating that, or another host, would not.
+      bool withDigest = true,
     }) => jsonEncode([
       {
         'tag_name': tag,
@@ -98,6 +101,7 @@ void main() {
               'name': name,
               'size': 1024,
               'browser_download_url': 'https://example.test/$name',
+              if (withDigest) 'digest': 'sha256:$digest',
             },
         ],
       },
@@ -257,6 +261,71 @@ void main() {
       );
     });
 
+    group('the checksum comes with the listing', () {
+      // The bug this exists to stop coming back: verifying an asset used to
+      // need a second request, to `checksums.txt` — and because a release
+      // download redirects to objects.githubusercontent.com, a second request
+      // to a different host. A machine that could reach the API but not that
+      // host got an empty map, every asset looked unverifiable, and the check
+      // came back as "no update" in silence. It did that on Windows from the
+      // day the updater shipped.
+      test('an unreachable checksums.txt does not matter any more', () async {
+        final client = MockClient((request) async {
+          if (request.url.host == 'api.github.com') {
+            return http.Response(releasesJson(), 200);
+          }
+          throw const SocketException('objects.githubusercontent.com');
+        });
+
+        final update = await updaterWith(client).offered();
+        expect(update, isNotNull);
+        expect(update!.sha256, digest);
+      });
+
+      test('the listing is not asked to be taken on trust', () async {
+        // A digest that is not a SHA-256 is no digest at all.
+        for (final bad in ['', 'sha256:', 'md5:$digest', 'sha256:zz']) {
+          expect(Updater.assetDigest({'digest': bad}), isNull, reason: bad);
+        }
+        expect(Updater.assetDigest(const {}), isNull);
+        expect(
+          Updater.assetDigest({'digest': 'SHA256:${'A' * 64}'}),
+          'a' * 64,
+          reason: 'case is not part of a hex digest',
+        );
+      });
+
+      test('a release without one still falls back to checksums.txt', () async {
+        final client = MockClient((request) async {
+          if (request.url.host == 'api.github.com') {
+            return http.Response(releasesJson(withDigest: false), 200);
+          }
+          return http.Response('$digest  $installer\n', 200);
+        });
+
+        final update = await updaterWith(client).offered();
+        expect(update!.sha256, digest);
+      });
+
+      test('and says so plainly when that fallback cannot be read', () async {
+        final client = MockClient((request) async {
+          if (request.url.host == 'api.github.com') {
+            return http.Response(releasesJson(withDigest: false), 200);
+          }
+          throw const SocketException('no route');
+        });
+
+        final result = await updaterWith(client).check();
+        expect(result.update, isNull);
+        expect(result.reason, contains('could not be read'));
+        expect(
+          result.reason,
+          isNot(contains('has no line')),
+          reason: 'a network failure is not a malformed release',
+        );
+      });
+    });
+
     group('nothing offered says which kind of nothing', () {
       // "Up to date" and "there is a newer release and none of it fits this
       // install" are both no-update, and told apart nowhere else. Two reports
@@ -295,12 +364,15 @@ void main() {
 
       test('a release with no checksum for our asset is not either', () async {
         final result = await updaterWith(
-          clientFor(releasesJson(), checksums: 'nothing  for-us.txt\n'),
+          clientFor(
+            releasesJson(withDigest: false),
+            checksums: 'nothing  for-us.txt\n',
+          ),
         ).check();
 
         expect(result.isUpToDate, isFalse);
         expect('${result.blockedVersion}', '1.4.0');
-        expect(result.reason, contains('checksum'));
+        expect(result.reason, contains('has no line'));
       });
 
       test('the newest unusable release is the one reported', () async {
@@ -322,7 +394,7 @@ void main() {
 
     test('refuses a release with no checksum for our asset', () async {
       final update = await updaterWith(
-        clientFor(releasesJson(assets: const [installer])),
+        clientFor(releasesJson(assets: const [installer], withDigest: false)),
       ).offered();
 
       expect(

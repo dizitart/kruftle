@@ -14,12 +14,12 @@ check in §3 to confirm the tree is in the state this document claims.
 
 | | |
 |---|---|
-| **Current milestone** | **v0.2.6** — self-update without an installer, and the platform-integration bugs behind it |
+| **Current milestone** | **v0.2.7** — self-update without an installer, working on all three |
 | **Last updated** | 2026-08-28 |
 | **Build green?** | Yes — 661 tests, analyzer clean (`--fatal-infos`), formatter clean |
 | **Repo** | https://github.com/dizitart/kruftle (public, GPL-3.0) |
 | **CI** | Green — analyze/test plus release builds on all three OSs |
-| **Released** | [v0.2.4](https://github.com/dizitart/kruftle/releases/tag/v0.2.4) — .dmg, macOS .zip, two .exe, two Windows .zip, two .AppImage, two .deb, two .tar.gz, checksums.txt |
+| **Released** | [v0.2.6](https://github.com/dizitart/kruftle/releases/tag/v0.2.6) — .dmg, macOS .zip, two .exe, two Windows .zip, two .AppImage, two .deb, two .tar.gz, checksums.txt |
 
 ---
 
@@ -102,7 +102,7 @@ Run this first, every session. It is the definition of "the tree is healthy".
 cd /Volumes/External/codebase/kruftle && dart format --output=none --set-exit-if-changed lib test tool && flutter analyze --fatal-infos && flutter test
 ```
 
-Expected: formatter reports 0 changed, `No issues found!`, then 662 passing.
+Expected: formatter reports 0 changed, `No issues found!`, then 666 passing.
 
 `lib/l10n/app_localizations*.dart` is generated and committed. Regenerate it
 with `flutter gen-l10n` after editing any `.arb`; the analyzer will not warn if
@@ -166,6 +166,40 @@ gh release delete v0.2.7-rc.1 --repo dizitart/kruftle --yes --cleanup-tag
 ## 4. Session log
 
 Newest first.
+
+### Session 15 — 2026-08-29
+
+**Landed** — v0.2.7: why Windows never saw an update, found at last.
+
+- **The v0.2.7-rc.1 candidate answered it in one line.** macOS and Linux
+  updated themselves correctly — including the `.deb` through `pkexec`. Windows
+  logged:
+  `0.2.7-rc.1 unusable: no published checksum for Kruftle-0.2.7-rc.1-windows-arm64.zip`
+  — and the checksum was right there in `checksums.txt`, verifying fine from
+  another machine. So it was not the release: it was `_fetchChecksums` coming
+  back empty.
+- **The cause, and it was never architecture or asset selection.** Verifying an
+  asset took a *second* HTTP request, for `checksums.txt`. A release asset
+  download redirects to `objects.githubusercontent.com`, so that was a second
+  request to a different host — and one this machine could not reach. The
+  method caught everything and returned `{}`, so every asset looked
+  unverifiable, `check()` returned nothing, and the banner said "up to date".
+  It had been doing that since the updater first shipped; macOS and Linux only
+  worked because their networks could reach the download host.
+- **The fix is to stop needing it.** GitHub publishes `digest:
+  "sha256:<hex>"` on every release asset, in the listing already fetched, for
+  every release back to v0.1.0. `Updater.assetDigest` reads it; `checksums.txt`
+  is now a fallback for a release that carries none. Proved by pointing the
+  updater at the real releases through a client that refuses every host except
+  `api.github.com`: it offers the update, with the digest matching
+  `checksums.txt` byte for byte.
+- **And a failed fetch no longer looks like a broken release.**
+  `_fetchChecksums` returns null when it could not be read at all, so the
+  reason says "checksums.txt could not be read" rather than "has no line for
+  X". Conflating the two is what hid this.
+- **Still true:** if that machine genuinely cannot reach the download host at
+  all rather than merely timing out, the *download* will fail — but visibly
+  now, with an error, instead of in silence.
 
 ### Session 14 — 2026-08-28
 
@@ -785,6 +819,11 @@ Append-only. Record *why*, so a future session does not undo it.
 
 ## 6. Known gotchas
 
+- **A GitHub release asset download is not on `api.github.com`.** It redirects
+  to `objects.githubusercontent.com`, so anything that fetches an asset during
+  a *check* — `checksums.txt`, most obviously — needs a second host the machine
+  may not have. Prefer the `digest` field GitHub puts on every asset in the
+  release listing itself.
 - **GNOME Software will not install a local `.deb` whose package name is
   already installed.** It shows the new version, greys out the button and does
   nothing — which looks exactly like a successful update to anyone watching.

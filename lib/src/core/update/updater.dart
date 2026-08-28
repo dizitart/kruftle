@@ -289,15 +289,26 @@ class Updater {
         continue;
       }
 
-      final checksums = await _fetchChecksums(assets);
       final name = chosen['name']! as String;
-      final digest = checksums[name];
+
+      // The digest came with the listing. Only when a release does not carry
+      // one is the extra request for `checksums.txt` worth making.
+      var digest = assetDigest(chosen);
+      String? fallbackReason;
       if (digest == null) {
-        // A release without a checksum for our asset is not installable. We do
-        // not fall back to installing it unverified, and we do not stop
-        // looking: the next one down is still an upgrade.
+        final checksums = await _fetchChecksums(assets);
+        digest = checksums?[name];
+        fallbackReason = checksums == null
+            ? 'checksums.txt could not be read'
+            : 'checksums.txt has no line for $name';
+      }
+
+      if (digest == null) {
+        // An asset we cannot verify is not installable. We do not fall back to
+        // installing it unverified, and we do not stop looking: the next one
+        // down is still an upgrade.
         blocked ??= version;
-        reason ??= 'no published checksum for $name';
+        reason ??= '$name is unverifiable — $fallbackReason';
         continue;
       }
 
@@ -316,22 +327,45 @@ class Updater {
     return UpdateCheck(blockedVersion: blocked, reason: reason);
   }
 
+  /// The SHA-256 GitHub publishes alongside the asset, as `sha256:<hex>`.
+  ///
+  /// This arrives in the release listing we have already fetched, which is the
+  /// whole point of preferring it. The `checksums.txt` we publish ourselves is
+  /// a *second* request, and — because a release asset download redirects to
+  /// `objects.githubusercontent.com` — a second request to a different host.
+  /// A machine that could reach the API but not that host got an empty
+  /// checksum map, which made every asset look unverifiable and the whole
+  /// check come back as "no update". That is what a Windows machine had been
+  /// doing since the updater shipped.
+  static String? assetDigest(Map<String, Object?> asset) {
+    const prefix = 'sha256:';
+    final digest = (asset['digest'] as String? ?? '').toLowerCase();
+    if (!digest.startsWith(prefix)) return null;
+    final hex = digest.substring(prefix.length);
+    return RegExp(r'^[0-9a-f]{64}$').hasMatch(hex) ? hex : null;
+  }
+
   /// Parses the release's `checksums.txt`, in `sha256sum` format:
   /// `<hex>  <filename>` per line.
-  Future<Map<String, String>> _fetchChecksums(
+  ///
+  /// Null when it could not be read at all, which is a different thing from a
+  /// file that simply does not list our asset — one is a network that cannot
+  /// reach the download host, the other is a broken release. Reporting both as
+  /// "no checksum" is how the first hid for so long.
+  Future<Map<String, String>?> _fetchChecksums(
     List<Map<String, Object?>> assets,
   ) async {
     final asset = assets.firstWhere(
       (a) => a['name'] == 'checksums.txt',
       orElse: () => const {},
     );
-    if (asset.isEmpty) return const {};
+    if (asset.isEmpty) return null;
 
     try {
       final response = await _client
           .get(Uri.parse(asset['browser_download_url']! as String))
           .timeout(const Duration(seconds: 15));
-      if (response.statusCode != 200) return const {};
+      if (response.statusCode != 200) return null;
 
       return {
         for (final line in const LineSplitter().convert(response.body))
@@ -339,7 +373,7 @@ class Updater {
             name.replaceFirst('*', ''): hex.toLowerCase(),
       };
     } on Object {
-      return const {};
+      return null;
     }
   }
 
