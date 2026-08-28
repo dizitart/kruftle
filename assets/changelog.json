@@ -2,6 +2,16 @@
   "kruftle.changelog": 1,
   "versions": [
     {
+      "version": "0.2.9",
+      "date": "2026-08-29",
+      "fixed": [
+        "Applying an update on Windows could do nothing at all. The helper that replaces Kruftle runs after Kruftle has closed, and it now waits more patiently for Windows to let go of the old files, retries the rename when something is still holding it, and no longer draws a progress bar it has no window to draw in \u2014 any of which could stop it before it started."
+      ],
+      "changed": [
+        "The update helper on Windows now writes down what it did, and Kruftle reads that back into the activity log the next time it starts. Because the helper only runs once Kruftle has exited, an update that quietly failed used to leave no trace anywhere; now it leaves an account of itself."
+      ]
+    },
+    {
       "version": "0.2.8",
       "date": "2026-08-29",
       "fixed": [

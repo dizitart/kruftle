@@ -661,13 +661,19 @@ class Updater {
     return true;
   }
 
+  /// Where the Windows helper writes its account of itself, beside the
+  /// download. Read back and folded into the activity log on the next launch.
+  static String helperLogPath(String updatesDirectory) =>
+      p.join(updatesDirectory, 'apply-update.log');
+
   Future<bool> _applyWindowsArchive(String archive) async {
     final directory = target.swapDirectory;
     if (directory == null) return _reveal(archive);
 
     // Written out rather than passed inline: `powershell -File` takes named
     // arguments, which keeps every path out of the script text.
-    final script = File(p.join(p.dirname(archive), 'apply-update.ps1'))
+    final updates = p.dirname(archive);
+    final script = File(p.join(updates, 'apply-update.ps1'))
       ..writeAsStringSync(windowsSwapScript);
 
     await Process.start('powershell', [
@@ -685,6 +691,8 @@ class Updater {
       '$pid',
       '-Exe',
       Platform.resolvedExecutable,
+      '-Log',
+      helperLogPath(updates),
     ], mode: ProcessStartMode.detached);
     return true;
   }

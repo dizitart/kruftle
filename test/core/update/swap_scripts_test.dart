@@ -467,7 +467,16 @@ void main() {
           '$pid',
           '-Exe',
           relaunchStub(directory),
+          '-Log',
+          p.join(work.path, 'apply-update.log'),
         ]);
+      }
+
+      /// What the helper wrote about itself. Empty when it never ran at all,
+      /// which is the state a Windows machine was left in with no way to tell.
+      List<String> helperLog() {
+        final file = File(p.join(work.path, 'apply-update.log'));
+        return file.existsSync() ? file.readAsLinesSync() : const [];
       }
 
       test('replaces the install once the old process has gone', () async {
@@ -505,6 +514,12 @@ void main() {
         expect(await launched(), 'new');
         expect(Directory('$directory.new').existsSync(), isFalse);
         expect(Directory('$directory.old').existsSync(), isFalse);
+
+        final said = helperLog().join('\n');
+        expect(said, contains('helper started'));
+        expect(said, contains('has exited'));
+        expect(said, contains('swapped'));
+        expect(said, contains('carried over unins000.exe'));
       });
 
       test(

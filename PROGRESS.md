@@ -14,12 +14,12 @@ check in §3 to confirm the tree is in the state this document claims.
 
 | | |
 |---|---|
-| **Current milestone** | **v0.2.8** — self-update without an installer, working on all three |
+| **Current milestone** | **v0.2.9** — self-update without an installer, working on all three |
 | **Last updated** | 2026-08-28 |
 | **Build green?** | Yes — 661 tests, analyzer clean (`--fatal-infos`), formatter clean |
 | **Repo** | https://github.com/dizitart/kruftle (public, GPL-3.0) |
 | **CI** | Green — analyze/test plus release builds on all three OSs |
-| **Released** | [v0.2.7](https://github.com/dizitart/kruftle/releases/tag/v0.2.7) — .dmg, macOS .zip, two .exe, two Windows .zip, two .AppImage, two .deb, two .tar.gz, checksums.txt |
+| **Released** | [v0.2.8](https://github.com/dizitart/kruftle/releases/tag/v0.2.8) — .dmg, macOS .zip, two .exe, two Windows .zip, two .AppImage, two .deb, two .tar.gz, checksums.txt |
 
 ---
 
@@ -102,7 +102,7 @@ Run this first, every session. It is the definition of "the tree is healthy".
 cd /Volumes/External/codebase/kruftle && dart format --output=none --set-exit-if-changed lib test tool && flutter analyze --fatal-infos && flutter test
 ```
 
-Expected: formatter reports 0 changed, `No issues found!`, then 669 passing.
+Expected: formatter reports 0 changed, `No issues found!`, then 671 passing.
 
 `lib/l10n/app_localizations*.dart` is generated and committed. Regenerate it
 with `flutter gen-l10n` after editing any `.arb`; the analyzer will not warn if
@@ -166,6 +166,37 @@ gh release delete v0.2.7-rc.1 --repo dizitart/kruftle --yes --cleanup-tag
 ## 4. Session log
 
 Newest first.
+
+### Session 17 — 2026-08-29
+
+**Landed** — v0.2.9: the Windows swap, and a helper that can be seen.
+
+- **0.2.9-rc.1 got further than anything before it.** Windows found the
+  release, downloaded it through the `curl` fallback and verified it — the
+  Restart button appeared, which means the download was on disk and its SHA-256
+  matched. Clicking it left the app on 0.2.8, with **no `Update failed` line**:
+  `install()` had returned cleanly and the process had exited.
+- **Which meant the failure was somewhere nothing could see.** The helper runs
+  *after* Kruftle has gone. Whether PowerShell never started, or started and
+  failed on the rename, produced identical evidence: none.
+- **So the helper reports itself now.** It takes a `-Log` path, writes a line
+  at every step, and `UpdateController._collectHelperLog` folds that file into
+  the activity log on the next launch and deletes it. `applyAndRestart` also
+  logs *before* it goes, so the absence of a helper log now means PowerShell
+  never ran — which is a different answer from a swap that failed.
+- **And the three most likely causes are fixed while we are here.**
+  `$ProgressPreference = 'SilentlyContinue'`, because `Expand-Archive` draws a
+  progress bar and this helper is started detached with no console to draw it
+  in — a host that cannot render progress can fail before doing any work.
+  `Wait-Process` is replaced by polling, which cannot throw for a reason worth
+  distinguishing and can be reported second by second. And the two directory
+  renames retry for six seconds, because a handle can outlive the process that
+  held it by a moment when an indexer or a scanner is looking at what just
+  changed.
+- **Not yet confirmed on the machine.** Everything here is exercised against
+  real PowerShell in `swap_scripts_test.dart`, including the log. What the
+  Windows box does with it is the next thing to find out — and this time it
+  will say.
 
 ### Session 16 — 2026-08-29
 
@@ -848,6 +879,12 @@ Append-only. Record *why*, so a future session does not undo it.
 
 ## 6. Known gotchas
 
+- **Anything that runs after the app exits must write its own log.** The update
+  helpers do their work with nothing left to report to; a swap that quietly did
+  nothing on Windows was indistinguishable from a helper that never started,
+  twice over. The Windows one writes a file the next launch folds into the
+  activity log. The macOS and Linux ones do not yet, and should if they ever
+  misbehave.
 - **`dart:io` on Windows verifies TLS against a snapshot of the root store.**
   Windows itself fetches a missing root on demand; Dart cannot ask it to, so a
   host whose root the machine has never needed fails with

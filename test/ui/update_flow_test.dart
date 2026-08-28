@@ -272,6 +272,38 @@ void main() {
     );
   });
 
+  testWidgets('what the update helper said reaches the activity log', (
+    tester,
+  ) async {
+    // The helper runs after Kruftle has exited, so nothing it does reaches the
+    // log by any other route. A Windows swap that quietly did nothing left the
+    // app on the old version with no record of why, anywhere.
+    final updates = Directory(p.join(support.path, 'updates'))
+      ..createSync(recursive: true);
+    File(p.join(updates.path, 'apply-update.log')).writeAsStringSync(
+      '2026-08-29T02:40:00 helper started\n'
+      '2026-08-29T02:40:01 could not rename it out of the way\n',
+    );
+
+    final container = await pump(tester, client('[]'));
+    await container.read(updateProvider.notifier).check();
+
+    final lines = Directory(p.join(support.path, 'logs'))
+        .listSync()
+        .whereType<File>()
+        .expand((f) => f.readAsLinesSync())
+        .where((l) => l.contains('Update helper'))
+        .toList();
+
+    expect(lines, hasLength(2));
+    expect(lines.last, contains('could not rename it out of the way'));
+    expect(
+      File(p.join(updates.path, 'apply-update.log')).existsSync(),
+      isFalse,
+      reason: 'folded in once, not repeated at every launch',
+    );
+  });
+
   group('the check at launch and the one a person asks for', () {
     testWidgets('an unreachable server says nothing in the background', (
       tester,

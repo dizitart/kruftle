@@ -72,6 +72,7 @@ class UpdateController extends Notifier<UpdateState> {
   /// who just pressed the button is owed an answer either way, including "no,
   /// and here is why".
   Future<void> check({bool byHand = false}) async {
+    _collectHelperLog();
     if (byHand) state = const UpdateState(phase: UpdatePhase.checking);
 
     final target = ref.read(installTargetProvider);
@@ -119,6 +120,31 @@ class UpdateController extends Notifier<UpdateState> {
             phase: UpdatePhase.noBuild,
             blockedVersion: '${result.blockedVersion}',
           );
+  }
+
+  /// Folds what the update helper said into the activity log, once.
+  ///
+  /// The helper does its work after Kruftle has exited, so nothing it does
+  /// reaches the log by any other route — a swap that quietly failed left the
+  /// app running the old version with no record of why anywhere. It writes to
+  /// a file beside the download; this is the first thing that runs afterwards.
+  void _collectHelperLog() {
+    final log = File(
+      Updater.helperLogPath(
+        p.join(ref.read(appSupportDirectoryProvider), 'updates'),
+      ),
+    );
+    if (!log.existsSync()) return;
+    try {
+      for (final line in log.readAsLinesSync()) {
+        if (line.trim().isNotEmpty) {
+          ref.read(activityLogProvider).info('Update helper', {'said': line});
+        }
+      }
+      log.deleteSync();
+    } on Object {
+      // A log we cannot read is not worth failing a launch over.
+    }
   }
 
   /// Fetches and verifies the new build. Nothing is replaced yet: the swap
@@ -173,6 +199,10 @@ class UpdateController extends Notifier<UpdateState> {
     final installer = state.installer;
     if (installer == null) return;
     try {
+      ref.read(activityLogProvider).info('Applying update', {
+        'asset': p.basename(installer.path),
+        'install': '${ref.read(installTargetProvider)}',
+      });
       if (await _updater().install(installer)) exit(0);
     } on Object catch (e) {
       ref.read(activityLogProvider).error('Update failed', {'reason': '$e'});
