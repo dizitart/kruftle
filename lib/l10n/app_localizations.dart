@@ -347,6 +347,42 @@ abstract class L {
   /// **'Remove from recents'**
   String get sourceForget;
 
+  /// No description provided for @sourceShallowTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan this path anyway?'**
+  String get sourceShallowTitle;
+
+  /// No description provided for @sourceShallowReason.
+  ///
+  /// In en, this message translates to:
+  /// **'This sits close to the root of its drive. Kruftle refuses that by default, because a path that short is usually a slip — but on a mapped network drive or a mounted volume it is exactly where a codebase lives. You decide.'**
+  String get sourceShallowReason;
+
+  /// No description provided for @sourceShallowReadOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'Scanning only reads. Nothing is deleted, moved or changed by it.'**
+  String get sourceShallowReadOnly;
+
+  /// No description provided for @sourceShallowChoice.
+  ///
+  /// In en, this message translates to:
+  /// **'You still pick what to clean afterwards, project by project, and confirm again before anything is removed.'**
+  String get sourceShallowChoice;
+
+  /// No description provided for @sourceShallowStillRefused.
+  ///
+  /// In en, this message translates to:
+  /// **'System and home directories stay refused whatever you choose here, and this answer is not remembered.'**
+  String get sourceShallowStillRefused;
+
+  /// No description provided for @sourceShallowAccept.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan it anyway'**
+  String get sourceShallowAccept;
+
   /// No description provided for @scanningLooking.
   ///
   /// In en, this message translates to:

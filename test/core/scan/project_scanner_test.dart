@@ -257,6 +257,44 @@ void main() {
       );
     });
 
+    test('consent in the request reaches the depth rail', () async {
+      expect(
+        (await ProjectScanner()
+                .scan(const ScanRequest(root: '/scratch'))
+                .toList())
+            .whereType<ScanFailed>()
+            .single
+            .violation,
+        SafetyViolation.tooShallow,
+      );
+
+      // Consented, the depth rail stands aside and the walk gets as far as the
+      // next rail — this path still does not exist.
+      expect(
+        (await ProjectScanner()
+                .scan(
+                  const ScanRequest(root: '/scratch', allowShallowRoot: true),
+                )
+                .toList())
+            .whereType<ScanFailed>()
+            .single
+            .violation,
+        SafetyViolation.notADirectory,
+      );
+    });
+
+    test('consent in the request does not open a forbidden root', () async {
+      expect(
+        (await ProjectScanner()
+                .scan(const ScanRequest(root: '/', allowShallowRoot: true))
+                .toList())
+            .whereType<ScanFailed>()
+            .single
+            .violation,
+        SafetyViolation.forbiddenRoot,
+      );
+    });
+
     test('refuses to scan a directory that does not exist', () async {
       final events = await ProjectScanner()
           .scan(ScanRequest(root: p.join(root, 'nope')))

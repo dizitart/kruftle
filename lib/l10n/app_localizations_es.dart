@@ -129,6 +129,28 @@ class LEs extends L {
   String get sourceForget => 'Quitar de recientes';
 
   @override
+  String get sourceShallowTitle => '¿Analizar esta ruta de todos modos?';
+
+  @override
+  String get sourceShallowReason =>
+      'Está cerca de la raíz de su unidad. Kruftle lo rechaza por omisión, porque una ruta tan corta suele ser un desliz, pero en una unidad de red asignada o un volumen montado es justo donde vive un código. Tú decides.';
+
+  @override
+  String get sourceShallowReadOnly =>
+      'El análisis solo lee. No borra, mueve ni cambia nada.';
+
+  @override
+  String get sourceShallowChoice =>
+      'Después sigues eligiendo qué limpiar, proyecto por proyecto, y lo confirmas de nuevo antes de que se elimine nada.';
+
+  @override
+  String get sourceShallowStillRefused =>
+      'Los directorios del sistema y el personal seguirán rechazándose elijas lo que elijas aquí, y esta respuesta no se recuerda.';
+
+  @override
+  String get sourceShallowAccept => 'Analizarla igualmente';
+
+  @override
   String get scanningLooking => 'Buscando proyectos';
 
   @override

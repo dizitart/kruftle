@@ -135,6 +135,14 @@ of them without the owner saying so.
 2. **Forbidden roots** — refuse to scan or clean `/`, `$HOME`, `/Users`,
    `/System`, `/Library`, `C:\`, `C:\Windows`, `C:\Users`, `/etc`, `/usr`,
    `/var`, `/bin`, volume mount points, and any path with depth < 2.
+   The depth part — and *only* the depth part — is waivable by explicit
+   consent (`checkScanRoot(allowShallow:)`), because depth is a guess at
+   intent rather than a fact about danger, and it guesses wrong on a mapped
+   network drive or a mounted volume where a real codebase sits one segment
+   from the root. The waiver is asked for per scan, never remembered, and is
+   checked *after* the forbidden-name list, so no named root can be reached
+   through it. `SafetyViolation.isOverridable` is the single place that says
+   which refusals may be waived; every other one answers false.
 3. **No symlink traversal** — the scanner never descends a symlinked dir; the
    cleaner never deletes *through* a symlink (it deletes the link, never the
    target — and by default doesn't touch links at all).

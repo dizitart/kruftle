@@ -129,6 +129,28 @@ class LEn extends L {
   String get sourceForget => 'Remove from recents';
 
   @override
+  String get sourceShallowTitle => 'Scan this path anyway?';
+
+  @override
+  String get sourceShallowReason =>
+      'This sits close to the root of its drive. Kruftle refuses that by default, because a path that short is usually a slip — but on a mapped network drive or a mounted volume it is exactly where a codebase lives. You decide.';
+
+  @override
+  String get sourceShallowReadOnly =>
+      'Scanning only reads. Nothing is deleted, moved or changed by it.';
+
+  @override
+  String get sourceShallowChoice =>
+      'You still pick what to clean afterwards, project by project, and confirm again before anything is removed.';
+
+  @override
+  String get sourceShallowStillRefused =>
+      'System and home directories stay refused whatever you choose here, and this answer is not remembered.';
+
+  @override
+  String get sourceShallowAccept => 'Scan it anyway';
+
+  @override
   String get scanningLooking => 'Looking for projects';
 
   @override

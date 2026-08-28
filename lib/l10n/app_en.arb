@@ -51,6 +51,12 @@
   "sourceConfirmButton": "Scan this folder",
   "sourceRecent": "Recent",
   "sourceForget": "Remove from recents",
+  "sourceShallowTitle": "Scan this path anyway?",
+  "sourceShallowReason": "This sits close to the root of its drive. Kruftle refuses that by default, because a path that short is usually a slip — but on a mapped network drive or a mounted volume it is exactly where a codebase lives. You decide.",
+  "sourceShallowReadOnly": "Scanning only reads. Nothing is deleted, moved or changed by it.",
+  "sourceShallowChoice": "You still pick what to clean afterwards, project by project, and confirm again before anything is removed.",
+  "sourceShallowStillRefused": "System and home directories stay refused whatever you choose here, and this answer is not remembered.",
+  "sourceShallowAccept": "Scan it anyway",
 
   "scanningLooking": "Looking for projects",
   "scanningMeasuring": "Measuring what they hold",

@@ -62,9 +62,15 @@ class ScanRequest {
     this.maxDepth = 12,
     this.followHiddenDirectories = false,
     this.excludeGlobs = const [],
+    this.allowShallowRoot = false,
   });
 
   final String root;
+
+  /// Set only when the user has been shown the depth refusal for [root] and
+  /// confirmed it anyway — a mapped drive or a mounted volume. Waives the
+  /// depth rail, nothing else.
+  final bool allowShallowRoot;
 
   /// Paths never entered, whichever stack might have claimed them.
   ///
@@ -135,7 +141,10 @@ class ProjectScanner {
   };
 
   Stream<ScanEvent> scan(ScanRequest request) async* {
-    final violation = checkScanRoot(request.root);
+    final violation = checkScanRoot(
+      request.root,
+      allowShallow: request.allowShallowRoot,
+    );
     if (violation != null) {
       yield ScanFailed(violation);
       return;

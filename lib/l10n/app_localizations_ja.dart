@@ -127,6 +127,26 @@ class LJa extends L {
   String get sourceForget => '履歴から削除';
 
   @override
+  String get sourceShallowTitle => 'このパスをそれでもスキャンしますか？';
+
+  @override
+  String get sourceShallowReason =>
+      'ドライブのルートに近い場所です。これほど短いパスは通常は手滑りなので Kruftle は既定で拒否しますが、割り当てたネットワークドライブやマウントされたボリュームではそこにコードが置かれます。判断はあなた次第です。';
+
+  @override
+  String get sourceShallowReadOnly => 'スキャンは読むだけです。削除も移動も変更もしません。';
+
+  @override
+  String get sourceShallowChoice => 'その後もプロジェクトごとに消すものを選び、削除の前にもう一度確認します。';
+
+  @override
+  String get sourceShallowStillRefused =>
+      'ここで何を選んでもシステムディレクトリとホームディレクトリは拒否されたままで、この回答は記憶されません。';
+
+  @override
+  String get sourceShallowAccept => 'それでもスキャン';
+
+  @override
   String get scanningLooking => 'プロジェクトを探しています';
 
   @override

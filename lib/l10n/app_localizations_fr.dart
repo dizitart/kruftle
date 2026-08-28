@@ -129,6 +129,28 @@ class LFr extends L {
   String get sourceForget => 'Retirer des récents';
 
   @override
+  String get sourceShallowTitle => 'Analyser ce chemin malgré tout ?';
+
+  @override
+  String get sourceShallowReason =>
+      'Il se trouve près de la racine de son disque. Kruftle le refuse par défaut, car un chemin aussi court est généralement une erreur — mais sur un lecteur réseau connecté ou un volume monté, c\'est justement là que vit une base de code. À vous de voir.';
+
+  @override
+  String get sourceShallowReadOnly =>
+      'L\'analyse ne fait que lire. Elle ne supprime, ne déplace et ne modifie rien.';
+
+  @override
+  String get sourceShallowChoice =>
+      'Vous choisissez ensuite ce qu\'il faut nettoyer, projet par projet, et vous confirmez à nouveau avant toute suppression.';
+
+  @override
+  String get sourceShallowStillRefused =>
+      'Les répertoires système et personnels restent refusés quoi que vous choisissiez ici, et cette réponse n\'est pas mémorisée.';
+
+  @override
+  String get sourceShallowAccept => 'Analyser quand même';
+
+  @override
   String get scanningLooking => 'Recherche des projets';
 
   @override

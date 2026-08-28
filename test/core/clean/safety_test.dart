@@ -105,6 +105,83 @@ void main() {
       );
     });
 
+    test('only the depth rail can be waived by consent', () {
+      for (final violation in SafetyViolation.values) {
+        expect(
+          violation.isOverridable,
+          violation == SafetyViolation.tooShallow,
+          reason: '${violation.name} must not be waivable',
+        );
+      }
+    });
+
+    test('consent lets a mapped drive through the depth rail', () {
+      // Z:\ and Z:\codebase are the shapes that sent people here: a network
+      // share, mounted at a drive letter, holding the whole codebase.
+      for (final path in [r'Z:\', r'Z:\codebase']) {
+        expect(
+          checkScanRoot(
+            path,
+            home: r'C:\Users\dev',
+            windows: true,
+            directoryExists: alwaysExists,
+          ),
+          SafetyViolation.tooShallow,
+          reason: '$path is refused without consent',
+        );
+        expect(
+          checkScanRoot(
+            path,
+            home: r'C:\Users\dev',
+            windows: true,
+            allowShallow: true,
+            directoryExists: alwaysExists,
+          ),
+          isNull,
+          reason: '$path is allowed with consent',
+        );
+      }
+    });
+
+    test('consent does not open a forbidden root', () {
+      for (final path in [r'C:\', r'C:\Windows', r'C:\Users']) {
+        expect(
+          checkScanRoot(
+            path,
+            home: r'C:\Users\dev',
+            windows: true,
+            allowShallow: true,
+            directoryExists: alwaysExists,
+          ),
+          SafetyViolation.forbiddenRoot,
+          reason: '$path stays refused',
+        );
+      }
+      expect(
+        checkScanRoot(
+          '/',
+          home: '/Users/dev',
+          windows: false,
+          allowShallow: true,
+          directoryExists: alwaysExists,
+        ),
+        SafetyViolation.forbiddenRoot,
+      );
+    });
+
+    test('consent does not conjure a directory that is not there', () {
+      expect(
+        checkScanRoot(
+          r'Z:\gone',
+          home: r'C:\Users\dev',
+          windows: true,
+          allowShallow: true,
+          directoryExists: (_) => false,
+        ),
+        SafetyViolation.notADirectory,
+      );
+    });
+
     test('refuses a directory that does not exist', () {
       expect(
         checkScanRoot(

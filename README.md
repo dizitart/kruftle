@@ -55,7 +55,12 @@ allow-list, and you have ticked a box saying so for that run.
 
 Disk cleanup tools get one chance to earn trust. Kruftle:
 
-- refuses to run on `/`, your home directory, or any system path
+- refuses to run on `/`, your home directory, or any system path, and that
+  refusal cannot be waived
+- refuses a path near the root of its drive too — but that one is a guess at
+  intent, not a danger, so it asks instead: a mapped network drive or a mounted
+  volume puts a real codebase at `Z:\` or `/mnt/work`, and Kruftle shows you
+  the path and what a scan does, and proceeds only if you say so
 - never follows a symlink, and never deletes through one
 - deletes only directory names a matched stack explicitly declares — never a
   glob, never a pattern you typed

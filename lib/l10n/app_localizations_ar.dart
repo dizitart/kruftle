@@ -129,6 +129,28 @@ class LAr extends L {
   String get sourceForget => 'إزالة من الأحدث';
 
   @override
+  String get sourceShallowTitle => 'أتريد فحص هذا المسار على أي حال؟';
+
+  @override
+  String get sourceShallowReason =>
+      'يقع قريبًا من جذر محرّكه. يرفض Kruftle ذلك افتراضيًا لأن مسارًا بهذا القِصَر عادةً ما يكون زلّة — لكنّه على محرّك شبكة متصل أو وحدة تخزين مُحمّلة هو بالضبط موضع قاعدة الشفرة. القرار لك.';
+
+  @override
+  String get sourceShallowReadOnly =>
+      'الفحص يقرأ فقط. لا يحذف شيئًا ولا ينقله ولا يغيّره.';
+
+  @override
+  String get sourceShallowChoice =>
+      'ستظلّ تختار بعده ما يُنظّف مشروعًا مشروعًا، وتؤكّد مرّة أخرى قبل إزالة أي شيء.';
+
+  @override
+  String get sourceShallowStillRefused =>
+      'تبقى أدلّة النظام والمجلد الشخصي مرفوضة مهما اخترت هنا، ولا يُحفظ هذا الجواب.';
+
+  @override
+  String get sourceShallowAccept => 'افحصه على أي حال';
+
+  @override
   String get scanningLooking => 'جارٍ البحث عن المشاريع';
 
   @override

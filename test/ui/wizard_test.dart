@@ -8,6 +8,7 @@ import 'package:kruftle/src/core/models/clean.dart';
 import 'package:kruftle/src/core/models/project.dart';
 import 'package:kruftle/src/core/models/stack.dart';
 import 'package:kruftle/src/core/scan/toolchain.dart';
+import 'package:kruftle/src/core/settings/settings.dart';
 import 'package:kruftle/src/ui/state/app_state.dart';
 import 'package:kruftle/src/ui/state/wizard_controller.dart';
 import 'package:kruftle/src/ui/theme.dart';
@@ -23,8 +24,11 @@ Future<void> pumpWizard(
   Size size = const Size(1200, 820),
   Locale locale = const Locale('en'),
   Brightness brightness = Brightness.dark,
+  Settings? settings,
 }) async {
-  SharedPreferences.setMockInitialValues({});
+  SharedPreferences.setMockInitialValues({
+    if (settings != null) Settings.storageKey: settings.encode(),
+  });
   final preferences = await SharedPreferences.getInstance();
 
   tester.view.physicalSize = size;
@@ -99,6 +103,47 @@ void main() {
 
     expect(find.text('Which directory should Kruftle look through?'), findsOne);
     expect(find.text('Choose a folder'), findsOne);
+  });
+
+  testWidgets('a shallow root is offered, with the reason, not just refused', (
+    tester,
+  ) async {
+    // A mapped network drive: refused by the depth rail, which is a guess at
+    // intent rather than a danger, so the user gets the decision.
+    await pumpWizard(
+      tester,
+      (s) => s,
+      settings: const Settings(defaultRoots: [r'Z:\']),
+    );
+
+    expect(
+      find.text('This path is too close to the filesystem root to be safe.'),
+      findsOne,
+    );
+
+    await tester.tap(find.text(r'Z:\').first);
+    await tester.pumpAndSettle();
+
+    expect(find.text('Scan this path anyway?'), findsOne);
+    expect(find.textContaining('Scanning only reads'), findsOne);
+    expect(find.text('Scan it anyway'), findsOne);
+    expect(find.text('Cancel'), findsOne);
+  });
+
+  testWidgets('a forbidden root is refused outright, with no way past it', (
+    tester,
+  ) async {
+    await pumpWizard(
+      tester,
+      (s) => s,
+      // Tests run on a POSIX host, so this is a real forbidden root here.
+      settings: const Settings(defaultRoots: ['/etc']),
+    );
+
+    await tester.tap(find.text('/etc').first);
+    await tester.pumpAndSettle();
+
+    expect(find.text('Scan this path anyway?'), findsNothing);
   });
 
   testWidgets('the scan step reports progress rather than a bare spinner', (

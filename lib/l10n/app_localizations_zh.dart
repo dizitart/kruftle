@@ -127,6 +127,26 @@ class LZh extends L {
   String get sourceForget => '从最近使用中移除';
 
   @override
+  String get sourceShallowTitle => '仍要扫描此路径？';
+
+  @override
+  String get sourceShallowReason =>
+      '它靠近所在驱动器的根目录。Kruftle 默认拒绝，因为这么短的路径通常是误操作——但在映射的网络驱动器或已挂载的卷上，代码库恰恰就在那里。由你决定。';
+
+  @override
+  String get sourceShallowReadOnly => '扫描只读取。不会删除、移动或修改任何东西。';
+
+  @override
+  String get sourceShallowChoice => '扫描后仍由你逐个项目选择要清理的内容，删除前还会再确认一次。';
+
+  @override
+  String get sourceShallowStillRefused =>
+      '无论你在此处选择什么，系统目录和主目录依然被拒绝，而且此次回答不会被记住。';
+
+  @override
+  String get sourceShallowAccept => '仍然扫描';
+
+  @override
   String get scanningLooking => '正在查找项目';
 
   @override

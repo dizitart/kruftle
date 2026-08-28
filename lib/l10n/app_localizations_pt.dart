@@ -129,6 +129,28 @@ class LPt extends L {
   String get sourceForget => 'Remover dos recentes';
 
   @override
+  String get sourceShallowTitle => 'Analisar este caminho mesmo assim?';
+
+  @override
+  String get sourceShallowReason =>
+      'Ele fica perto da raiz da unidade. O Kruftle recusa isso por padrão, porque um caminho tão curto costuma ser um deslize — mas num drive de rede mapeado ou num volume montado é exatamente onde uma base de código mora. Você decide.';
+
+  @override
+  String get sourceShallowReadOnly =>
+      'A análise apenas lê. Não apaga, move nem altera nada.';
+
+  @override
+  String get sourceShallowChoice =>
+      'Depois você continua escolhendo o que limpar, projeto a projeto, e confirma de novo antes de qualquer remoção.';
+
+  @override
+  String get sourceShallowStillRefused =>
+      'Diretórios de sistema e pessoais continuam recusados, escolha o que escolher aqui, e esta resposta não é lembrada.';
+
+  @override
+  String get sourceShallowAccept => 'Analisar assim mesmo';
+
+  @override
   String get scanningLooking => 'Procurando projetos';
 
   @override

@@ -45,6 +45,12 @@
   "sourceConfirmButton": "Explorar esta carpeta",
   "sourceRecent": "Recientes",
   "sourceForget": "Quitar de recientes",
+  "sourceShallowTitle": "¿Analizar esta ruta de todos modos?",
+  "sourceShallowReason": "Está cerca de la raíz de su unidad. Kruftle lo rechaza por omisión, porque una ruta tan corta suele ser un desliz, pero en una unidad de red asignada o un volumen montado es justo donde vive un código. Tú decides.",
+  "sourceShallowReadOnly": "El análisis solo lee. No borra, mueve ni cambia nada.",
+  "sourceShallowChoice": "Después sigues eligiendo qué limpiar, proyecto por proyecto, y lo confirmas de nuevo antes de que se elimine nada.",
+  "sourceShallowStillRefused": "Los directorios del sistema y el personal seguirán rechazándose elijas lo que elijas aquí, y esta respuesta no se recuerda.",
+  "sourceShallowAccept": "Analizarla igualmente",
 
   "scanningLooking": "Buscando proyectos",
   "scanningMeasuring": "Midiendo lo que contienen",

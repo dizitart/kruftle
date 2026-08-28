@@ -151,9 +151,15 @@ class WizardController extends Notifier<WizardState> {
 
   // ---------------------------------------------------------------- scanning
 
-  Future<void> startScan(String root) async {
+  /// [allowShallowRoot] is passed by the source step once the user has been
+  /// shown the depth refusal for [root] and confirmed it. It is never
+  /// remembered: a later scan of the same root asks again.
+  Future<void> startScan(String root, {bool allowShallowRoot = false}) async {
     final settings = ref.read(settingsProvider);
-    _log.info('Scan started', {'root': root});
+    _log.info('Scan started', {
+      'root': root,
+      'shallowRootAllowed': allowShallowRoot,
+    });
 
     state = state.copyWith(
       step: WizardStep.scanning,
@@ -178,6 +184,7 @@ class WizardController extends Notifier<WizardState> {
             maxDepth: settings.maxScanDepth,
             followHiddenDirectories: settings.scanHiddenDirectories,
             excludeGlobs: ref.read(profilesProvider).excludeGlobs,
+            allowShallowRoot: allowShallowRoot,
           ),
         )
         .listen(

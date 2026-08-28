@@ -129,6 +129,28 @@ class LDe extends L {
   String get sourceForget => 'Aus der Liste entfernen';
 
   @override
+  String get sourceShallowTitle => 'Diesen Pfad trotzdem durchsuchen?';
+
+  @override
+  String get sourceShallowReason =>
+      'Er liegt dicht an der Wurzel seines Laufwerks. Kruftle lehnt das standardmäßig ab, weil ein so kurzer Pfad meist ein Versehen ist — auf einem verbundenen Netzlaufwerk oder einem eingehängten Volume ist er aber genau der richtige Ort für eine Codebasis. Sie entscheiden.';
+
+  @override
+  String get sourceShallowReadOnly =>
+      'Das Durchsuchen liest nur. Es löscht, verschiebt und ändert nichts.';
+
+  @override
+  String get sourceShallowChoice =>
+      'Sie wählen danach weiterhin projektweise aus, was aufgeräumt wird, und bestätigen erneut, bevor etwas entfernt wird.';
+
+  @override
+  String get sourceShallowStillRefused =>
+      'System- und Benutzerverzeichnisse bleiben abgelehnt, was immer Sie hier wählen, und diese Antwort wird nicht gemerkt.';
+
+  @override
+  String get sourceShallowAccept => 'Trotzdem durchsuchen';
+
+  @override
   String get scanningLooking => 'Projekte werden gesucht';
 
   @override

@@ -23,11 +23,26 @@ class StepSource extends ConsumerWidget {
     final settings = ref.watch(settingsProvider);
     final controller = ref.read(wizardProvider.notifier);
 
+    Future<void> open(String path) async {
+      final refused = checkScanRoot(path);
+      if (refused != null && refused.isOverridable) {
+        final consented = await showDialog<bool>(
+          context: context,
+          builder: (context) =>
+              _ShallowRootDialog(path: path, refused: refused),
+        );
+        if (consented != true) return;
+        await controller.startScan(path, allowShallowRoot: true);
+        return;
+      }
+      await controller.startScan(path);
+    }
+
     Future<void> browse() async {
       final chosen = await getDirectoryPath(
         confirmButtonText: l.sourceConfirmButton,
       );
-      if (chosen != null) await controller.startScan(chosen);
+      if (chosen != null) await open(chosen);
     }
 
     return Column(
@@ -69,7 +84,7 @@ class StepSource extends ConsumerWidget {
           for (final root in settings.defaultRoots.take(5))
             _RecentRoot(
               path: root,
-              onOpen: () => controller.startScan(root),
+              onOpen: () => open(root),
               onForget: () => ref
                   .read(settingsProvider.notifier)
                   .update(
@@ -149,7 +164,7 @@ class _RecentRoot extends StatelessWidget {
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          onTap: refused == null ? onOpen : null,
+          onTap: refused == null || refused.isOverridable ? onOpen : null,
           borderRadius: BorderRadius.circular(8),
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
@@ -162,6 +177,8 @@ class _RecentRoot extends StatelessWidget {
                   size: 16,
                   color: refused == null
                       ? context.colors.onSurfaceVariant
+                      : refused.isOverridable
+                      ? context.warn
                       : context.danger,
                 ),
                 const SizedBox(width: 12),
@@ -182,7 +199,12 @@ class _RecentRoot extends StatelessWidget {
                         const SizedBox(height: 3),
                         Text(
                           refused.message,
-                          style: TextStyle(fontSize: 11, color: context.danger),
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: refused.isOverridable
+                                ? context.warn
+                                : context.danger,
+                          ),
                         ),
                       ],
                     ],
@@ -199,6 +221,81 @@ class _RecentRoot extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+/// The consent gate for a path the depth rail refused.
+///
+/// It is shown rather than obeyed because the rail is a guess at intent: a
+/// mapped network drive or a mounted volume puts a real codebase one segment
+/// from the root, and only the person looking at the path knows which it is.
+/// Everything the decision rests on is on screen — the path, why it was
+/// refused, what a scan actually does, and what stays refused regardless.
+class _ShallowRootDialog extends StatelessWidget {
+  const _ShallowRootDialog({required this.path, required this.refused});
+
+  final String path;
+  final SafetyViolation refused;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = L.of(context);
+
+    return AlertDialog(
+      icon: Icon(Icons.warning_amber_rounded, size: 30, color: context.warn),
+      title: Text(l.sourceShallowTitle),
+      content: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 430),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            PathText(path, size: 12.5),
+            const SizedBox(height: 10),
+            Text(
+              refused.message,
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: context.warn,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              l.sourceShallowReason,
+              style: TextStyle(
+                fontSize: 13,
+                height: 1.5,
+                color: context.colors.onSurfaceVariant,
+              ),
+            ),
+            const SizedBox(height: 12),
+            for (final point in [
+              l.sourceShallowReadOnly,
+              l.sourceShallowChoice,
+              l.sourceShallowStillRefused,
+            ])
+              Padding(
+                padding: const EdgeInsets.only(bottom: 6),
+                child: Text(
+                  '\u2022  $point',
+                  style: const TextStyle(fontSize: 13, height: 1.4),
+                ),
+              ),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(false),
+          child: Text(l.actionCancel),
+        ),
+        FilledButton(
+          onPressed: () => Navigator.of(context).pop(true),
+          child: Text(l.sourceShallowAccept),
+        ),
+      ],
     );
   }
 }

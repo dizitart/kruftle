@@ -129,6 +129,28 @@ class LRu extends L {
   String get sourceForget => 'Убрать из недавних';
 
   @override
+  String get sourceShallowTitle => 'Всё равно сканировать этот путь?';
+
+  @override
+  String get sourceShallowReason =>
+      'Он слишком близок к корню диска. Kruftle по умолчанию отказывает: такой короткий путь обычно случайность — но на сетевом диске или подключённом томе именно там и лежит код. Решать вам.';
+
+  @override
+  String get sourceShallowReadOnly =>
+      'Сканирование только читает. Оно ничего не удаляет, не перемещает и не меняет.';
+
+  @override
+  String get sourceShallowChoice =>
+      'Вы по-прежнему сами выбираете, что чистить, проект за проектом, и подтверждаете ещё раз перед удалением.';
+
+  @override
+  String get sourceShallowStillRefused =>
+      'Системные и домашние каталоги останутся запрещёнными, что бы вы здесь ни выбрали, а этот ответ не запоминается.';
+
+  @override
+  String get sourceShallowAccept => 'Всё равно сканировать';
+
+  @override
   String get scanningLooking => 'Идёт поиск проектов';
 
   @override

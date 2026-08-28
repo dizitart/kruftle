@@ -2,6 +2,13 @@
   "kruftle.changelog": 1,
   "versions": [
     {
+      "version": "0.2.3",
+      "date": "2026-08-28",
+      "fixed": [
+        "A codebase on a mapped network drive or a mounted volume can be scanned. Kruftle refused any path close to the root of its drive \u2014 so on Windows a share mapped to Z:\\ was refused, and so was every folder in it, with \u201cthis path is too close to the filesystem root to be safe\u201d and no way past it. That rule is a guess at what you meant, not a fact about danger, and on a mounted drive it guesses wrong: that is exactly where a codebase lives. Kruftle now asks instead. It shows you the path, why it hesitated, that scanning only reads, and that you still choose what gets cleaned afterwards \u2014 and scans it if you say so. The answer is not remembered, so it asks again next time. System and home directories are still refused outright, and confirming here cannot reach one."
+      ]
+    },
+    {
       "version": "0.2.2",
       "date": "2026-08-26",
       "added": [

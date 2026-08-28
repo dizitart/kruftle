@@ -14,9 +14,9 @@ check in §3 to confirm the tree is in the state this document claims.
 
 | | |
 |---|---|
-| **Current milestone** | **v0.2.2** — the About panel links out to Kruftle's own page and to Dizitart |
-| **Last updated** | 2026-08-26 |
-| **Build green?** | Yes — 583 tests, analyzer clean, formatter clean, all five release targets green |
+| **Current milestone** | **v0.2.3** — a codebase on a mapped drive or a mounted volume can be scanned, behind a consent gate |
+| **Last updated** | 2026-08-28 |
+| **Build green?** | Yes — 591 tests, analyzer clean, formatter clean |
 | **Repo** | https://github.com/dizitart/kruftle (public, GPL-3.0) |
 | **CI** | Green — analyze/test plus release builds on all three OSs |
 | **Released** | [v0.2.2](https://github.com/dizitart/kruftle/releases/tag/v0.2.2) — .dmg, two .exe, two .AppImage, two .deb, checksums.txt |
@@ -121,6 +121,40 @@ it is there to be looked at. Regenerate the app icon's rasters with:
 ## 4. Session log
 
 Newest first.
+
+### Session 12 — 2026-08-28
+
+**Landed** — v0.2.3: the depth rail asks instead of refusing.
+
+- **The report.** A codebase on a Windows share mapped to `Z:\` could not be
+  scanned, and neither could anything inside it. `Z:\` is depth 0 and
+  `Z:\codebase` is depth 1, and rail 2 refuses anything below depth 2, so the
+  drive root *and* every project folder on it were dead ends with no way past
+  the banner.
+- **Why the rail was wrong, and only here.** Depth is a guess at what the user
+  meant, not a fact about danger — a short path is usually a slip, but on a
+  mapped drive or a mounted volume it is exactly where a codebase lives. The
+  forbidden-*name* list (`/`, `$HOME`, `C:\Windows`, …) is a fact, and stays
+  absolute.
+- **The split.** `SafetyViolation.isOverridable` is the one place that says
+  which refusals may be waived, and it answers true for `tooShallow` alone;
+  `checkScanRoot(allowShallow:)` waives that check and nothing else. It runs
+  *after* the forbidden-name list, so consent cannot reach a named root — a
+  test asserts that for `C:\`, `C:\Windows`, `C:\Users` and `/`, and another
+  asserts every other violation answers false, so a violation added later is
+  non-waivable unless someone deliberately says otherwise.
+- **The gate.** `_ShallowRootDialog` on the source step shows the path, the
+  refusal, that scanning only reads, that cleaning is still chosen project by
+  project afterwards, and that system and home directories stay refused. Six
+  new ARB keys across all ten locales. A recent root refused only on depth is
+  tappable again and marked in the warn colour rather than the danger one.
+- **Consent is per scan and never persisted.** It is a flag on `ScanRequest`,
+  threaded from `startScan(allowShallowRoot:)`, and the answer is not stored —
+  same reasoning as rail 7.
+- **Known, not fixed:** a *scheduled* background cleanup of a shallow root
+  still fails on the depth rail, because there is nobody there to ask. It
+  failed before this change too. Persisting the consent in `Settings` would fix
+  it; that is a deliberate deferral, not an oversight.
 
 ### Session 11 — 2026-08-26
 

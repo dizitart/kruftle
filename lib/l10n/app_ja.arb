@@ -45,6 +45,12 @@
   "sourceConfirmButton": "このフォルダをスキャン",
   "sourceRecent": "最近使った項目",
   "sourceForget": "履歴から削除",
+  "sourceShallowTitle": "このパスをそれでもスキャンしますか？",
+  "sourceShallowReason": "ドライブのルートに近い場所です。これほど短いパスは通常は手滑りなので Kruftle は既定で拒否しますが、割り当てたネットワークドライブやマウントされたボリュームではそこにコードが置かれます。判断はあなた次第です。",
+  "sourceShallowReadOnly": "スキャンは読むだけです。削除も移動も変更もしません。",
+  "sourceShallowChoice": "その後もプロジェクトごとに消すものを選び、削除の前にもう一度確認します。",
+  "sourceShallowStillRefused": "ここで何を選んでもシステムディレクトリとホームディレクトリは拒否されたままで、この回答は記憶されません。",
+  "sourceShallowAccept": "それでもスキャン",
 
   "scanningLooking": "プロジェクトを探しています",
   "scanningMeasuring": "サイズを測定しています",

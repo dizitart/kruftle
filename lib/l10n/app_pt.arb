@@ -45,6 +45,12 @@
   "sourceConfirmButton": "Varrer esta pasta",
   "sourceRecent": "Recentes",
   "sourceForget": "Remover dos recentes",
+  "sourceShallowTitle": "Analisar este caminho mesmo assim?",
+  "sourceShallowReason": "Ele fica perto da raiz da unidade. O Kruftle recusa isso por padrão, porque um caminho tão curto costuma ser um deslize — mas num drive de rede mapeado ou num volume montado é exatamente onde uma base de código mora. Você decide.",
+  "sourceShallowReadOnly": "A análise apenas lê. Não apaga, move nem altera nada.",
+  "sourceShallowChoice": "Depois você continua escolhendo o que limpar, projeto a projeto, e confirma de novo antes de qualquer remoção.",
+  "sourceShallowStillRefused": "Diretórios de sistema e pessoais continuam recusados, escolha o que escolher aqui, e esta resposta não é lembrada.",
+  "sourceShallowAccept": "Analisar assim mesmo",
 
   "scanningLooking": "Procurando projetos",
   "scanningMeasuring": "Medindo o que eles ocupam",

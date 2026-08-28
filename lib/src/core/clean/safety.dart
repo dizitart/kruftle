@@ -39,6 +39,15 @@ enum SafetyViolation {
       'This is not a known build output directory for any detected stack.',
     symlink => 'This is a symbolic link. Kruftle never deletes through links.',
   };
+
+  /// Whether the user may proceed past this refusal by confirming it.
+  ///
+  /// Only [tooShallow] is. Depth is a guess at intent, not a fact about
+  /// danger, and it guesses wrong on a mounted volume or a mapped network
+  /// drive, where `Z:\` or `Z:\codebase` is a perfectly ordinary place to
+  /// keep a codebase. Every other violation names something that stays unsafe
+  /// however certain the user is, so none of them can be waived.
+  bool get isOverridable => this == tooShallow;
 }
 
 /// Absolute paths that may never be a scan root or a delete target, whatever
@@ -89,10 +98,14 @@ String? _homeDirectory() =>
 ///
 /// [exists] is injectable so the rule itself can be tested without building a
 /// filesystem for every case.
+/// [allowShallow] waives the depth rail — and only that rail — for a user who
+/// has been shown the path and confirmed it anyway. Forbidden roots are
+/// checked first and are never waived.
 SafetyViolation? checkScanRoot(
   String path, {
   String? home,
   bool? windows,
+  bool allowShallow = false,
   bool Function(String)? directoryExists,
 }) {
   final isWindows = windows ?? Platform.isWindows;
@@ -104,7 +117,7 @@ SafetyViolation? checkScanRoot(
   ).map((r) => _normalize(r, windows: isWindows));
   if (forbidden.contains(normalized)) return SafetyViolation.forbiddenRoot;
 
-  if (_depth(normalized, windows: isWindows) < 2) {
+  if (!allowShallow && _depth(normalized, windows: isWindows) < 2) {
     return SafetyViolation.tooShallow;
   }
 

@@ -129,6 +129,28 @@ class LHi extends L {
   String get sourceForget => 'हाल के से हटाएँ';
 
   @override
+  String get sourceShallowTitle => 'क्या फिर भी यह पथ स्कैन करें?';
+
+  @override
+  String get sourceShallowReason =>
+      'यह अपने ड्राइव की जड़ के पास है। Kruftle डिफ़ॉल्ट रूप से इसे मना करता है, क्योंकि इतना छोटा पथ आमतौर पर चूक होता है — पर मैप किए नेटवर्क ड्राइव या माउंट किए वॉल्यूम पर कोडबेस वहीं रहता है। फ़ैसला आपका।';
+
+  @override
+  String get sourceShallowReadOnly =>
+      'स्कैन केवल पढ़ता है। वह कुछ भी हटाता, हिलाता या बदलता नहीं।';
+
+  @override
+  String get sourceShallowChoice =>
+      'इसके बाद भी आप हर प्रोजेक्ट के लिए चुनते हैं कि क्या साफ़ करना है, और कुछ भी हटने से पहले फिर पुष्टि करते हैं।';
+
+  @override
+  String get sourceShallowStillRefused =>
+      'आप यहाँ जो भी चुनें, सिस्टम और होम डायरेक्ट्री मना ही रहेंगी, और यह उत्तर याद नहीं रखा जाता।';
+
+  @override
+  String get sourceShallowAccept => 'फिर भी स्कैन करें';
+
+  @override
   String get scanningLooking => 'प्रोजेक्ट खोजे जा रहे हैं';
 
   @override
