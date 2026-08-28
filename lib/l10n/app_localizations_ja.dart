@@ -506,6 +506,16 @@ class LJa extends L {
   String get updateUpToDate => 'Kruftle は最新です。';
 
   @override
+  String updateReadyInstall(String version) {
+    return 'Kruftle $version をインストールできます。';
+  }
+
+  @override
+  String updateNoBuild(String version) {
+    return 'Kruftle $version が公開されていますが、このインストール形態で使えるビルドがありません。アクティビティログをご覧ください。';
+  }
+
+  @override
   String get settingsTitle => '設定';
 
   @override

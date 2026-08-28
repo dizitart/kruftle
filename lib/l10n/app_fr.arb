@@ -153,6 +153,8 @@
   "updateRestart": "Redémarrer maintenant",
   "updateChecking": "Recherche de mises à jour…",
   "updateUpToDate": "Kruftle est à jour.",
+  "updateReadyInstall": "Kruftle {version} est prêt à être installé.",
+  "updateNoBuild": "Kruftle {version} est disponible, mais cette installation n'a aucune version qu'elle puisse utiliser. Voir le journal d'activité.",
 
   "settingsTitle": "Réglages",
   "settingsSectionAppearance": "Apparence",

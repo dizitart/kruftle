@@ -100,6 +100,27 @@ const macSwapScript = r'''
       if [ -n "$swapped" ]; then open "$app"; else open "$dmg"; fi
 ''';
 
+/// Starts Kruftle again once this process has gone, and nothing else.
+///
+/// Arguments: executable, our pid.
+///
+/// For the updates that are applied by something other than a swap helper — a
+/// `.deb` handed to `dpkg` — where the files are replaced while Kruftle is
+/// still running but the *running* Kruftle is still the old one. It cannot
+/// start its replacement itself: the new process would collide with the single
+/// instance lock the old one is still holding.
+const relaunchScript = r'''
+      cd / || exit 1
+      exe=$1; pid=$2
+      waited=0
+      while kill -0 "$pid" 2>/dev/null && [ "$waited" -lt 600 ]; do
+        sleep 0.1; waited=$((waited + 1))
+      done
+      kill -0 "$pid" 2>/dev/null && exit 1
+
+      "$exe" >/dev/null 2>&1 &
+''';
+
 /// Replaces an installed Linux bundle directory with the contents of a
 /// `.tar.gz`, then starts the new build.
 ///

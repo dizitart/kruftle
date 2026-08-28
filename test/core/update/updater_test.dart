@@ -10,6 +10,14 @@ import 'package:http/testing.dart';
 import 'package:kruftle/src/core/update/updater.dart';
 import 'package:kruftle/src/core/update/version.dart';
 
+/// The update a check offered, or null.
+///
+/// `check()` reports more than that — it also says why nothing was offered —
+/// and the tests that care about the difference ask for it directly.
+extension on Updater {
+  Future<AvailableUpdate?> offered() => check().then((c) => c.update);
+}
+
 void main() {
   group('Version', () {
     test('parses the forms a release tag actually takes', () {
@@ -97,7 +105,7 @@ void main() {
     );
 
     test('finds a newer release and its verified installer', () async {
-      final update = await updaterWith(clientFor(releasesJson())).check();
+      final update = await updaterWith(clientFor(releasesJson())).offered();
 
       expect(update, isNotNull);
       expect(update!.version.toString(), '1.4.0');
@@ -108,11 +116,17 @@ void main() {
 
     test('reports nothing when already up to date', () async {
       expect(
-        await updaterWith(clientFor(releasesJson()), current: '1.4.0').check(),
+        await updaterWith(
+          clientFor(releasesJson()),
+          current: '1.4.0',
+        ).offered(),
         isNull,
       );
       expect(
-        await updaterWith(clientFor(releasesJson()), current: '2.0.0').check(),
+        await updaterWith(
+          clientFor(releasesJson()),
+          current: '2.0.0',
+        ).offered(),
         isNull,
       );
     });
@@ -158,7 +172,7 @@ void main() {
       test('several versions ahead, it offers the newest', () async {
         final update = await updaterWith(
           clientForMany(manyReleases(['v2.0.0', 'v1.3.0', 'v1.2.0', 'v1.1.0'])),
-        ).check();
+        ).offered();
 
         expect(update!.version.toString(), '2.0.0');
       });
@@ -170,7 +184,7 @@ void main() {
         // release at a time instead of arriving at the latest.
         final update = await updaterWith(
           clientForMany(manyReleases(['v1.1.0', 'v2.0.0', 'v1.3.0'])),
-        ).check();
+        ).offered();
 
         expect(update!.version.toString(), '2.0.0');
       });
@@ -190,7 +204,7 @@ void main() {
         ]);
 
         expectLater(
-          updaterWith(clientForMany(releases)).check(),
+          updaterWith(clientForMany(releases)).offered(),
           completion(
             isA<AvailableUpdate>().having(
               (u) => u.version.toString(),
@@ -205,23 +219,86 @@ void main() {
     test('ignores drafts', () async {
       final update = await updaterWith(
         clientFor(releasesJson(draft: true)),
-      ).check();
+      ).offered();
       expect(update, isNull);
     });
 
     test('ignores pre-releases unless the user opted in', () async {
       final json = releasesJson(tag: 'v1.4.0-beta.1', prerelease: true);
-      expect(await updaterWith(clientFor(json)).check(), isNull);
+      expect(await updaterWith(clientFor(json)).offered(), isNull);
       expect(
-        await updaterWith(clientFor(json), preReleases: true).check(),
+        await updaterWith(clientFor(json), preReleases: true).offered(),
         isNotNull,
       );
+    });
+
+    group('nothing offered says which kind of nothing', () {
+      // "Up to date" and "there is a newer release and none of it fits this
+      // install" are both no-update, and told apart nowhere else. Two reports
+      // of "updating does nothing" have turned on exactly this distinction.
+      test('being current is up to date', () async {
+        final result = await updaterWith(
+          clientFor(releasesJson()),
+          current: '1.4.0',
+        ).check();
+
+        expect(result.isUpToDate, isTrue);
+        expect(result.blockedVersion, isNull);
+        expect(result.outcome, 'up to date');
+      });
+
+      test('a release with no asset for this install is not', () async {
+        // A Linux release, asked for by a macOS build.
+        final result = await updaterWith(
+          clientFor(
+            releasesJson(
+              assets: const ['Kruftle-1.4.0-x86_64.AppImage', 'checksums.txt'],
+            ),
+          ),
+        ).check();
+
+        expect(result.isUpToDate, isFalse);
+        expect(result.update, isNull);
+        expect('${result.blockedVersion}', '1.4.0');
+        expect(result.reason, contains('.dmg'));
+        expect(
+          result.reason,
+          contains('Kruftle-1.4.0-x86_64.AppImage'),
+          reason: 'the log has to say what was on offer instead',
+        );
+      });
+
+      test('a release with no checksum for our asset is not either', () async {
+        final result = await updaterWith(
+          clientFor(releasesJson(), checksums: 'nothing  for-us.txt\n'),
+        ).check();
+
+        expect(result.isUpToDate, isFalse);
+        expect('${result.blockedVersion}', '1.4.0');
+        expect(result.reason, contains('checksum'));
+      });
+
+      test('the newest unusable release is the one reported', () async {
+        // Not the oldest one it walked past on the way down.
+        final releases = jsonEncode([
+          for (final tag in const ['v3.0.0', 'v2.0.0'])
+            {
+              'tag_name': tag,
+              'draft': false,
+              'prerelease': false,
+              'body': '',
+              'assets': const <Map<String, Object?>>[],
+            },
+        ]);
+        final result = await updaterWith(clientFor(releases)).check();
+        expect('${result.blockedVersion}', '3.0.0');
+      });
     });
 
     test('refuses a release with no checksum for our asset', () async {
       final update = await updaterWith(
         clientFor(releasesJson(assets: const [installer])),
-      ).check();
+      ).offered();
 
       expect(
         update,
@@ -249,7 +326,7 @@ void main() {
           client: clientFor(releasesJson(assets: assets), checksums: checksums),
           target: target,
           architecture: 'x64',
-        ).check();
+        ).offered();
         return update?.assetName;
       }
 

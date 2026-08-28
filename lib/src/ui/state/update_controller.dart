@@ -13,6 +13,10 @@ enum UpdatePhase {
   idle,
   checking,
   upToDate,
+
+  /// A newer release exists and carries nothing this copy can install.
+  noBuild,
+
   available,
   downloading,
   ready,
@@ -26,6 +30,7 @@ class UpdateState {
     this.progress = 0,
     this.error,
     this.installer,
+    this.blockedVersion,
   });
 
   final UpdatePhase phase;
@@ -35,6 +40,9 @@ class UpdateState {
 
   /// The verified download, waiting to be applied.
   final File? installer;
+
+  /// The release that exists but cannot be installed here, in [UpdatePhase.noBuild].
+  final String? blockedVersion;
 
   /// True once the download is staged and only a restart is left.
   bool get isReady => phase == UpdatePhase.ready;
@@ -66,12 +74,15 @@ class UpdateController extends Notifier<UpdateState> {
   Future<void> check({bool byHand = false}) async {
     if (byHand) state = const UpdateState(phase: UpdatePhase.checking);
 
-    final AvailableUpdate? update;
+    final target = ref.read(installTargetProvider);
+    final UpdateCheck result;
     try {
-      update = await _updater().check();
+      result = await _updater().check();
     } on UpdateFailure catch (e) {
-      ref.read(activityLogProvider).info('Update check failed', {
-        'reason': e.message,
+      ref.read(activityLogProvider).info('Update check', {
+        'current': kAppVersion,
+        'install': '$target',
+        'outcome': 'failed: ${e.message}',
       });
       state = byHand
           ? UpdateState(phase: UpdatePhase.failed, error: e.message)
@@ -79,19 +90,35 @@ class UpdateController extends Notifier<UpdateState> {
       return;
     }
 
-    if (update == null) {
-      state = byHand
-          ? const UpdateState(phase: UpdatePhase.upToDate)
-          : const UpdateState();
+    // Logged every time, whatever it found. Two reports of "updating does
+    // nothing" have now cost a day each because the only evidence was a banner
+    // that said the same thing for "you are current" and for "there is a new
+    // version and none of it fits this install". This line says which.
+    ref.read(activityLogProvider).info('Update check', {
+      'current': kAppVersion,
+      'install': '$target',
+      'outcome': result.outcome,
+    });
+
+    final update = result.update;
+    if (update != null) {
+      state = UpdateState(phase: UpdatePhase.available, update: update);
       return;
     }
 
-    ref.read(activityLogProvider).info('Update available', {
-      'current': kAppVersion,
-      'latest': '${update.version}',
-      'asset': update.assetName,
-    });
-    state = UpdateState(phase: UpdatePhase.available, update: update);
+    if (!byHand) {
+      // Neither "you are current" nor "there is one you cannot have" is worth
+      // interrupting a launch for. The log has both.
+      state = const UpdateState();
+      return;
+    }
+
+    state = result.isUpToDate
+        ? const UpdateState(phase: UpdatePhase.upToDate)
+        : UpdateState(
+            phase: UpdatePhase.noBuild,
+            blockedVersion: '${result.blockedVersion}',
+          );
   }
 
   /// Fetches and verifies the new build. Nothing is replaced yet: the swap

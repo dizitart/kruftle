@@ -524,6 +524,16 @@ class LDe extends L {
   String get updateUpToDate => 'Kruftle ist auf dem neuesten Stand.';
 
   @override
+  String updateReadyInstall(String version) {
+    return 'Kruftle $version ist bereit zur Installation.';
+  }
+
+  @override
+  String updateNoBuild(String version) {
+    return 'Kruftle $version ist verfügbar, aber für diese Installation gibt es kein passendes Build. Siehe Aktivitätsprotokoll.';
+  }
+
+  @override
   String get settingsTitle => 'Einstellungen';
 
   @override

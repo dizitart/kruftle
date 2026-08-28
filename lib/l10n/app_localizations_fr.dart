@@ -525,6 +525,16 @@ class LFr extends L {
   String get updateUpToDate => 'Kruftle est à jour.';
 
   @override
+  String updateReadyInstall(String version) {
+    return 'Kruftle $version est prêt à être installé.';
+  }
+
+  @override
+  String updateNoBuild(String version) {
+    return 'Kruftle $version est disponible, mais cette installation n\'a aucune version qu\'elle puisse utiliser. Voir le journal d\'activité.';
+  }
+
+  @override
   String get settingsTitle => 'Réglages';
 
   @override

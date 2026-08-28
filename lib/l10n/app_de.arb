@@ -153,6 +153,8 @@
   "updateRestart": "Jetzt neu starten",
   "updateChecking": "Suche nach Updates…",
   "updateUpToDate": "Kruftle ist auf dem neuesten Stand.",
+  "updateReadyInstall": "Kruftle {version} ist bereit zur Installation.",
+  "updateNoBuild": "Kruftle {version} ist verfügbar, aber für diese Installation gibt es kein passendes Build. Siehe Aktivitätsprotokoll.",
 
   "settingsTitle": "Einstellungen",
   "settingsSectionAppearance": "Erscheinungsbild",

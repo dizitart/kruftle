@@ -531,6 +531,16 @@ class LRu extends L {
   String get updateUpToDate => 'Установлена последняя версия Kruftle.';
 
   @override
+  String updateReadyInstall(String version) {
+    return 'Kruftle $version готов к установке.';
+  }
+
+  @override
+  String updateNoBuild(String version) {
+    return 'Kruftle $version доступен, но для этой установки нет подходящей сборки. См. журнал действий.';
+  }
+
+  @override
   String get settingsTitle => 'Настройки';
 
   @override

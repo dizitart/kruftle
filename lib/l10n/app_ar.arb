@@ -153,6 +153,8 @@
   "updateRestart": "إعادة التشغيل الآن",
   "updateChecking": "جارٍ البحث عن التحديثات…",
   "updateUpToDate": "‏Kruftle محدَّث.",
+  "updateReadyInstall": "‏Kruftle {version} جاهز للتثبيت.",
+  "updateNoBuild": "‏Kruftle {version} متاح، لكن لا توجد نسخة تصلح لهذا التثبيت. راجع سجل النشاط.",
 
   "settingsTitle": "الإعدادات",
   "settingsSectionAppearance": "المظهر",

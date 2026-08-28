@@ -153,6 +153,8 @@
   "updateRestart": "अभी पुनः आरंभ करें",
   "updateChecking": "अपडेट देखे जा रहे हैं…",
   "updateUpToDate": "Kruftle नवीनतम है।",
+  "updateReadyInstall": "Kruftle {version} इंस्टॉल करने के लिए तैयार है।",
+  "updateNoBuild": "Kruftle {version} उपलब्ध है, लेकिन इस इंस्टॉलेशन के लिए कोई उपयुक्त बिल्ड नहीं है। गतिविधि लॉग देखें।",
 
   "settingsTitle": "सेटिंग्स",
   "settingsSectionAppearance": "रूप-रंग",

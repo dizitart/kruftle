@@ -64,6 +64,17 @@ class InstallTarget {
   /// True when an update lands without an installer running.
   bool get isSelfReplacing => swapDirectory != null || appImage != null;
 
+  /// One line for the activity log.
+  ///
+  /// Which install shape was detected is the first thing worth knowing when
+  /// somebody reports that updating does nothing, and it is not visible from
+  /// anywhere else.
+  @override
+  String toString() =>
+      'InstallTarget(${platform.token}, wants ${assetSuffixes.join(' or ')}'
+      '${swapDirectory == null ? '' : ', swaps $swapDirectory'}'
+      '${appImage == null ? '' : ', appimage $appImage'})';
+
   /// The `.app` bundle [executable] is running out of, or null when this build
   /// is not inside one — a `flutter run`, or a bare binary.
   ///

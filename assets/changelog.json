@@ -2,6 +2,17 @@
   "kruftle.changelog": 1,
   "versions": [
     {
+      "version": "0.2.6",
+      "date": "2026-08-28",
+      "fixed": [
+        "Updating a Kruftle installed from the .deb package did nothing. It handed the download to the software centre, and the software centre will not upgrade a package it already considers installed \u2014 it showed the new version, greyed the button out, and changed nothing. Kruftle now installs it directly, asking for your password once, and restarts itself when it is done.",
+        "The update banner said \u201crestart to finish\u201d next to a button that ran an installer. The two now agree: an update that is unpacked in place offers Restart now, and one that runs an installer offers Update."
+      ],
+      "changed": [
+        "Kruftle can now tell you when a new version exists that your installation cannot use \u2014 a missing build for your processor, or a release with no published checksum \u2014 instead of reporting it as \u201cup to date\u201d. Every update check is also written to the activity log, with what it found and how Kruftle is installed, so a check that comes back empty can be explained rather than guessed at."
+      ]
+    },
+    {
       "version": "0.2.4",
       "date": "2026-08-28",
       "changed": [

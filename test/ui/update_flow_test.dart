@@ -214,6 +214,62 @@ void main() {
 
     expect(find.text('Restart now'), findsNothing);
     expect(find.text('Update'), findsOneWidget);
+    // And the message has to agree with the button. It said "Restart to
+    // finish." next to an Update button that opened a package installer.
+    expect(find.textContaining('ready to install'), findsOneWidget);
+    expect(find.textContaining('Restart to finish'), findsNothing);
+  });
+
+  testWidgets('a release with no build for this install says so', (
+    tester,
+  ) async {
+    // Not "up to date". The two are both "no update" and look identical from
+    // outside, and this is the one that means something is wrong.
+    final container = await pump(
+      tester,
+      client(
+        releases(asset: 'Kruftle-99.0.0-macos.zip'),
+        sums: '$digest  Kruftle-99.0.0-macos.zip\n',
+      ),
+      target: const InstallTarget(
+        platform: HostPlatform.windows,
+        assetSuffixes: ['.zip', '.exe'],
+        swapDirectory: r'C:\Users\me\Kruftle',
+      ),
+    );
+
+    await container.read(updateProvider.notifier).check(byHand: true);
+    await tester.pump();
+
+    expect(container.read(updateProvider).phase, UpdatePhase.noBuild);
+    expect(find.textContaining('99.0.0'), findsOneWidget);
+    expect(find.text('Kruftle is up to date.'), findsNothing);
+  });
+
+  testWidgets('every check is written to the log, whatever it found', (
+    tester,
+  ) async {
+    // The evidence that was missing twice over: a report of "updating does
+    // nothing" with a log that says nothing about updating.
+    final container = await pump(tester, client('[]'));
+    await container.read(updateProvider.notifier).check();
+
+    final log = File(p.join(support.path, 'logs')).parent;
+    final lines = log
+        .listSync(recursive: true)
+        .whereType<File>()
+        .where((f) => f.path.endsWith('.jsonl'))
+        .expand((f) => f.readAsLinesSync())
+        .where((l) => l.contains('Update check'))
+        .toList();
+
+    expect(lines, hasLength(1));
+    expect(lines.single, contains('up to date'));
+    expect(
+      lines.single,
+      contains('InstallTarget'),
+      reason: 'which install shape was detected is the first thing to know',
+    );
   });
 
   group('the check at launch and the one a person asks for', () {

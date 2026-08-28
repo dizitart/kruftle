@@ -14,12 +14,12 @@ check in §3 to confirm the tree is in the state this document claims.
 
 | | |
 |---|---|
-| **Current milestone** | **v0.2.4 (unreleased)** — self-update without an installer, and the platform-integration bugs behind it |
+| **Current milestone** | **v0.2.6** — self-update without an installer, and the platform-integration bugs behind it |
 | **Last updated** | 2026-08-28 |
-| **Build green?** | Yes — 649 tests, analyzer clean (`--fatal-infos`), formatter clean |
+| **Build green?** | Yes — 661 tests, analyzer clean (`--fatal-infos`), formatter clean |
 | **Repo** | https://github.com/dizitart/kruftle (public, GPL-3.0) |
 | **CI** | Green — analyze/test plus release builds on all three OSs |
-| **Released** | [v0.2.2](https://github.com/dizitart/kruftle/releases/tag/v0.2.2) — .dmg, two .exe, two .AppImage, two .deb, checksums.txt |
+| **Released** | [v0.2.4](https://github.com/dizitart/kruftle/releases/tag/v0.2.4) — .dmg, macOS .zip, two .exe, two Windows .zip, two .AppImage, two .deb, two .tar.gz, checksums.txt |
 
 ---
 
@@ -132,6 +132,38 @@ it is there to be looked at. Regenerate the app icon's rasters with:
 ## 4. Session log
 
 Newest first.
+
+### Session 14 — 2026-08-28
+
+**Landed** — v0.2.6: the Linux `.deb` update actually installs, and a check
+that finds nothing says which kind of nothing.
+
+- **What the v0.2.5 test build found.** macOS updated itself correctly. Linux
+  did not, and Windows reported "up to date" against a release that existed.
+- **The `.deb` update was a dead end.** `Updater.install` handed the file to
+  `xdg-open`, on the reasoning that a system package is the desktop's business.
+  That opens GNOME Software, and GNOME Software will not upgrade a package it
+  already considers installed: it showed 0.2.5, greyed the button out, and did
+  nothing. The update looked applied and was not. It is `pkexec dpkg --install`
+  now — polkit shows its own password dialog, a refusal is a clean no, and the
+  fallback to `xdg-open` is kept for a machine with no polkit agent. `dpkg`
+  replaces the files of a running program happily on Linux, but the running
+  Kruftle is still the old one and cannot start its replacement while it holds
+  the instance lock, so `relaunchScript` waits for it to go.
+- **The banner contradicted itself.** "Kruftle 0.2.5 is ready. Restart to
+  finish." next to an **Update** button that opened a package installer. The
+  message is chosen by `isSelfReplacing` now, same as the button was.
+- **Windows is still not explained, and that is the actual bug.** The release
+  data is correct, and a Windows target picks `Kruftle-0.2.5-windows-arm64.zip`
+  out of the live release list in simulation. What could not be established is
+  what the app on that machine saw, because "up to date" was shown for both
+  "you are current" and "there is a newer release and nothing in it fits this
+  install" — and the log said nothing at all about the check.
+- **So the check now reports which.** `check()` returns an `UpdateCheck`
+  carrying the update, or the newest version it had to reject and why, and
+  every check writes one line to the activity log: current version, the
+  detected `InstallTarget`, and the outcome. That one line would have answered
+  this in a minute. It is the second time this exact blindness has cost a day.
 
 ### Session 13 — 2026-08-28
 
@@ -718,6 +750,10 @@ Append-only. Record *why*, so a future session does not undo it.
 
 ## 6. Known gotchas
 
+- **GNOME Software will not install a local `.deb` whose package name is
+  already installed.** It shows the new version, greys out the button and does
+  nothing — which looks exactly like a successful update to anyone watching.
+  `pkexec dpkg --install` is the only thing that actually applies it.
 - **macOS is the only one of the three that wants an inset app icon.** Its grid
   puts the body in the middle 824 of 1024 points and the Dock lays every icon
   out on that assumption — a full-bleed icon is drawn a quarter oversized, not

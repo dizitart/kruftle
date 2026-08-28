@@ -525,6 +525,16 @@ class LEs extends L {
   String get updateUpToDate => 'Kruftle está actualizado.';
 
   @override
+  String updateReadyInstall(String version) {
+    return 'Kruftle $version está listo para instalarse.';
+  }
+
+  @override
+  String updateNoBuild(String version) {
+    return 'Kruftle $version está disponible, pero esta instalación no tiene ninguna compilación que pueda usar. Consulta el registro de actividad.';
+  }
+
+  @override
   String get settingsTitle => 'Ajustes';
 
   @override

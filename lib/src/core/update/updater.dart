@@ -43,6 +43,35 @@ class AvailableUpdate {
       !const ['.exe', '.deb'].any(assetName.toLowerCase().endsWith);
 }
 
+/// What a check found, including when what it found was nothing.
+///
+/// "Up to date" and "there is a newer release, and nothing in it this copy can
+/// install" look identical from outside — both are simply no update — and the
+/// difference between them is the difference between a shrug and a bug report.
+/// Telling them apart is the whole reason this is not just a nullable
+/// [AvailableUpdate].
+class UpdateCheck {
+  const UpdateCheck({this.update, this.blockedVersion, this.reason});
+
+  final AvailableUpdate? update;
+
+  /// The newest release this copy could *not* use, when there was one.
+  final Version? blockedVersion;
+
+  /// Why it could not, in the log's words rather than the user's.
+  final String? reason;
+
+  bool get isUpToDate => update == null && blockedVersion == null;
+
+  /// For the activity log.
+  String get outcome => switch (this) {
+    _ when update != null =>
+      'offering ${update!.version} (${update!.assetName})',
+    _ when blockedVersion != null => '$blockedVersion unusable: $reason',
+    _ => 'up to date',
+  };
+}
+
 /// Why an update could not be checked for, downloaded, or applied.
 class UpdateFailure implements Exception {
   const UpdateFailure(this.message);
@@ -196,14 +225,12 @@ class Updater {
     return const {};
   }
 
-  /// Null when already up to date.
-  ///
   /// Throws [UpdateFailure] when the check could not be made at all. Whether
   /// that is worth telling the user about depends on who asked: a background
   /// check that nags about its own update server being unreachable is worse
   /// than one that quietly tries again tomorrow, but a person who just pressed
   /// "check for updates" is owed an answer.
-  Future<AvailableUpdate?> check() async {
+  Future<UpdateCheck> check() async {
     final List<dynamic> releases;
     try {
       final response = await _client
@@ -243,12 +270,24 @@ class Updater {
             .toList()
           ..sort((a, b) => b.$1.compareTo(a.$1));
 
+    // Why the newest unusable release was unusable, kept for the log and for
+    // the person who pressed the button. Only the first is recorded: it is the
+    // newest, and the rest are the same story further down.
+    Version? blocked;
+    String? reason;
+
     for (final (version, release) in newer) {
       final assets = (release['assets'] as List<dynamic>? ?? const [])
           .cast<Map<String, Object?>>();
 
       final chosen = selectAsset(assets);
-      if (chosen.isEmpty) continue;
+      if (chosen.isEmpty) {
+        blocked ??= version;
+        reason ??=
+            'no ${target.assetSuffixes.join(' or ')} for $_architecture among '
+            '${assets.map((a) => a['name']).join(', ')}';
+        continue;
+      }
 
       final checksums = await _fetchChecksums(assets);
       final name = chosen['name']! as String;
@@ -257,20 +296,24 @@ class Updater {
         // A release without a checksum for our asset is not installable. We do
         // not fall back to installing it unverified, and we do not stop
         // looking: the next one down is still an upgrade.
+        blocked ??= version;
+        reason ??= 'no published checksum for $name';
         continue;
       }
 
-      return AvailableUpdate(
-        version: version,
-        assetName: name,
-        downloadUrl: chosen['browser_download_url']! as String,
-        sha256: digest,
-        notes: release['body'] as String? ?? '',
-        sizeBytes: (chosen['size'] as num?)?.toInt() ?? 0,
+      return UpdateCheck(
+        update: AvailableUpdate(
+          version: version,
+          assetName: name,
+          downloadUrl: chosen['browser_download_url']! as String,
+          sha256: digest,
+          notes: release['body'] as String? ?? '',
+          sizeBytes: (chosen['size'] as num?)?.toInt() ?? 0,
+        ),
       );
     }
 
-    return null;
+    return UpdateCheck(blockedVersion: blocked, reason: reason);
   }
 
   /// Parses the release's `checksums.txt`, in `sha256sum` format:
@@ -386,12 +429,7 @@ class Updater {
       return false;
     }
 
-    if (name.endsWith('.deb')) {
-      // Needs a package manager and root. Hand it to the desktop's own
-      // installer rather than asking for a password behind a progress bar.
-      await Process.start('xdg-open', [path], mode: ProcessStartMode.detached);
-      return false;
-    }
+    if (name.endsWith('.deb')) return _applyDebianPackage(path);
 
     if (name.endsWith('.dmg')) return _applyMacImage(path);
     if (name.endsWith('.appimage')) return _applyAppImage(path);
@@ -401,6 +439,60 @@ class Updater {
       HostPlatform.windows => _applyWindowsArchive(path),
       HostPlatform.linux => _applyLinuxArchive(path),
     };
+  }
+
+  /// Installs a `.deb` over the running copy, asking for a password properly.
+  ///
+  /// This used to hand the file to `xdg-open`, on the reasoning that a system
+  /// package is the desktop's business and not ours. In practice that opens
+  /// GNOME Software, and GNOME Software will not upgrade a package it already
+  /// considers installed — it shows the new version, greys the button out, and
+  /// does nothing. The update looked applied and was not.
+  ///
+  /// `pkexec` is how a desktop application asks for root: polkit shows its own
+  /// password dialog, and a refusal is a clean no rather than a half-done
+  /// update. There is no version of "replace a package under /usr" that does
+  /// not need this, so the honest thing is to ask for it plainly.
+  ///
+  /// `dpkg` replaces the files of a running program quite happily on Linux, so
+  /// the install finishes while Kruftle is still up — but the Kruftle that is
+  /// up is still the old one, and it cannot start its own replacement while it
+  /// holds the single-instance lock. The relaunch waits for it to go.
+  Future<bool> _applyDebianPackage(String package) async {
+    bool installed;
+    try {
+      // ponytail: `dpkg -i`, not `apt-get install`. It is the right tool for
+      // replacing a package whose dependencies have not changed, which is what
+      // an update of our own .deb is. If Kruftle ever gains a new runtime
+      // dependency, dpkg will refuse the unmet one and this falls through to
+      // showing the file — swap in `apt-get install -y <path>` then, which
+      // resolves them.
+      final result = await Process.run('pkexec', [
+        'dpkg',
+        '--install',
+        package,
+      ]);
+      installed = result.exitCode == 0;
+    } on Object {
+      installed = false; // No pkexec, or no polkit agent to answer it.
+    }
+
+    if (!installed) {
+      // Cancelled, or nothing to ask with. Show the file rather than pretend.
+      await Process.start('xdg-open', [
+        package,
+      ], mode: ProcessStartMode.detached);
+      return false;
+    }
+
+    await Process.start('/bin/sh', [
+      '-c',
+      relaunchScript,
+      'kruftle-update',
+      Platform.resolvedExecutable,
+      '$pid',
+    ], mode: ProcessStartMode.detached);
+    return true;
   }
 
   Future<bool> _applyMacArchive(String archive) async {

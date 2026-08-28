@@ -522,6 +522,16 @@ class LHi extends L {
   String get updateUpToDate => 'Kruftle नवीनतम है।';
 
   @override
+  String updateReadyInstall(String version) {
+    return 'Kruftle $version इंस्टॉल करने के लिए तैयार है।';
+  }
+
+  @override
+  String updateNoBuild(String version) {
+    return 'Kruftle $version उपलब्ध है, लेकिन इस इंस्टॉलेशन के लिए कोई उपयुक्त बिल्ड नहीं है। गतिविधि लॉग देखें।';
+  }
+
+  @override
   String get settingsTitle => 'सेटिंग्स';
 
   @override

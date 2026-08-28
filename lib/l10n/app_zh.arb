@@ -153,6 +153,8 @@
   "updateRestart": "立即重启",
   "updateChecking": "正在检查更新…",
   "updateUpToDate": "Kruftle 已是最新版本。",
+  "updateReadyInstall": "Kruftle {version} 已可安装。",
+  "updateNoBuild": "Kruftle {version} 已发布，但没有适用于此安装方式的版本。请查看活动日志。",
 
   "settingsTitle": "设置",
   "settingsSectionAppearance": "外观",
