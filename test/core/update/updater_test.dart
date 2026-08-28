@@ -545,6 +545,115 @@ void main() {
       },
     );
 
+    group('a certificate the platform trusts and we do not', () {
+      // The Windows failure, exactly: api.github.com is signed by Sectigo,
+      // whose root ships with Windows, and release downloads come from
+      // objects.githubusercontent.com, signed by Let's Encrypt and chaining to
+      // ISRG Root X2 — which `dart:io` cannot see on a machine that has never
+      // fetched it, because it verifies against a snapshot of the root store
+      // rather than asking Windows to build the chain. The check succeeded and
+      // the download died on the handshake.
+      late HttpServer server;
+
+      setUp(() async {
+        // Something for the system downloader to actually fetch, so this
+        // exercises the real `curl` rather than a stand-in for it.
+        server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
+        server.listen((request) async {
+          request.response.add(payload);
+          await request.response.close();
+        });
+      });
+      tearDown(() => server.close(force: true));
+
+      AvailableUpdate served(String digest) => AvailableUpdate(
+        version: Version.tryParse('1.4.0')!,
+        assetName: 'Kruftle-1.4.0.dmg',
+        downloadUrl: 'http://127.0.0.1:${server.port}/Kruftle-1.4.0.dmg',
+        sha256: digest,
+        notes: '',
+        sizeBytes: payload.length,
+      );
+
+      /// Refuses the handshake, as that machine's TLS does.
+      Updater refusing() => Updater(
+        currentVersion: Version.tryParse('1.0.0')!,
+        target: const InstallTarget(
+          platform: HostPlatform.macOS,
+          assetSuffixes: ['.dmg'],
+        ),
+        client: MockClient(
+          (_) async => throw const HandshakeException(
+            'CERTIFICATE_VERIFY_FAILED: unable to get local issuer certificate',
+          ),
+        ),
+      );
+
+      test('the download falls back to the system downloader', () async {
+        final file = await refusing().download(
+          served(realDigest),
+          directory: tmp.path,
+        );
+
+        expect(file.readAsBytesSync(), payload);
+      });
+
+      test('and what it fetched is still verified', () async {
+        // The fallback is only acceptable because this still happens: the
+        // digest came from the API over a connection that did verify.
+        await expectLater(
+          refusing().download(served('c' * 64), directory: tmp.path),
+          throwsA(
+            isA<UpdateFailure>().having(
+              (e) => e.message,
+              'message',
+              contains('Checksum mismatch'),
+            ),
+          ),
+        );
+      });
+
+      test('a failure there reports both halves', () async {
+        final updater = Updater(
+          currentVersion: Version.tryParse('1.0.0')!,
+          target: const InstallTarget(
+            platform: HostPlatform.macOS,
+            assetSuffixes: ['.dmg'],
+          ),
+          client: MockClient(
+            (_) async => throw const HandshakeException('no issuer'),
+          ),
+        );
+        // A port nothing is listening on, so the system downloader fails
+        // too: bound to claim a free one, then closed.
+        final closed = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
+        final deadPort = closed.port;
+        await closed.close();
+
+        final nowhere = AvailableUpdate(
+          version: Version.tryParse('1.4.0')!,
+          assetName: 'Kruftle-1.4.0.dmg',
+          downloadUrl: 'http://127.0.0.1:$deadPort/Kruftle-1.4.0.dmg',
+          sha256: realDigest,
+          notes: '',
+          sizeBytes: 0,
+        );
+
+        await expectLater(
+          updater.download(nowhere, directory: tmp.path),
+          throwsA(
+            isA<UpdateFailure>()
+                .having((e) => e.message, 'names the cause', contains('issuer'))
+                .having(
+                  (e) => e.message,
+                  'and the fallback',
+                  contains('system downloader'),
+                ),
+          ),
+        );
+      });
+    });
+
     test('a checksum comparison is case-insensitive', () async {
       final file = await downloaderFor(
         200,

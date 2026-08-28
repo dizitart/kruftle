@@ -14,7 +14,7 @@
 /// A constant is identical on every platform, needs no plugin, and cannot come
 /// back wrong. `version_test.dart` holds it to `pubspec.yaml`, and the release
 /// workflow refuses to build a tag that disagrees with it.
-const kAppVersion = '0.2.7';
+const kAppVersion = '0.2.8';
 
 /// A semantic version, enough of one to decide whether a release is newer.
 ///

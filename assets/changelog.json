@@ -2,6 +2,13 @@
   "kruftle.changelog": 1,
   "versions": [
     {
+      "version": "0.2.8",
+      "date": "2026-08-29",
+      "fixed": [
+        "Downloading an update on Windows could fail with a certificate error. Kruftle asks GitHub for the release over one server and downloads the build from another, and the two are signed by different authorities \u2014 on a machine that has not yet collected the second one\u2019s root certificate, Windows can fetch it on demand but Kruftle could not ask it to. The download now falls back to the system\u2019s own downloader when that happens, which can. What it fetches is still checked against the release\u2019s published SHA-256 before anything is replaced."
+      ]
+    },
+    {
       "version": "0.2.7",
       "date": "2026-08-29",
       "fixed": [

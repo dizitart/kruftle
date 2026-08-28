@@ -14,12 +14,12 @@ check in §3 to confirm the tree is in the state this document claims.
 
 | | |
 |---|---|
-| **Current milestone** | **v0.2.7** — self-update without an installer, working on all three |
+| **Current milestone** | **v0.2.8** — self-update without an installer, working on all three |
 | **Last updated** | 2026-08-28 |
 | **Build green?** | Yes — 661 tests, analyzer clean (`--fatal-infos`), formatter clean |
 | **Repo** | https://github.com/dizitart/kruftle (public, GPL-3.0) |
 | **CI** | Green — analyze/test plus release builds on all three OSs |
-| **Released** | [v0.2.6](https://github.com/dizitart/kruftle/releases/tag/v0.2.6) — .dmg, macOS .zip, two .exe, two Windows .zip, two .AppImage, two .deb, two .tar.gz, checksums.txt |
+| **Released** | [v0.2.7](https://github.com/dizitart/kruftle/releases/tag/v0.2.7) — .dmg, macOS .zip, two .exe, two Windows .zip, two .AppImage, two .deb, two .tar.gz, checksums.txt |
 
 ---
 
@@ -102,7 +102,7 @@ Run this first, every session. It is the definition of "the tree is healthy".
 cd /Volumes/External/codebase/kruftle && dart format --output=none --set-exit-if-changed lib test tool && flutter analyze --fatal-infos && flutter test
 ```
 
-Expected: formatter reports 0 changed, `No issues found!`, then 666 passing.
+Expected: formatter reports 0 changed, `No issues found!`, then 669 passing.
 
 `lib/l10n/app_localizations*.dart` is generated and committed. Regenerate it
 with `flutter gen-l10n` after editing any `.arb`; the analyzer will not warn if
@@ -166,6 +166,35 @@ gh release delete v0.2.7-rc.1 --repo dizitart/kruftle --yes --cleanup-tag
 ## 4. Session log
 
 Newest first.
+
+### Session 16 — 2026-08-29
+
+**Landed** — v0.2.8: the other half of the Windows problem, which was the same
+half all along.
+
+- **0.2.7 fixed the check; the download then failed.** The v0.2.8-rc.1
+  candidate got as far as
+  `offering 0.2.8-rc.1 (Kruftle-0.2.8-rc.1-windows-arm64.zip)` — the first time
+  a Windows Kruftle had ever seen a release — and then died with
+  `CERTIFICATE_VERIFY_FAILED: unable to get local issuer certificate`.
+- **Two hosts, two authorities.** `api.github.com` is signed by Sectigo, whose
+  root ships with Windows. Release downloads come from
+  `objects.githubusercontent.com`, signed by Let's Encrypt and chaining to ISRG
+  Root X2. Windows fetches a missing root on demand through CryptoAPI, but
+  `dart:io` verifies against a *snapshot* of the root store and cannot ask it
+  to — so on a machine that has never needed X2, the API verifies and the
+  download does not. That is also what was failing `checksums.txt` before 0.2.7
+  stopped needing it: one cause, two symptoms, three rounds apart.
+- **The fix is to let the operating system do the fetching.** On a
+  `TlsException` the download is retried with `curl`, which has shipped in
+  Windows since 10 1803 and uses Schannel — the stack that *does* fetch the
+  missing root — and uses the platform store on macOS and Linux too.
+- **Why that is not a hole.** The bytes are still verified against the SHA-256
+  that came from the API over a connection that verified. The download channel
+  is defence in depth, not the security boundary, which is exactly why falling
+  back on it is acceptable and why skipping the digest never would be. A test
+  drives the real `curl` against a local server with the Dart client refusing
+  the handshake, and another proves a tampered payload is still rejected.
 
 ### Session 15 — 2026-08-29
 
@@ -819,6 +848,12 @@ Append-only. Record *why*, so a future session does not undo it.
 
 ## 6. Known gotchas
 
+- **`dart:io` on Windows verifies TLS against a snapshot of the root store.**
+  Windows itself fetches a missing root on demand; Dart cannot ask it to, so a
+  host whose root the machine has never needed fails with
+  `unable to get local issuer certificate` while other hosts verify fine. It
+  looks like a network fault and is not one. Handing the transfer to `curl`
+  (Schannel) works, as long as what it fetches is verified afterwards.
 - **A GitHub release asset download is not on `api.github.com`.** It redirects
   to `objects.githubusercontent.com`, so anything that fetches an asset during
   a *check* — `checksums.txt`, most obviously — needs a second host the machine

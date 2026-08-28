@@ -391,18 +391,6 @@ class Updater {
     required String directory,
     void Function(int received, int total)? onProgress,
   }) async {
-    final request = http.Request('GET', Uri.parse(update.downloadUrl));
-    final http.StreamedResponse response;
-    try {
-      response = await _client.send(request);
-    } on Object catch (e) {
-      throw UpdateFailure('Could not reach the download server: $e');
-    }
-
-    if (response.statusCode != 200) {
-      throw UpdateFailure('Download failed with HTTP ${response.statusCode}.');
-    }
-
     final into = Directory(directory);
     if (into.existsSync()) into.deleteSync(recursive: true);
     into.createSync(recursive: true);
@@ -410,18 +398,11 @@ class Updater {
     // `basename`, because the name comes off the network: an asset called
     // `../../kruftle.exe` must land in the updates directory like any other.
     final file = File(p.join(directory, p.basename(update.assetName)));
-    final sink = file.openWrite();
-    final total = response.contentLength ?? update.sizeBytes;
-    var received = 0;
 
     try {
-      await for (final chunk in response.stream) {
-        sink.add(chunk);
-        received += chunk.length;
-        onProgress?.call(received, total);
-      }
-    } finally {
-      await sink.close();
+      await _stream(update, file, onProgress);
+    } on TlsException catch (e) {
+      await _fetchWithSystemTool(update, file, e);
     }
 
     final actual = sha256.convert(await file.readAsBytes()).toString();
@@ -434,6 +415,95 @@ class Updater {
     }
 
     return file;
+  }
+
+  Future<void> _stream(
+    AvailableUpdate update,
+    File into,
+    void Function(int received, int total)? onProgress,
+  ) async {
+    final request = http.Request('GET', Uri.parse(update.downloadUrl));
+    final http.StreamedResponse response;
+    try {
+      response = await _client.send(request);
+    } on TlsException {
+      rethrow; // Recoverable; `download` has somewhere else to go.
+    } on Object catch (e) {
+      throw UpdateFailure('Could not reach the download server: $e');
+    }
+
+    if (response.statusCode != 200) {
+      throw UpdateFailure('Download failed with HTTP ${response.statusCode}.');
+    }
+
+    final sink = into.openWrite();
+    final total = response.contentLength ?? update.sizeBytes;
+    var received = 0;
+    try {
+      await for (final chunk in response.stream) {
+        sink.add(chunk);
+        received += chunk.length;
+        onProgress?.call(received, total);
+      }
+    } finally {
+      await sink.close();
+    }
+  }
+
+  /// Fetches the asset with the operating system's own downloader, after our
+  /// own TLS refused the certificate.
+  ///
+  /// This is not a workaround for a bad certificate — it is a workaround for a
+  /// root store Dart cannot see all of. On Windows, `dart:io` verifies against
+  /// a snapshot of the system root store and cannot trigger the on-demand root
+  /// fetch that Windows itself does, so a machine that has never needed a
+  /// given root simply does not have it. GitHub's API is signed by Sectigo,
+  /// whose root ships with Windows; release downloads are served from
+  /// `objects.githubusercontent.com`, signed by Let's Encrypt and chaining to
+  /// ISRG Root X2, which a fresh machine may not have fetched yet. The API
+  /// verifies, the download does not, and the update dies half-way.
+  ///
+  /// `curl` has shipped in Windows since 10 1803 and uses Schannel, which
+  /// *does* fetch the missing root; on macOS and Linux it uses the platform
+  /// store as well. So the operating system is asked to do what it can do and
+  /// we cannot.
+  ///
+  /// Safe, because the bytes are verified afterwards against a SHA-256 that
+  /// arrived from the API over a connection that did verify. The download
+  /// channel is defence in depth here, not the security boundary — which is
+  /// exactly why falling back to it is acceptable and why skipping the digest
+  /// check never would be.
+  Future<void> _fetchWithSystemTool(
+    AvailableUpdate update,
+    File into,
+    TlsException cause,
+  ) async {
+    final ProcessResult result;
+    try {
+      result = await Process.run('curl', [
+        '--fail',
+        '--silent',
+        '--show-error',
+        '--location',
+        '--retry',
+        '2',
+        '--output',
+        into.path,
+        update.downloadUrl,
+      ]);
+    } on Object catch (e) {
+      throw UpdateFailure(
+        'The download server could not be verified (${cause.message}), and '
+        'the system downloader could not be run either: $e',
+      );
+    }
+
+    if (result.exitCode != 0) {
+      throw UpdateFailure(
+        'The download server could not be verified (${cause.message}), and '
+        'the system downloader failed too: ${result.stderr}',
+      );
+    }
   }
 
   /// Applies the verified download.
