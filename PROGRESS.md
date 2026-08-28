@@ -102,7 +102,7 @@ Run this first, every session. It is the definition of "the tree is healthy".
 cd /Volumes/External/codebase/kruftle && dart format --output=none --set-exit-if-changed lib test tool && flutter analyze --fatal-infos && flutter test
 ```
 
-Expected: formatter reports 0 changed, `No issues found!`, then 583 passing.
+Expected: formatter reports 0 changed, `No issues found!`, then 662 passing.
 
 `lib/l10n/app_localizations*.dart` is generated and committed. Regenerate it
 with `flutter gen-l10n` after editing any `.arb`; the analyzer will not warn if
@@ -125,6 +125,40 @@ it is there to be looked at. Regenerate the app icon's rasters with:
 
 ```bash
 ./tool/make_icons.sh
+```
+
+### Releasing
+
+Bump `version:` in `pubspec.yaml` **and** `kAppVersion` in
+`lib/src/core/update/version.dart` — two lines, held equal by
+`version_test.dart` — add a `changelog.json` entry, then push a `v<version>`
+tag. The release workflow builds all three platforms, publishes every asset
+with `checksums.txt`, and refuses a tag that disagrees with `pubspec.yaml`.
+
+### Testing an update without spending a version number
+
+A test build is tagged **`v<next>-rc.<n>`** — `v0.2.7-rc.1` — never the next
+plain version.
+
+`Version` sorts `0.2.6 < 0.2.7-rc.1 < 0.2.7-rc.2 < 0.2.7`, so an installed
+0.2.6 is offered the candidate and the whole update path can be watched end to
+end; whoever took it moves on to the real 0.2.7 when that ships; and because no
+number was consumed, deleting the release afterwards leaves the history intact.
+`updater_test.dart` pins that ordering.
+
+Publishing a throwaway as a plain version does the opposite, and it cannot be
+undone: v0.2.5 was spent on one, the fix went out as v0.2.6, and the releases
+now skip 0.2.5 permanently.
+
+Two things a candidate still shares with a real release, because it is
+published the same way: it is offered to everyone, not only to the tester, and
+the site's own six-hourly poll will pick it up. Delete it the same day. The
+site-dispatch step should be stood down on the candidate's own commit —
+repointing the public download links at something about to stop existing breaks
+every link on the site.
+
+```bash
+gh release delete v0.2.7-rc.1 --repo dizitart/kruftle --yes --cleanup-tag
 ```
 
 ---
@@ -739,6 +773,7 @@ Append-only. Record *why*, so a future session does not undo it.
 | 2026-08-25 | Every toast goes through `showToast`, which sets `persist: false` | The Material default makes any snack bar with an action permanent, which is never what Kruftle wants, and it is invisible at the call site |
 ---
 | 2026-08-28 | The updater asks *how Kruftle is installed*, not what OS it is on | "Not Windows, not macOS, therefore AppImage" is what handed a `.deb` install a file it had nowhere to put. `InstallTarget` answers the only question that matters: what can this copy actually apply, given where it lives and whether it can write there |
+| 2026-08-29 | Test builds are tagged `v<next>-rc.<n>`, never a plain version | A throwaway published as v0.2.5 and a fix released as v0.2.6 leaves the history skipping 0.2.5 for good. A candidate sorts above the current release and below the real next one, so it can be tested and then deleted without spending anything |
 | 2026-08-28 | The updater sorts candidate releases by version, not by GitHub's listing order | GitHub lists by publication date. A patch cut on an older line after a newer release sorts first there, so taking the first newer entry offers a stale release and an out-of-date app climbs back one at a time instead of arriving at the latest |
 | 2026-08-28 | macOS updates from a `ditto` archive, with the `.dmg` only as a fallback | The disk-image swap worked, but mounting an image at every update is the thing this feature exists to stop. `ditto` because it is the only macOS archiver that preserves a bundle's symlinks, resource forks and executable bits |
 | 2026-08-28 | Update by unpacking an archive over the install, not by running an installer | An installer is a second UI, a second set of prompts and, on Windows, an elevation prompt for something the user already agreed to. Where the copy is writable — which per-user installs make the normal case — a rename is enough, and the next launch is the new version |

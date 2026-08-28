@@ -40,6 +40,31 @@ void main() {
       expect(Version.tryParse('1.0.0')! > Version.tryParse('1.0.0')!, isFalse);
     });
 
+    test('a release-candidate tag sits between two releases', () {
+      // How an update is tested without spending a version number on it.
+      //
+      // A throwaway build tagged v0.2.7-rc.1 is newer than 0.2.6, so an
+      // installed 0.2.6 is offered it and the whole path can be watched; it is
+      // older than 0.2.7, so whoever took it moves on to the real release when
+      // that ships; and it consumes no number, so deleting it afterwards
+      // leaves no gap in the history. Publishing the throwaway as 0.2.5 and
+      // then releasing the fix as 0.2.6 left exactly such a gap, permanently.
+      const chain = [
+        '0.2.6',
+        '0.2.7-rc.1',
+        '0.2.7-rc.2',
+        '0.2.7',
+        '0.2.8-rc.1',
+      ];
+      for (var i = 0; i + 1 < chain.length; i++) {
+        expect(
+          Version.tryParse(chain[i + 1])! > Version.tryParse(chain[i])!,
+          isTrue,
+          reason: '${chain[i + 1]} must be newer than ${chain[i]}',
+        );
+      }
+    });
+
     test('a pre-release sorts before its own release', () {
       expect(
         Version.tryParse('1.0.0')! > Version.tryParse('1.0.0-beta.1')!,
