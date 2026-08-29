@@ -2,6 +2,13 @@
   "kruftle.changelog": 1,
   "versions": [
     {
+      "version": "0.2.10",
+      "date": "2026-08-29",
+      "fixed": [
+        "Applying an update on Windows did nothing, and had never done anything. The helper that replaces Kruftle once Kruftle has closed was started in a way that gave it no console to run in, and Windows PowerShell will not start without one — so it exited before its first line, leaving the old version in place and no error behind. It is now started through the command prompt, which gives it what it needs, and in a hidden window so nothing flashes up on screen. Kruftle for Windows can update itself from this version onwards; a copy already on an older version has to be reinstalled once, by hand, from the downloads page."
+      ]
+    },
+    {
       "version": "0.2.9",
       "date": "2026-08-29",
       "fixed": [

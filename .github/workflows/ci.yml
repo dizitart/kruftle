@@ -38,6 +38,26 @@ jobs:
       - name: Test
         run: flutter test --reporter expanded
 
+  # The update helpers are the one part of this that is not the same program on
+  # every machine: each is a script the host's own shell runs, started the way
+  # the host's own process model allows. Ubuntu can run the PowerShell helper
+  # through `pwsh`, which is what hid the bug that made every Windows update do
+  # nothing — the script was fine; *starting* it was not, and only Windows can
+  # be asked about that. So the update tests run there too.
+  windows-update-tests:
+    name: Update helpers on Windows
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - name: Test
+        run: flutter test test/core/update --reporter expanded
+
   build:
     name: Build ${{ matrix.name }}
     needs: analyze-and-test

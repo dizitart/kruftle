@@ -9,8 +9,9 @@
 /// then swaps. Sparkle ships a helper binary to do this; here it is a dozen
 /// lines of the shell every target already has.
 ///
-/// Every path arrives as an argument, never interpolated into the script, so a
-/// release asset cannot name itself into a command.
+/// Every path arrives as an argument — or, on Windows, in the environment —
+/// and is never interpolated into the script, so a release asset cannot name
+/// itself into a command.
 ///
 /// All three follow the same shape: unpack beside the installed copy, rename
 /// the old one aside, move the new one into place, and put the old one back if
@@ -192,16 +193,21 @@ const appImageSwapScript = r'''
 /// runs entirely after Kruftle has exited: a swap that quietly does nothing
 /// leaves no trace anywhere, which is exactly what happened on Windows.
 ///
+/// Each parameter falls back to an environment variable, because that is how
+/// [windowsHelperCommand] delivers them — see there for why nothing may travel
+/// on the command line. Passing them by name still works, and is what the tests
+/// do.
+///
 /// PowerShell rather than `cmd`, for `Expand-Archive` and `Wait-Process`: both
 /// have shipped in Windows since PowerShell 5.1, which is every supported
 /// version of Windows 10 and 11, on x64 and arm64 alike.
 const windowsSwapScript = r'''
 param(
-  [string]$Archive,
-  [string]$Dir,
-  [int]$Owner,
-  [string]$Exe,
-  [string]$Log
+  [string]$Archive = $env:KRUFTLE_UPDATE_ARCHIVE,
+  [string]$Dir = $env:KRUFTLE_UPDATE_DIR,
+  [int]$Owner = $env:KRUFTLE_UPDATE_OWNER,
+  [string]$Exe = $env:KRUFTLE_UPDATE_EXE,
+  [string]$Log = $env:KRUFTLE_UPDATE_LOG
 )
 
 # Expand-Archive writes a progress bar. This helper is started detached, with
@@ -224,6 +230,14 @@ function Note($message) {
 Note "helper started; pid $PID, PowerShell $($PSVersionTable.PSVersion)"
 Note "archive $Archive"
 Note "install $Dir"
+
+# Nobody to wait for means nobody told us who to wait for, and pid 0 is the
+# idle process -- which never exits, so without this the helper would spend
+# ninety seconds waiting for the machine to stop.
+if ($Owner -le 0) {
+  Note 'no process id to wait for; the helper was started without one'
+  exit 1
+}
 
 # The install directory is almost certainly the exited process's working
 # directory, and Windows will not rename a directory anything is sitting in.
@@ -298,3 +312,60 @@ try {
   Note "could not start $Exe : $($_.Exception.Message)"
 }
 ''';
+
+/// How [windowsSwapScript] has to be started, and the only shape that works.
+///
+/// `powershell.exe` is a console program, and a process Dart starts with
+/// `ProcessStartMode.detached` on Windows is given no console at all:
+/// `DETACHED_PROCESS` means the child neither inherits ours nor gets one of its
+/// own. Windows
+/// PowerShell's host cannot initialise without one, so it exits before the
+/// first line of the script — no swap, no relaunch, no log, no error anywhere.
+/// That is precisely what "the Windows update does nothing" was: the helper had
+/// never once run. `cmd.exe` has no such requirement, and the PowerShell it
+/// starts in turn is given a console the ordinary way. `-WindowStyle Hidden`
+/// keeps that console off the screen, which is the whole reason for preferring
+/// it over `conhost.exe`.
+///
+/// **Nothing variable appears here, and nothing variable may be added.** `cmd`
+/// re-parses what Dart hands it with its own rules, where `&`, `|`, `^`, `%`,
+/// `<`, `>` and `()` are operators — and Dart only quotes an argument that
+/// contains a space, so a path like `C:\Users\a&b\...\apply-update.ps1` would
+/// arrive bare and be cut in half. Every path therefore travels in the
+/// environment, which `cmd` does not look at. See [windowsHelperEnvironment].
+///
+/// The first element is the executable; the rest are its arguments.
+const windowsHelperCommand = [
+  'cmd',
+  '/c',
+  'powershell',
+  '-NoProfile',
+  '-NonInteractive',
+  '-WindowStyle',
+  'Hidden',
+  '-ExecutionPolicy',
+  'Bypass',
+  '-Command',
+  r'. $env:KRUFTLE_UPDATE_SCRIPT',
+];
+
+/// The parameters [windowsSwapScript] reads when it is started by
+/// [windowsHelperCommand], which passes it none.
+///
+/// [script] is where [windowsSwapScript] was written; the rest are its
+/// `param()` block, in the same order.
+Map<String, String> windowsHelperEnvironment({
+  required String script,
+  required String archive,
+  required String directory,
+  required int owner,
+  required String executable,
+  required String log,
+}) => {
+  'KRUFTLE_UPDATE_SCRIPT': script,
+  'KRUFTLE_UPDATE_ARCHIVE': archive,
+  'KRUFTLE_UPDATE_DIR': directory,
+  'KRUFTLE_UPDATE_OWNER': '$owner',
+  'KRUFTLE_UPDATE_EXE': executable,
+  'KRUFTLE_UPDATE_LOG': log,
+};

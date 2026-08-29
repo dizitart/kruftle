@@ -136,7 +136,11 @@ class UpdateController extends Notifier<UpdateState> {
     );
     if (!log.existsSync()) return;
     try {
-      for (final line in log.readAsLinesSync()) {
+      for (final raw in log.readAsLinesSync()) {
+        // `Add-Content -Encoding UTF8` on Windows PowerShell 5.1 writes a byte
+        // order mark, which arrives here as a zero-width space on the front of
+        // the first line.
+        final line = raw.replaceFirst('\u{FEFF}', '');
         if (line.trim().isNotEmpty) {
           ref.read(activityLogProvider).info('Update helper', {'said': line});
         }

@@ -19,7 +19,11 @@ import 'package:flutter_test/flutter_test.dart';
 void main() {
   const appId = 'com.dizitart.kruftle';
 
-  String read(String path) => File(path).readAsStringSync();
+  // Line endings are the checkout's business, not the assertion's: git on
+  // Windows hands these files back with CRLF, and every `contains('\n...')`
+  // below would miss for a reason that has nothing to do with the packaging.
+  String read(String path) =>
+      File(path).readAsStringSync().replaceAll('\r\n', '\n');
 
   test('the GTK application id is what the packaging assumes', () {
     expect(

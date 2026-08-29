@@ -14,11 +14,11 @@ check in §3 to confirm the tree is in the state this document claims.
 
 | | |
 |---|---|
-| **Current milestone** | **v0.2.9** — self-update without an installer, working on all three |
-| **Last updated** | 2026-08-28 |
-| **Build green?** | Yes — 661 tests, analyzer clean (`--fatal-infos`), formatter clean |
+| **Current milestone** | **v0.2.10** — self-update without an installer, working on all three |
+| **Last updated** | 2026-08-29 |
+| **Build green?** | Yes — 663 tests (two Windows-only), analyzer clean (`--fatal-infos`), formatter clean |
 | **Repo** | https://github.com/dizitart/kruftle (public, GPL-3.0) |
-| **CI** | Green — analyze/test plus release builds on all three OSs |
+| **CI** | Green — analyze/test on Ubuntu, the update tests again on Windows, plus release builds on all three OSs |
 | **Released** | [v0.2.8](https://github.com/dizitart/kruftle/releases/tag/v0.2.8) — .dmg, macOS .zip, two .exe, two Windows .zip, two .AppImage, two .deb, two .tar.gz, checksums.txt |
 
 ---
@@ -65,32 +65,41 @@ Legend: `[ ]` not started · `[~]` in progress · `[x]` done & green
 
 ### What is left
 
-1. **A real self-update on Windows and Linux, machine to machine.** Every swap
-   helper is now driven against real archives, real files and a real process in
-   `swap_scripts_test.dart` — the Windows one through PowerShell, which exists
-   on Windows and on GitHub's Ubuntu runners alike. What has still never
-   happened is the whole round trip on those platforms: an installed older
-   build noticing a release, fetching it and coming back up as the new one.
-   That needs v0.2.4 published and a machine of each kind.
-2. **Why the Windows update check was silent is still not known.** It was
-   `PackageInfo.fromPlatform()` or the version resource it reads — that lookup
-   is gone, replaced by `kAppVersion`, so the failure cannot recur by that
-   route. But the cause was never reproduced, only removed. If a Windows
-   machine still sees nothing, **Settings → Updates → Check for updates now**
-   now reports the reason instead of failing in silence; that message is the
-   next piece of evidence.
-3. **Windows and Linux run-throughs generally** — only macOS has been driven
-   by hand. Worth checking: PATH probing without a login shell on Windows, the
-   `\\?\` long-path case noted in §6, and the background job on both — the
-   generated unit, argv and plist are asserted against each other in
-   `background_service_test.dart`, but only launchd has actually been asked to
-   load one.
-4. **v0.1.0 users on Windows cannot auto-update correctly.** The updater that
+1. **A real self-update on Windows and Linux, machine to machine.** Session 18
+   drove the Windows *swap* on a real Windows 11 machine — a real install
+   directory, a real archive, the real detached launch, from a Dart process that
+   exits — and it works. What has still never happened on Windows or Linux is
+   the whole round trip over the network: an installed older build noticing a
+   release, fetching it and coming back up as the new one. On Windows that needs
+   0.2.10 published and a 0.2.10 machine, because everything below it carries
+   the launcher that cannot work.
+2. ~~Why the Windows update check was silent~~ — answered across sessions 15
+   to 18. Four causes in a row, each hiding the next: the checksum fetch
+   (0.2.7), the download's certificate chain (0.2.8), the helper's silence
+   (0.2.9), and finally the helper never running at all (0.2.10).
+3. **Windows users below 0.2.10 have to reinstall once, by hand.** The broken
+   launcher lives in the *installed* copy, so it is the old build that runs it
+   and no release can reach it. Everything up to and including the Restart
+   button works for them; the swap does not. From 0.2.10 onwards it does. This
+   belongs in the release notes, as v0.2.0's asset-selection bug did.
+4. **Windows and Linux run-throughs generally** — only macOS and the Windows
+   update path have been driven by hand. Worth checking: PATH probing without a
+   login shell on Windows, the `\\?\` long-path case noted in §6, and the
+   background job on both — the generated unit, argv and plist are asserted
+   against each other in `background_service_test.dart`, but only launchd has
+   actually been asked to load one.
+5. **Four tests outside `test/core/update` still fail on Windows** — two
+   forbidden-root cases in `project_scanner_test.dart`, one in `wizard_test.dart`
+   and the missing-tool probe in `process_runner_test.dart`. All four assume
+   POSIX paths or a POSIX shell; none touches the updater. They are why the new
+   Windows CI job runs `test/core/update` rather than the whole suite. Fixing
+   them would let it run everything, which is worth doing.
+6. **v0.1.0 users on Windows cannot auto-update correctly.** The updater that
    shipped in v0.1.0 takes the *first* asset ending in `.exe`, and v0.2.0
    publishes two — x64 and arm64. Half of them will be offered the wrong one.
    Nothing can be done to the released v0.1.0; v0.2.0's updater picks by
    processor, so this ends with v0.2.0. Worth a line in the release notes.
-5. ~~Tier-2 stacks~~ — done in M15.
+7. ~~Tier-2 stacks~~ — done in M15.
 
 ---
 
@@ -166,6 +175,54 @@ gh release delete v0.2.7-rc.1 --repo dizitart/kruftle --yes --cleanup-tag
 ## 4. Session log
 
 Newest first.
+
+### Session 18 — 2026-08-29
+
+**Landed** — v0.2.10: the Windows helper had never once run, and now it does.
+
+- **Session 17's instrumentation asked the right question and got an answer.**
+  It said the absence of a helper log means PowerShell never ran. On a real
+  Windows 11 machine, with a real install directory and a real archive, that is
+  exactly what happens: no log, no swap, no relaunch, no error. Reproduced in
+  four lines of Dart before a single line of the fix was written.
+- **The cause is one flag, and it is not ours.** `Process.start` with
+  `ProcessStartMode.detached` on Windows passes `DETACHED_PROCESS`, which means
+  the child neither inherits our console nor is given one of its own.
+  `powershell.exe` is a console program and its host cannot initialise without
+  one, so it exits before the first line of the script — before `Note` can even
+  say it started. Measured across every start mode: `normal` and `inheritStdio`
+  run the script, `detached` and `detachedWithStdio` both silently do not. This
+  had been true since the helper first shipped.
+- **The fix is one process in front of it.** `cmd.exe` has no such requirement,
+  and the PowerShell *it* starts is given a console in the ordinary way.
+  `-WindowStyle Hidden` keeps that console off the screen — measured with
+  `GetConsoleWindow`/`IsWindowVisible`, which is what rules out `conhost.exe`
+  (it runs, but visibly).
+- **Nothing variable may go on that command line.** `cmd` re-parses what it is
+  given, where `&`, `|`, `^`, `%`, `<`, `>` and `()` are operators, and Dart
+  only quotes an argument containing a space — so a user called `a&b` would have
+  had the script path cut in half. Every path travels in the environment
+  instead, which `cmd` never looks at; the script's `param()` block defaults to
+  those variables and still accepts named arguments, which is what the existing
+  tests pass it. `windowsHelperCommand` carries the whole argument in its
+  doc comment.
+- **The gap this fell through is the reason it survived four sessions.** CI
+  tested on Ubuntu only. `swap_scripts_test.dart` exercises the Windows helper
+  there through `pwsh` — which proves the *script* is right and can never ask
+  whether *starting* it works, because the answer depends on a Windows process
+  model Ubuntu does not have. So: `windows_helper_launch_test.dart` starts the
+  helper exactly as `Updater` does, detached, and asserts it ran; it fails on
+  the old launcher and passes on this one. And CI now runs `test/core/update`
+  on `windows-latest`, which is what makes that test worth having.
+- **Three smaller things fixed while in there.** A helper given no owner pid
+  used to wait ninety seconds for process 0 — the idle process, which never
+  exits — and now says so instead. `Add-Content -Encoding UTF8` on PowerShell
+  5.1 writes a byte order mark, which was arriving in the activity log on the
+  front of the first line. And `linux_desktop_test.dart` read `.desktop` files
+  with `contains('\n…')`, which a Windows checkout hands back as CRLF.
+- **What is still unproven:** the round trip over the network. That needs
+  0.2.10 published and a Windows machine already on 0.2.10 — machines below it
+  carry the launcher that cannot work and have to be reinstalled once by hand.
 
 ### Session 17 — 2026-08-29
 
@@ -984,6 +1041,36 @@ Hard-won. Read before debugging something that looks impossible.
 
 - **Do not follow symlinks** anywhere in scan or clean. The owner's codebase
   root is on an external volume and contains cross-project links.
+
+- **A detached process on Windows has no console, and PowerShell needs one.**
+  `ProcessStartMode.detached` passes `DETACHED_PROCESS`: the child neither
+  inherits ours nor gets one of its own, and `powershell.exe` exits immediately
+  rather than run without it — no output, no exit code you can see, nothing.
+  Start it through `cmd.exe`, which does not care, and add `-WindowStyle Hidden`
+  so the console `cmd` gets it does not appear on screen. `detachedWithStdio`
+  does not help. This is what made every Windows self-update do nothing at all
+  from the day the updater shipped until v0.2.10.
+
+- **Anything handed to `cmd.exe` is parsed twice.** `&`, `|`, `^`, `%`, `<`,
+  `>` and `()` are cmd operators, and Dart's `Process.start` only quotes an
+  argument that contains a space — so a path with no space and an `&` in it
+  arrives bare and is cut in half. You cannot quote it yourself either: Dart
+  escapes the quotes you add. Pass variable data in the `environment:` map,
+  which cmd never reads.
+
+- **A test that runs the right script the wrong way proves nothing.** The
+  Windows swap helper was exercised on Ubuntu through `pwsh` for four sessions
+  while every real Windows update failed, because the script was never the
+  problem — starting it was, and only Windows can be asked about that. When a
+  test stands in for a platform, write down which half of the question it is
+  answering.
+
+- **`dart format` is version-specific, and this machine's is not CI's.** CI
+  pins Flutter 3.44.8; a newer local SDK reformats `group(name, () {…}, skip: …)`
+  into a different shape and rewrites two dozen untouched files. Format only the
+  files you changed, and check `git status` afterwards — `flutter test` also
+  regenerates `pubspec.lock` and the plugin registrants against whatever SDK is
+  local, and none of that belongs in the commit.
 
 - **Windows paths**: compare artifact names case-insensitively, and long-path
   (>260 char) deletion needs the `\\?\` prefix. **Not yet implemented or

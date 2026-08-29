@@ -670,30 +670,27 @@ class Updater {
     final directory = target.swapDirectory;
     if (directory == null) return _reveal(archive);
 
-    // Written out rather than passed inline: `powershell -File` takes named
-    // arguments, which keeps every path out of the script text.
+    // Written out rather than passed inline: a script on disk is one somebody
+    // can read afterwards, and it keeps every path out of the script text.
     final updates = p.dirname(archive);
     final script = File(p.join(updates, 'apply-update.ps1'))
       ..writeAsStringSync(windowsSwapScript);
 
-    await Process.start('powershell', [
-      '-NoProfile',
-      '-NonInteractive',
-      '-ExecutionPolicy',
-      'Bypass',
-      '-File',
-      script.path,
-      '-Archive',
-      archive,
-      '-Dir',
-      directory,
-      '-Owner',
-      '$pid',
-      '-Exe',
-      Platform.resolvedExecutable,
-      '-Log',
-      helperLogPath(updates),
-    ], mode: ProcessStartMode.detached);
+    // Through `cmd`, and with every path in the environment. Both are load-
+    // bearing and neither is decoration — [windowsHelperCommand] says why.
+    await Process.start(
+      windowsHelperCommand.first,
+      windowsHelperCommand.sublist(1),
+      environment: windowsHelperEnvironment(
+        script: script.path,
+        archive: archive,
+        directory: directory,
+        owner: pid,
+        executable: Platform.resolvedExecutable,
+        log: helperLogPath(updates),
+      ),
+      mode: ProcessStartMode.detached,
+    );
     return true;
   }
 

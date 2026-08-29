@@ -55,7 +55,28 @@ void main() {
   }
 
   /// A process to stand in for the Kruftle that is still running.
-  Future<Process> holder() => Process.start('/bin/sleep', ['30']);
+  ///
+  /// Windows has no `/bin/sleep`, and the one group that runs there — the
+  /// PowerShell helper, which is exercised on Ubuntu too — needs a real
+  /// process with a real pid as much as the others do.
+  Future<Process> holder() {
+    if (Platform.isWindows) {
+      return Process.start('powershell', const [
+        '-NoProfile',
+        '-NonInteractive',
+        '-Command',
+        'Start-Sleep -Seconds 30',
+      ]);
+    }
+    return Process.start('/bin/sleep', const ['30']);
+  }
+
+  /// The POSIX helpers are POSIX scripts: `/bin/sh`, `tar` and `chmod` are the
+  /// subject rather than incidental, and Windows has none of them. The
+  /// PowerShell group below runs everywhere, which is the point of it.
+  final posixOnly = Platform.isWindows
+      ? 'a POSIX shell script cannot be exercised on Windows'
+      : false;
 
   group('linuxSwapScript', () {
     /// An install directory as the .tar.gz and the deb both lay it out.
@@ -199,7 +220,7 @@ void main() {
         );
       },
     );
-  });
+  }, skip: posixOnly);
 
   group('macArchiveSwapScript', () {
     /// A `.app` is a directory with a fixed shape, which is all the swap cares
@@ -367,7 +388,7 @@ void main() {
       expect(File(current).readAsStringSync(), contains('old'));
       expect(File('$current.old').existsSync(), isFalse);
     });
-  });
+  }, skip: posixOnly);
 
   group(
     'windowsSwapScript',
