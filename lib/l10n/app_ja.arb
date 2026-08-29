@@ -153,6 +153,8 @@
   "updateRestart": "今すぐ再起動",
   "updateChecking": "アップデートを確認しています…",
   "updateUpToDate": "Kruftle は最新です。",
+  "updateReadyInstall": "Kruftle {version} をインストールできます。",
+  "updateNoBuild": "Kruftle {version} が公開されていますが、このインストール形態で使えるビルドがありません。アクティビティログをご覧ください。",
 
   "settingsTitle": "設定",
   "settingsSectionAppearance": "外観",

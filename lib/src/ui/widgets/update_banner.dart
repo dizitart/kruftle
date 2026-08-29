@@ -27,6 +27,7 @@ class UpdateBanner extends ConsumerWidget {
     final message = switch (state.phase) {
       UpdatePhase.checking => l.updateChecking,
       UpdatePhase.upToDate => l.updateUpToDate,
+      UpdatePhase.noBuild => l.updateNoBuild(state.blockedVersion ?? ''),
       UpdatePhase.available => l.updateAvailable(
         '${update!.version}',
         formatBytes(update.sizeBytes),
@@ -35,7 +36,12 @@ class UpdateBanner extends ConsumerWidget {
         '${update!.version}',
         (state.progress * 100).round(),
       ),
-      UpdatePhase.ready => l.updateReady('${update!.version}'),
+      // The message has to agree with the button beside it. An update that
+      // ends in an installer run is not one a restart finishes.
+      UpdatePhase.ready =>
+        update!.isSelfReplacing
+            ? l.updateReady('${update.version}')
+            : l.updateReadyInstall('${update.version}'),
       UpdatePhase.failed => state.error ?? l.updateFailed,
       UpdatePhase.idle => '',
     };
@@ -48,6 +54,7 @@ class UpdateBanner extends ConsumerWidget {
           Icon(
             switch (state.phase) {
               UpdatePhase.failed => Icons.error_outline_rounded,
+              UpdatePhase.noBuild => Icons.info_outline_rounded,
               UpdatePhase.upToDate => Icons.check_circle_outline_rounded,
               _ => Icons.arrow_circle_up_rounded,
             },

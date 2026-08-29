@@ -100,6 +100,27 @@ const macSwapScript = r'''
       if [ -n "$swapped" ]; then open "$app"; else open "$dmg"; fi
 ''';
 
+/// Starts Kruftle again once this process has gone, and nothing else.
+///
+/// Arguments: executable, our pid.
+///
+/// For the updates that are applied by something other than a swap helper — a
+/// `.deb` handed to `dpkg` — where the files are replaced while Kruftle is
+/// still running but the *running* Kruftle is still the old one. It cannot
+/// start its replacement itself: the new process would collide with the single
+/// instance lock the old one is still holding.
+const relaunchScript = r'''
+      cd / || exit 1
+      exe=$1; pid=$2
+      waited=0
+      while kill -0 "$pid" 2>/dev/null && [ "$waited" -lt 600 ]; do
+        sleep 0.1; waited=$((waited + 1))
+      done
+      kill -0 "$pid" 2>/dev/null && exit 1
+
+      "$exe" >/dev/null 2>&1 &
+''';
+
 /// Replaces an installed Linux bundle directory with the contents of a
 /// `.tar.gz`, then starts the new build.
 ///
@@ -166,30 +187,80 @@ const appImageSwapScript = r'''
 
 /// Replaces a Windows install directory with the contents of a `.zip`.
 ///
-/// Parameters: archive, install directory, our pid, executable to relaunch.
+/// Parameters: archive, install directory, our pid, executable to relaunch, and
+/// a file to write an account of itself to. That last one exists because this
+/// runs entirely after Kruftle has exited: a swap that quietly does nothing
+/// leaves no trace anywhere, which is exactly what happened on Windows.
 ///
 /// PowerShell rather than `cmd`, for `Expand-Archive` and `Wait-Process`: both
 /// have shipped in Windows since PowerShell 5.1, which is every supported
 /// version of Windows 10 and 11, on x64 and arm64 alike.
 const windowsSwapScript = r'''
-param([string]$Archive, [string]$Dir, [int]$Owner, [string]$Exe)
+param(
+  [string]$Archive,
+  [string]$Dir,
+  [int]$Owner,
+  [string]$Exe,
+  [string]$Log
+)
 
-# The install directory is almost certainly this process's working directory,
-# and Windows will not rename a directory anything is sitting in. Asked of
-# .NET rather than of $env:TEMP, which is not guaranteed to be set.
+# Expand-Archive writes a progress bar. This helper is started detached, with
+# no console to write it to, and a host that cannot render progress can fail
+# before doing any work at all. Silencing it also makes Expand-Archive many
+# times faster on Windows PowerShell 5.1.
+$ProgressPreference = 'SilentlyContinue'
+
+# Everything this helper does, written where Kruftle can find it. It runs after
+# Kruftle has exited, so nothing it does is visible anywhere else; the next
+# launch folds this file into the activity log and deletes it. A swap that goes
+# wrong in silence is a swap nobody can diagnose.
+function Note($message) {
+  try {
+    Add-Content -LiteralPath $Log -Encoding UTF8 `
+      -Value ("{0} {1}" -f (Get-Date).ToString('s'), $message)
+  } catch {}
+}
+
+Note "helper started; pid $PID, PowerShell $($PSVersionTable.PSVersion)"
+Note "archive $Archive"
+Note "install $Dir"
+
+# The install directory is almost certainly the exited process's working
+# directory, and Windows will not rename a directory anything is sitting in.
 Set-Location -LiteralPath ([System.IO.Path]::GetTempPath())
 
-# Nothing here can happen while Kruftle still holds its own files open.
-try { Wait-Process -Id $Owner -Timeout 60 -ErrorAction Stop } catch {}
-if (Get-Process -Id $Owner -ErrorAction SilentlyContinue) { exit 1 }
+# Polled rather than Wait-Process: it is one thing that cannot throw for a
+# reason worth distinguishing, and every second of it can be reported.
+$deadline = (Get-Date).AddSeconds(90)
+while ((Get-Process -Id $Owner -ErrorAction SilentlyContinue) -and
+       (Get-Date) -lt $deadline) {
+  Start-Sleep -Milliseconds 200
+}
+if (Get-Process -Id $Owner -ErrorAction SilentlyContinue) {
+  Note "Kruftle ($Owner) is still running after 90s; nothing was changed"
+  exit 1
+}
+Note "Kruftle ($Owner) has exited"
 
 $staging = "$Dir.new"
 $old = "$Dir.old"
 $swapped = $false
 Remove-Item -LiteralPath $staging, $old -Recurse -Force -ErrorAction SilentlyContinue
 
+# Renaming a directory Windows still has a handle on fails, and a handle can
+# outlive the process that held it by a moment -- an indexer or a virus scanner
+# looking at what just changed. Worth a few tries before giving up on it.
+function Move-WithRetry($from, $to) {
+  for ($i = 1; $i -le 12; $i++) {
+    try { Move-Item -LiteralPath $from -Destination $to -ErrorAction Stop; return $true }
+    catch { Start-Sleep -Milliseconds 500 }
+  }
+  return $false
+}
+
 try {
   Expand-Archive -LiteralPath $Archive -DestinationPath $staging -Force
+  Note "unpacked to $staging"
 
   # Inno Setup writes its uninstaller into the install directory, and it is not
   # part of the build output. Losing it would leave an Add/Remove Programs
@@ -197,19 +268,33 @@ try {
   Get-ChildItem -LiteralPath $Dir -Filter 'unins*' -ErrorAction SilentlyContinue |
     ForEach-Object {
       Copy-Item -LiteralPath $_.FullName -Destination $staging -Force
+      Note "carried over $($_.Name)"
     }
 
-  Move-Item -LiteralPath $Dir -Destination $old
-  try {
-    Move-Item -LiteralPath $staging -Destination $Dir
-    $swapped = $true
-  } catch {
-    Move-Item -LiteralPath $old -Destination $Dir
+  if (Move-WithRetry $Dir $old) {
+    if (Move-WithRetry $staging $Dir) {
+      $swapped = $true
+      Note 'swapped'
+    } else {
+      Note 'could not move the new build into place; putting the old one back'
+      [void](Move-WithRetry $old $Dir)
+    }
+  } else {
+    Note "could not rename $Dir out of the way; nothing was changed"
   }
-} catch {}
+} catch {
+  Note "failed: $($_.Exception.Message)"
+}
 
 Remove-Item -LiteralPath $staging, $old -Recurse -Force -ErrorAction SilentlyContinue
-if ($swapped) { Remove-Item -LiteralPath $Archive -Force -ErrorAction SilentlyContinue }
+if ($swapped) {
+  Remove-Item -LiteralPath $Archive -Force -ErrorAction SilentlyContinue
+}
 
-Start-Process -FilePath $Exe
+try {
+  Start-Process -FilePath $Exe
+  Note "started $Exe"
+} catch {
+  Note "could not start $Exe : $($_.Exception.Message)"
+}
 ''';

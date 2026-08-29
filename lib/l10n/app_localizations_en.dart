@@ -521,6 +521,16 @@ class LEn extends L {
   String get updateUpToDate => 'Kruftle is up to date.';
 
   @override
+  String updateReadyInstall(String version) {
+    return 'Kruftle $version is ready to install.';
+  }
+
+  @override
+  String updateNoBuild(String version) {
+    return 'Kruftle $version is available, but this installation has no build it can use. See the activity log.';
+  }
+
+  @override
   String get settingsTitle => 'Settings';
 
   @override

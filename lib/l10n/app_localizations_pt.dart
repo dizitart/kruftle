@@ -523,6 +523,16 @@ class LPt extends L {
   String get updateUpToDate => 'O Kruftle está atualizado.';
 
   @override
+  String updateReadyInstall(String version) {
+    return 'O Kruftle $version está pronto para instalar.';
+  }
+
+  @override
+  String updateNoBuild(String version) {
+    return 'O Kruftle $version está disponível, mas esta instalação não tem nenhuma versão que possa usar. Consulte o registo de atividade.';
+  }
+
+  @override
   String get settingsTitle => 'Configurações';
 
   @override

@@ -43,6 +43,35 @@ class AvailableUpdate {
       !const ['.exe', '.deb'].any(assetName.toLowerCase().endsWith);
 }
 
+/// What a check found, including when what it found was nothing.
+///
+/// "Up to date" and "there is a newer release, and nothing in it this copy can
+/// install" look identical from outside — both are simply no update — and the
+/// difference between them is the difference between a shrug and a bug report.
+/// Telling them apart is the whole reason this is not just a nullable
+/// [AvailableUpdate].
+class UpdateCheck {
+  const UpdateCheck({this.update, this.blockedVersion, this.reason});
+
+  final AvailableUpdate? update;
+
+  /// The newest release this copy could *not* use, when there was one.
+  final Version? blockedVersion;
+
+  /// Why it could not, in the log's words rather than the user's.
+  final String? reason;
+
+  bool get isUpToDate => update == null && blockedVersion == null;
+
+  /// For the activity log.
+  String get outcome => switch (this) {
+    _ when update != null =>
+      'offering ${update!.version} (${update!.assetName})',
+    _ when blockedVersion != null => '$blockedVersion unusable: $reason',
+    _ => 'up to date',
+  };
+}
+
 /// Why an update could not be checked for, downloaded, or applied.
 class UpdateFailure implements Exception {
   const UpdateFailure(this.message);
@@ -196,14 +225,12 @@ class Updater {
     return const {};
   }
 
-  /// Null when already up to date.
-  ///
   /// Throws [UpdateFailure] when the check could not be made at all. Whether
   /// that is worth telling the user about depends on who asked: a background
   /// check that nags about its own update server being unreachable is worse
   /// than one that quietly tries again tomorrow, but a person who just pressed
   /// "check for updates" is owed an answer.
-  Future<AvailableUpdate?> check() async {
+  Future<UpdateCheck> check() async {
     final List<dynamic> releases;
     try {
       final response = await _client
@@ -243,52 +270,102 @@ class Updater {
             .toList()
           ..sort((a, b) => b.$1.compareTo(a.$1));
 
+    // Why the newest unusable release was unusable, kept for the log and for
+    // the person who pressed the button. Only the first is recorded: it is the
+    // newest, and the rest are the same story further down.
+    Version? blocked;
+    String? reason;
+
     for (final (version, release) in newer) {
       final assets = (release['assets'] as List<dynamic>? ?? const [])
           .cast<Map<String, Object?>>();
 
       final chosen = selectAsset(assets);
-      if (chosen.isEmpty) continue;
-
-      final checksums = await _fetchChecksums(assets);
-      final name = chosen['name']! as String;
-      final digest = checksums[name];
-      if (digest == null) {
-        // A release without a checksum for our asset is not installable. We do
-        // not fall back to installing it unverified, and we do not stop
-        // looking: the next one down is still an upgrade.
+      if (chosen.isEmpty) {
+        blocked ??= version;
+        reason ??=
+            'no ${target.assetSuffixes.join(' or ')} for $_architecture among '
+            '${assets.map((a) => a['name']).join(', ')}';
         continue;
       }
 
-      return AvailableUpdate(
-        version: version,
-        assetName: name,
-        downloadUrl: chosen['browser_download_url']! as String,
-        sha256: digest,
-        notes: release['body'] as String? ?? '',
-        sizeBytes: (chosen['size'] as num?)?.toInt() ?? 0,
+      final name = chosen['name']! as String;
+
+      // The digest came with the listing. Only when a release does not carry
+      // one is the extra request for `checksums.txt` worth making.
+      var digest = assetDigest(chosen);
+      String? fallbackReason;
+      if (digest == null) {
+        final checksums = await _fetchChecksums(assets);
+        digest = checksums?[name];
+        fallbackReason = checksums == null
+            ? 'checksums.txt could not be read'
+            : 'checksums.txt has no line for $name';
+      }
+
+      if (digest == null) {
+        // An asset we cannot verify is not installable. We do not fall back to
+        // installing it unverified, and we do not stop looking: the next one
+        // down is still an upgrade.
+        blocked ??= version;
+        reason ??= '$name is unverifiable — $fallbackReason';
+        continue;
+      }
+
+      return UpdateCheck(
+        update: AvailableUpdate(
+          version: version,
+          assetName: name,
+          downloadUrl: chosen['browser_download_url']! as String,
+          sha256: digest,
+          notes: release['body'] as String? ?? '',
+          sizeBytes: (chosen['size'] as num?)?.toInt() ?? 0,
+        ),
       );
     }
 
-    return null;
+    return UpdateCheck(blockedVersion: blocked, reason: reason);
+  }
+
+  /// The SHA-256 GitHub publishes alongside the asset, as `sha256:<hex>`.
+  ///
+  /// This arrives in the release listing we have already fetched, which is the
+  /// whole point of preferring it. The `checksums.txt` we publish ourselves is
+  /// a *second* request, and — because a release asset download redirects to
+  /// `objects.githubusercontent.com` — a second request to a different host.
+  /// A machine that could reach the API but not that host got an empty
+  /// checksum map, which made every asset look unverifiable and the whole
+  /// check come back as "no update". That is what a Windows machine had been
+  /// doing since the updater shipped.
+  static String? assetDigest(Map<String, Object?> asset) {
+    const prefix = 'sha256:';
+    final digest = (asset['digest'] as String? ?? '').toLowerCase();
+    if (!digest.startsWith(prefix)) return null;
+    final hex = digest.substring(prefix.length);
+    return RegExp(r'^[0-9a-f]{64}$').hasMatch(hex) ? hex : null;
   }
 
   /// Parses the release's `checksums.txt`, in `sha256sum` format:
   /// `<hex>  <filename>` per line.
-  Future<Map<String, String>> _fetchChecksums(
+  ///
+  /// Null when it could not be read at all, which is a different thing from a
+  /// file that simply does not list our asset — one is a network that cannot
+  /// reach the download host, the other is a broken release. Reporting both as
+  /// "no checksum" is how the first hid for so long.
+  Future<Map<String, String>?> _fetchChecksums(
     List<Map<String, Object?>> assets,
   ) async {
     final asset = assets.firstWhere(
       (a) => a['name'] == 'checksums.txt',
       orElse: () => const {},
     );
-    if (asset.isEmpty) return const {};
+    if (asset.isEmpty) return null;
 
     try {
       final response = await _client
           .get(Uri.parse(asset['browser_download_url']! as String))
           .timeout(const Duration(seconds: 15));
-      if (response.statusCode != 200) return const {};
+      if (response.statusCode != 200) return null;
 
       return {
         for (final line in const LineSplitter().convert(response.body))
@@ -296,7 +373,7 @@ class Updater {
             name.replaceFirst('*', ''): hex.toLowerCase(),
       };
     } on Object {
-      return const {};
+      return null;
     }
   }
 
@@ -314,18 +391,6 @@ class Updater {
     required String directory,
     void Function(int received, int total)? onProgress,
   }) async {
-    final request = http.Request('GET', Uri.parse(update.downloadUrl));
-    final http.StreamedResponse response;
-    try {
-      response = await _client.send(request);
-    } on Object catch (e) {
-      throw UpdateFailure('Could not reach the download server: $e');
-    }
-
-    if (response.statusCode != 200) {
-      throw UpdateFailure('Download failed with HTTP ${response.statusCode}.');
-    }
-
     final into = Directory(directory);
     if (into.existsSync()) into.deleteSync(recursive: true);
     into.createSync(recursive: true);
@@ -333,18 +398,11 @@ class Updater {
     // `basename`, because the name comes off the network: an asset called
     // `../../kruftle.exe` must land in the updates directory like any other.
     final file = File(p.join(directory, p.basename(update.assetName)));
-    final sink = file.openWrite();
-    final total = response.contentLength ?? update.sizeBytes;
-    var received = 0;
 
     try {
-      await for (final chunk in response.stream) {
-        sink.add(chunk);
-        received += chunk.length;
-        onProgress?.call(received, total);
-      }
-    } finally {
-      await sink.close();
+      await _stream(update, file, onProgress);
+    } on TlsException catch (e) {
+      await _fetchWithSystemTool(update, file, e);
     }
 
     final actual = sha256.convert(await file.readAsBytes()).toString();
@@ -357,6 +415,95 @@ class Updater {
     }
 
     return file;
+  }
+
+  Future<void> _stream(
+    AvailableUpdate update,
+    File into,
+    void Function(int received, int total)? onProgress,
+  ) async {
+    final request = http.Request('GET', Uri.parse(update.downloadUrl));
+    final http.StreamedResponse response;
+    try {
+      response = await _client.send(request);
+    } on TlsException {
+      rethrow; // Recoverable; `download` has somewhere else to go.
+    } on Object catch (e) {
+      throw UpdateFailure('Could not reach the download server: $e');
+    }
+
+    if (response.statusCode != 200) {
+      throw UpdateFailure('Download failed with HTTP ${response.statusCode}.');
+    }
+
+    final sink = into.openWrite();
+    final total = response.contentLength ?? update.sizeBytes;
+    var received = 0;
+    try {
+      await for (final chunk in response.stream) {
+        sink.add(chunk);
+        received += chunk.length;
+        onProgress?.call(received, total);
+      }
+    } finally {
+      await sink.close();
+    }
+  }
+
+  /// Fetches the asset with the operating system's own downloader, after our
+  /// own TLS refused the certificate.
+  ///
+  /// This is not a workaround for a bad certificate — it is a workaround for a
+  /// root store Dart cannot see all of. On Windows, `dart:io` verifies against
+  /// a snapshot of the system root store and cannot trigger the on-demand root
+  /// fetch that Windows itself does, so a machine that has never needed a
+  /// given root simply does not have it. GitHub's API is signed by Sectigo,
+  /// whose root ships with Windows; release downloads are served from
+  /// `objects.githubusercontent.com`, signed by Let's Encrypt and chaining to
+  /// ISRG Root X2, which a fresh machine may not have fetched yet. The API
+  /// verifies, the download does not, and the update dies half-way.
+  ///
+  /// `curl` has shipped in Windows since 10 1803 and uses Schannel, which
+  /// *does* fetch the missing root; on macOS and Linux it uses the platform
+  /// store as well. So the operating system is asked to do what it can do and
+  /// we cannot.
+  ///
+  /// Safe, because the bytes are verified afterwards against a SHA-256 that
+  /// arrived from the API over a connection that did verify. The download
+  /// channel is defence in depth here, not the security boundary — which is
+  /// exactly why falling back to it is acceptable and why skipping the digest
+  /// check never would be.
+  Future<void> _fetchWithSystemTool(
+    AvailableUpdate update,
+    File into,
+    TlsException cause,
+  ) async {
+    final ProcessResult result;
+    try {
+      result = await Process.run('curl', [
+        '--fail',
+        '--silent',
+        '--show-error',
+        '--location',
+        '--retry',
+        '2',
+        '--output',
+        into.path,
+        update.downloadUrl,
+      ]);
+    } on Object catch (e) {
+      throw UpdateFailure(
+        'The download server could not be verified (${cause.message}), and '
+        'the system downloader could not be run either: $e',
+      );
+    }
+
+    if (result.exitCode != 0) {
+      throw UpdateFailure(
+        'The download server could not be verified (${cause.message}), and '
+        'the system downloader failed too: ${result.stderr}',
+      );
+    }
   }
 
   /// Applies the verified download.
@@ -386,12 +533,7 @@ class Updater {
       return false;
     }
 
-    if (name.endsWith('.deb')) {
-      // Needs a package manager and root. Hand it to the desktop's own
-      // installer rather than asking for a password behind a progress bar.
-      await Process.start('xdg-open', [path], mode: ProcessStartMode.detached);
-      return false;
-    }
+    if (name.endsWith('.deb')) return _applyDebianPackage(path);
 
     if (name.endsWith('.dmg')) return _applyMacImage(path);
     if (name.endsWith('.appimage')) return _applyAppImage(path);
@@ -401,6 +543,60 @@ class Updater {
       HostPlatform.windows => _applyWindowsArchive(path),
       HostPlatform.linux => _applyLinuxArchive(path),
     };
+  }
+
+  /// Installs a `.deb` over the running copy, asking for a password properly.
+  ///
+  /// This used to hand the file to `xdg-open`, on the reasoning that a system
+  /// package is the desktop's business and not ours. In practice that opens
+  /// GNOME Software, and GNOME Software will not upgrade a package it already
+  /// considers installed — it shows the new version, greys the button out, and
+  /// does nothing. The update looked applied and was not.
+  ///
+  /// `pkexec` is how a desktop application asks for root: polkit shows its own
+  /// password dialog, and a refusal is a clean no rather than a half-done
+  /// update. There is no version of "replace a package under /usr" that does
+  /// not need this, so the honest thing is to ask for it plainly.
+  ///
+  /// `dpkg` replaces the files of a running program quite happily on Linux, so
+  /// the install finishes while Kruftle is still up — but the Kruftle that is
+  /// up is still the old one, and it cannot start its own replacement while it
+  /// holds the single-instance lock. The relaunch waits for it to go.
+  Future<bool> _applyDebianPackage(String package) async {
+    bool installed;
+    try {
+      // ponytail: `dpkg -i`, not `apt-get install`. It is the right tool for
+      // replacing a package whose dependencies have not changed, which is what
+      // an update of our own .deb is. If Kruftle ever gains a new runtime
+      // dependency, dpkg will refuse the unmet one and this falls through to
+      // showing the file — swap in `apt-get install -y <path>` then, which
+      // resolves them.
+      final result = await Process.run('pkexec', [
+        'dpkg',
+        '--install',
+        package,
+      ]);
+      installed = result.exitCode == 0;
+    } on Object {
+      installed = false; // No pkexec, or no polkit agent to answer it.
+    }
+
+    if (!installed) {
+      // Cancelled, or nothing to ask with. Show the file rather than pretend.
+      await Process.start('xdg-open', [
+        package,
+      ], mode: ProcessStartMode.detached);
+      return false;
+    }
+
+    await Process.start('/bin/sh', [
+      '-c',
+      relaunchScript,
+      'kruftle-update',
+      Platform.resolvedExecutable,
+      '$pid',
+    ], mode: ProcessStartMode.detached);
+    return true;
   }
 
   Future<bool> _applyMacArchive(String archive) async {
@@ -465,13 +661,19 @@ class Updater {
     return true;
   }
 
+  /// Where the Windows helper writes its account of itself, beside the
+  /// download. Read back and folded into the activity log on the next launch.
+  static String helperLogPath(String updatesDirectory) =>
+      p.join(updatesDirectory, 'apply-update.log');
+
   Future<bool> _applyWindowsArchive(String archive) async {
     final directory = target.swapDirectory;
     if (directory == null) return _reveal(archive);
 
     // Written out rather than passed inline: `powershell -File` takes named
     // arguments, which keeps every path out of the script text.
-    final script = File(p.join(p.dirname(archive), 'apply-update.ps1'))
+    final updates = p.dirname(archive);
+    final script = File(p.join(updates, 'apply-update.ps1'))
       ..writeAsStringSync(windowsSwapScript);
 
     await Process.start('powershell', [
@@ -489,6 +691,8 @@ class Updater {
       '$pid',
       '-Exe',
       Platform.resolvedExecutable,
+      '-Log',
+      helperLogPath(updates),
     ], mode: ProcessStartMode.detached);
     return true;
   }

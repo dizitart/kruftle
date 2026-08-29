@@ -4,7 +4,7 @@ homepage: https://github.com/dizitart/kruftle
 repository: https://github.com/dizitart/kruftle
 publish_to: 'none'
 
-version: 0.2.4+1
+version: 0.2.9+1
 
 environment:
   sdk: ^3.12.2

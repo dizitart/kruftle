@@ -153,6 +153,8 @@
   "updateRestart": "Перезапустить",
   "updateChecking": "Проверка обновлений…",
   "updateUpToDate": "Установлена последняя версия Kruftle.",
+  "updateReadyInstall": "Kruftle {version} готов к установке.",
+  "updateNoBuild": "Kruftle {version} доступен, но для этой установки нет подходящей сборки. См. журнал действий.",
 
   "settingsTitle": "Настройки",
   "settingsSectionAppearance": "Внешний вид",

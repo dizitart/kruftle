@@ -256,6 +256,14 @@
   "updateRestart": "Restart now",
   "updateChecking": "Checking for updates…",
   "updateUpToDate": "Kruftle is up to date.",
+  "updateReadyInstall": "Kruftle {version} is ready to install.",
+  "@updateReadyInstall": {
+    "placeholders": { "version": { "type": "String" } }
+  },
+  "updateNoBuild": "Kruftle {version} is available, but this installation has no build it can use. See the activity log.",
+  "@updateNoBuild": {
+    "placeholders": { "version": { "type": "String" } }
+  },
 
   "settingsTitle": "Settings",
   "settingsSectionAppearance": "Appearance",

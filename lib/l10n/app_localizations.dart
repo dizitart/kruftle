@@ -947,6 +947,18 @@ abstract class L {
   /// **'Kruftle is up to date.'**
   String get updateUpToDate;
 
+  /// No description provided for @updateReadyInstall.
+  ///
+  /// In en, this message translates to:
+  /// **'Kruftle {version} is ready to install.'**
+  String updateReadyInstall(String version);
+
+  /// No description provided for @updateNoBuild.
+  ///
+  /// In en, this message translates to:
+  /// **'Kruftle {version} is available, but this installation has no build it can use. See the activity log.'**
+  String updateNoBuild(String version);
+
   /// No description provided for @settingsTitle.
   ///
   /// In en, this message translates to:

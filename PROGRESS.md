@@ -14,12 +14,12 @@ check in §3 to confirm the tree is in the state this document claims.
 
 | | |
 |---|---|
-| **Current milestone** | **v0.2.4 (unreleased)** — self-update without an installer, and the platform-integration bugs behind it |
+| **Current milestone** | **v0.2.9** — self-update without an installer, working on all three |
 | **Last updated** | 2026-08-28 |
-| **Build green?** | Yes — 649 tests, analyzer clean (`--fatal-infos`), formatter clean |
+| **Build green?** | Yes — 661 tests, analyzer clean (`--fatal-infos`), formatter clean |
 | **Repo** | https://github.com/dizitart/kruftle (public, GPL-3.0) |
 | **CI** | Green — analyze/test plus release builds on all three OSs |
-| **Released** | [v0.2.2](https://github.com/dizitart/kruftle/releases/tag/v0.2.2) — .dmg, two .exe, two .AppImage, two .deb, checksums.txt |
+| **Released** | [v0.2.8](https://github.com/dizitart/kruftle/releases/tag/v0.2.8) — .dmg, macOS .zip, two .exe, two Windows .zip, two .AppImage, two .deb, two .tar.gz, checksums.txt |
 
 ---
 
@@ -102,7 +102,7 @@ Run this first, every session. It is the definition of "the tree is healthy".
 cd /Volumes/External/codebase/kruftle && dart format --output=none --set-exit-if-changed lib test tool && flutter analyze --fatal-infos && flutter test
 ```
 
-Expected: formatter reports 0 changed, `No issues found!`, then 583 passing.
+Expected: formatter reports 0 changed, `No issues found!`, then 671 passing.
 
 `lib/l10n/app_localizations*.dart` is generated and committed. Regenerate it
 with `flutter gen-l10n` after editing any `.arb`; the analyzer will not warn if
@@ -127,11 +127,171 @@ it is there to be looked at. Regenerate the app icon's rasters with:
 ./tool/make_icons.sh
 ```
 
+### Releasing
+
+Bump `version:` in `pubspec.yaml` **and** `kAppVersion` in
+`lib/src/core/update/version.dart` — two lines, held equal by
+`version_test.dart` — add a `changelog.json` entry, then push a `v<version>`
+tag. The release workflow builds all three platforms, publishes every asset
+with `checksums.txt`, and refuses a tag that disagrees with `pubspec.yaml`.
+
+### Testing an update without spending a version number
+
+A test build is tagged **`v<next>-rc.<n>`** — `v0.2.7-rc.1` — never the next
+plain version.
+
+`Version` sorts `0.2.6 < 0.2.7-rc.1 < 0.2.7-rc.2 < 0.2.7`, so an installed
+0.2.6 is offered the candidate and the whole update path can be watched end to
+end; whoever took it moves on to the real 0.2.7 when that ships; and because no
+number was consumed, deleting the release afterwards leaves the history intact.
+`updater_test.dart` pins that ordering.
+
+Publishing a throwaway as a plain version does the opposite, and it cannot be
+undone: v0.2.5 was spent on one, the fix went out as v0.2.6, and the releases
+now skip 0.2.5 permanently.
+
+Two things a candidate still shares with a real release, because it is
+published the same way: it is offered to everyone, not only to the tester, and
+the site's own six-hourly poll will pick it up. Delete it the same day. The
+site-dispatch step should be stood down on the candidate's own commit —
+repointing the public download links at something about to stop existing breaks
+every link on the site.
+
+```bash
+gh release delete v0.2.7-rc.1 --repo dizitart/kruftle --yes --cleanup-tag
+```
+
 ---
 
 ## 4. Session log
 
 Newest first.
+
+### Session 17 — 2026-08-29
+
+**Landed** — v0.2.9: the Windows swap, and a helper that can be seen.
+
+- **0.2.9-rc.1 got further than anything before it.** Windows found the
+  release, downloaded it through the `curl` fallback and verified it — the
+  Restart button appeared, which means the download was on disk and its SHA-256
+  matched. Clicking it left the app on 0.2.8, with **no `Update failed` line**:
+  `install()` had returned cleanly and the process had exited.
+- **Which meant the failure was somewhere nothing could see.** The helper runs
+  *after* Kruftle has gone. Whether PowerShell never started, or started and
+  failed on the rename, produced identical evidence: none.
+- **So the helper reports itself now.** It takes a `-Log` path, writes a line
+  at every step, and `UpdateController._collectHelperLog` folds that file into
+  the activity log on the next launch and deletes it. `applyAndRestart` also
+  logs *before* it goes, so the absence of a helper log now means PowerShell
+  never ran — which is a different answer from a swap that failed.
+- **And the three most likely causes are fixed while we are here.**
+  `$ProgressPreference = 'SilentlyContinue'`, because `Expand-Archive` draws a
+  progress bar and this helper is started detached with no console to draw it
+  in — a host that cannot render progress can fail before doing any work.
+  `Wait-Process` is replaced by polling, which cannot throw for a reason worth
+  distinguishing and can be reported second by second. And the two directory
+  renames retry for six seconds, because a handle can outlive the process that
+  held it by a moment when an indexer or a scanner is looking at what just
+  changed.
+- **Not yet confirmed on the machine.** Everything here is exercised against
+  real PowerShell in `swap_scripts_test.dart`, including the log. What the
+  Windows box does with it is the next thing to find out — and this time it
+  will say.
+
+### Session 16 — 2026-08-29
+
+**Landed** — v0.2.8: the other half of the Windows problem, which was the same
+half all along.
+
+- **0.2.7 fixed the check; the download then failed.** The v0.2.8-rc.1
+  candidate got as far as
+  `offering 0.2.8-rc.1 (Kruftle-0.2.8-rc.1-windows-arm64.zip)` — the first time
+  a Windows Kruftle had ever seen a release — and then died with
+  `CERTIFICATE_VERIFY_FAILED: unable to get local issuer certificate`.
+- **Two hosts, two authorities.** `api.github.com` is signed by Sectigo, whose
+  root ships with Windows. Release downloads come from
+  `objects.githubusercontent.com`, signed by Let's Encrypt and chaining to ISRG
+  Root X2. Windows fetches a missing root on demand through CryptoAPI, but
+  `dart:io` verifies against a *snapshot* of the root store and cannot ask it
+  to — so on a machine that has never needed X2, the API verifies and the
+  download does not. That is also what was failing `checksums.txt` before 0.2.7
+  stopped needing it: one cause, two symptoms, three rounds apart.
+- **The fix is to let the operating system do the fetching.** On a
+  `TlsException` the download is retried with `curl`, which has shipped in
+  Windows since 10 1803 and uses Schannel — the stack that *does* fetch the
+  missing root — and uses the platform store on macOS and Linux too.
+- **Why that is not a hole.** The bytes are still verified against the SHA-256
+  that came from the API over a connection that verified. The download channel
+  is defence in depth, not the security boundary, which is exactly why falling
+  back on it is acceptable and why skipping the digest never would be. A test
+  drives the real `curl` against a local server with the Dart client refusing
+  the handshake, and another proves a tampered payload is still rejected.
+
+### Session 15 — 2026-08-29
+
+**Landed** — v0.2.7: why Windows never saw an update, found at last.
+
+- **The v0.2.7-rc.1 candidate answered it in one line.** macOS and Linux
+  updated themselves correctly — including the `.deb` through `pkexec`. Windows
+  logged:
+  `0.2.7-rc.1 unusable: no published checksum for Kruftle-0.2.7-rc.1-windows-arm64.zip`
+  — and the checksum was right there in `checksums.txt`, verifying fine from
+  another machine. So it was not the release: it was `_fetchChecksums` coming
+  back empty.
+- **The cause, and it was never architecture or asset selection.** Verifying an
+  asset took a *second* HTTP request, for `checksums.txt`. A release asset
+  download redirects to `objects.githubusercontent.com`, so that was a second
+  request to a different host — and one this machine could not reach. The
+  method caught everything and returned `{}`, so every asset looked
+  unverifiable, `check()` returned nothing, and the banner said "up to date".
+  It had been doing that since the updater first shipped; macOS and Linux only
+  worked because their networks could reach the download host.
+- **The fix is to stop needing it.** GitHub publishes `digest:
+  "sha256:<hex>"` on every release asset, in the listing already fetched, for
+  every release back to v0.1.0. `Updater.assetDigest` reads it; `checksums.txt`
+  is now a fallback for a release that carries none. Proved by pointing the
+  updater at the real releases through a client that refuses every host except
+  `api.github.com`: it offers the update, with the digest matching
+  `checksums.txt` byte for byte.
+- **And a failed fetch no longer looks like a broken release.**
+  `_fetchChecksums` returns null when it could not be read at all, so the
+  reason says "checksums.txt could not be read" rather than "has no line for
+  X". Conflating the two is what hid this.
+- **Still true:** if that machine genuinely cannot reach the download host at
+  all rather than merely timing out, the *download* will fail — but visibly
+  now, with an error, instead of in silence.
+
+### Session 14 — 2026-08-28
+
+**Landed** — v0.2.6: the Linux `.deb` update actually installs, and a check
+that finds nothing says which kind of nothing.
+
+- **What the v0.2.5 test build found.** macOS updated itself correctly. Linux
+  did not, and Windows reported "up to date" against a release that existed.
+- **The `.deb` update was a dead end.** `Updater.install` handed the file to
+  `xdg-open`, on the reasoning that a system package is the desktop's business.
+  That opens GNOME Software, and GNOME Software will not upgrade a package it
+  already considers installed: it showed 0.2.5, greyed the button out, and did
+  nothing. The update looked applied and was not. It is `pkexec dpkg --install`
+  now — polkit shows its own password dialog, a refusal is a clean no, and the
+  fallback to `xdg-open` is kept for a machine with no polkit agent. `dpkg`
+  replaces the files of a running program happily on Linux, but the running
+  Kruftle is still the old one and cannot start its replacement while it holds
+  the instance lock, so `relaunchScript` waits for it to go.
+- **The banner contradicted itself.** "Kruftle 0.2.5 is ready. Restart to
+  finish." next to an **Update** button that opened a package installer. The
+  message is chosen by `isSelfReplacing` now, same as the button was.
+- **Windows is still not explained, and that is the actual bug.** The release
+  data is correct, and a Windows target picks `Kruftle-0.2.5-windows-arm64.zip`
+  out of the live release list in simulation. What could not be established is
+  what the app on that machine saw, because "up to date" was shown for both
+  "you are current" and "there is a newer release and nothing in it fits this
+  install" — and the log said nothing at all about the check.
+- **So the check now reports which.** `check()` returns an `UpdateCheck`
+  carrying the update, or the newest version it had to reject and why, and
+  every check writes one line to the activity log: current version, the
+  detected `InstallTarget`, and the outcome. That one line would have answered
+  this in a minute. It is the second time this exact blindness has cost a day.
 
 ### Session 13 — 2026-08-28
 
@@ -707,6 +867,7 @@ Append-only. Record *why*, so a future session does not undo it.
 | 2026-08-25 | Every toast goes through `showToast`, which sets `persist: false` | The Material default makes any snack bar with an action permanent, which is never what Kruftle wants, and it is invisible at the call site |
 ---
 | 2026-08-28 | The updater asks *how Kruftle is installed*, not what OS it is on | "Not Windows, not macOS, therefore AppImage" is what handed a `.deb` install a file it had nowhere to put. `InstallTarget` answers the only question that matters: what can this copy actually apply, given where it lives and whether it can write there |
+| 2026-08-29 | Test builds are tagged `v<next>-rc.<n>`, never a plain version | A throwaway published as v0.2.5 and a fix released as v0.2.6 leaves the history skipping 0.2.5 for good. A candidate sorts above the current release and below the real next one, so it can be tested and then deleted without spending anything |
 | 2026-08-28 | The updater sorts candidate releases by version, not by GitHub's listing order | GitHub lists by publication date. A patch cut on an older line after a newer release sorts first there, so taking the first newer entry offers a stale release and an out-of-date app climbs back one at a time instead of arriving at the latest |
 | 2026-08-28 | macOS updates from a `ditto` archive, with the `.dmg` only as a fallback | The disk-image swap worked, but mounting an image at every update is the thing this feature exists to stop. `ditto` because it is the only macOS archiver that preserves a bundle's symlinks, resource forks and executable bits |
 | 2026-08-28 | Update by unpacking an archive over the install, not by running an installer | An installer is a second UI, a second set of prompts and, on Windows, an elevation prompt for something the user already agreed to. Where the copy is writable — which per-user installs make the normal case — a rename is enough, and the next launch is the new version |
@@ -718,6 +879,27 @@ Append-only. Record *why*, so a future session does not undo it.
 
 ## 6. Known gotchas
 
+- **Anything that runs after the app exits must write its own log.** The update
+  helpers do their work with nothing left to report to; a swap that quietly did
+  nothing on Windows was indistinguishable from a helper that never started,
+  twice over. The Windows one writes a file the next launch folds into the
+  activity log. The macOS and Linux ones do not yet, and should if they ever
+  misbehave.
+- **`dart:io` on Windows verifies TLS against a snapshot of the root store.**
+  Windows itself fetches a missing root on demand; Dart cannot ask it to, so a
+  host whose root the machine has never needed fails with
+  `unable to get local issuer certificate` while other hosts verify fine. It
+  looks like a network fault and is not one. Handing the transfer to `curl`
+  (Schannel) works, as long as what it fetches is verified afterwards.
+- **A GitHub release asset download is not on `api.github.com`.** It redirects
+  to `objects.githubusercontent.com`, so anything that fetches an asset during
+  a *check* — `checksums.txt`, most obviously — needs a second host the machine
+  may not have. Prefer the `digest` field GitHub puts on every asset in the
+  release listing itself.
+- **GNOME Software will not install a local `.deb` whose package name is
+  already installed.** It shows the new version, greys out the button and does
+  nothing — which looks exactly like a successful update to anyone watching.
+  `pkexec dpkg --install` is the only thing that actually applies it.
 - **macOS is the only one of the three that wants an inset app icon.** Its grid
   puts the body in the middle 824 of 1024 points and the Dock lays every icon
   out on that assumption — a full-bleed icon is drawn a quarter oversized, not

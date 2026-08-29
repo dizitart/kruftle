@@ -2,6 +2,41 @@
   "kruftle.changelog": 1,
   "versions": [
     {
+      "version": "0.2.9",
+      "date": "2026-08-29",
+      "fixed": [
+        "Applying an update on Windows could do nothing at all. The helper that replaces Kruftle runs after Kruftle has closed, and it now waits more patiently for Windows to let go of the old files, retries the rename when something is still holding it, and no longer draws a progress bar it has no window to draw in \u2014 any of which could stop it before it started."
+      ],
+      "changed": [
+        "The update helper on Windows now writes down what it did, and Kruftle reads that back into the activity log the next time it starts. Because the helper only runs once Kruftle has exited, an update that quietly failed used to leave no trace anywhere; now it leaves an account of itself."
+      ]
+    },
+    {
+      "version": "0.2.8",
+      "date": "2026-08-29",
+      "fixed": [
+        "Downloading an update on Windows could fail with a certificate error. Kruftle asks GitHub for the release over one server and downloads the build from another, and the two are signed by different authorities \u2014 on a machine that has not yet collected the second one\u2019s root certificate, Windows can fetch it on demand but Kruftle could not ask it to. The download now falls back to the system\u2019s own downloader when that happens, which can. What it fetches is still checked against the release\u2019s published SHA-256 before anything is replaced."
+      ]
+    },
+    {
+      "version": "0.2.7",
+      "date": "2026-08-29",
+      "fixed": [
+        "Kruftle on Windows never found an update. It reported \u201cup to date\u201d against releases that existed, from the day the updater shipped. Verifying a download needed a second request, for the checksums file \u2014 and because release downloads are redirected to a different server, that was a second request to a host the machine could not reach. Every build then looked unverifiable and the check quietly gave up. Kruftle now uses the checksum GitHub sends with the release listing it has already fetched, so there is nothing extra to reach. The download is still verified against it before anything is replaced, exactly as before."
+      ]
+    },
+    {
+      "version": "0.2.6",
+      "date": "2026-08-28",
+      "fixed": [
+        "Updating a Kruftle installed from the .deb package did nothing. It handed the download to the software centre, and the software centre will not upgrade a package it already considers installed \u2014 it showed the new version, greyed the button out, and changed nothing. Kruftle now installs it directly, asking for your password once, and restarts itself when it is done.",
+        "The update banner said \u201crestart to finish\u201d next to a button that ran an installer. The two now agree: an update that is unpacked in place offers Restart now, and one that runs an installer offers Update."
+      ],
+      "changed": [
+        "Kruftle can now tell you when a new version exists that your installation cannot use \u2014 a missing build for your processor, or a release with no published checksum \u2014 instead of reporting it as \u201cup to date\u201d. Every update check is also written to the activity log, with what it found and how Kruftle is installed, so a check that comes back empty can be explained rather than guessed at."
+      ]
+    },
+    {
       "version": "0.2.4",
       "date": "2026-08-28",
       "changed": [

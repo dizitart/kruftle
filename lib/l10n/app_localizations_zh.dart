@@ -502,6 +502,16 @@ class LZh extends L {
   String get updateUpToDate => 'Kruftle 已是最新版本。';
 
   @override
+  String updateReadyInstall(String version) {
+    return 'Kruftle $version 已可安装。';
+  }
+
+  @override
+  String updateNoBuild(String version) {
+    return 'Kruftle $version 已发布，但没有适用于此安装方式的版本。请查看活动日志。';
+  }
+
+  @override
   String get settingsTitle => '设置';
 
   @override

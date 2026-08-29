@@ -66,6 +66,19 @@ void main() {
   });
 
   test('the swap helper puts the old install back when it cannot finish', () {
-    expect(windowsSwapScript, contains('Move-Item -LiteralPath \$old'));
+    expect(windowsSwapScript, contains('Move-WithRetry \$old \$Dir'));
+  });
+
+  test('the swap helper writes down what it did', () {
+    // It runs entirely after Kruftle has exited, so this file is the only
+    // trace it can leave. Without it a swap that silently did nothing was
+    // indistinguishable from one that never started.
+    expect(windowsSwapScript, contains(r'[string]$Log'));
+    expect(windowsSwapScript, contains('function Note'));
+    expect(
+      windowsSwapScript,
+      contains(r"$ProgressPreference = 'SilentlyContinue'"),
+      reason: 'a progress bar with no console to draw it on is a hazard here',
+    );
   });
 }

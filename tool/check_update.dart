@@ -61,17 +61,18 @@ Future<void> main(List<String> args) async {
         architecture: architecture,
       );
 
-      final AvailableUpdate? update;
+      final UpdateCheck result;
       try {
-        update = await updater.check();
+        result = await updater.check();
       } on UpdateFailure catch (e) {
         stderr.writeln('$label ($architecture): FAILED — ${e.message}');
         exitCode = 1;
         continue;
       }
 
+      final update = result.update;
       if (update == null) {
-        stdout.writeln('$label ($architecture): nothing above $current');
+        stdout.writeln('$label ($architecture): ${result.outcome}');
         exitCode = 1;
         continue;
       }

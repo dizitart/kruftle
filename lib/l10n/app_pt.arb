@@ -153,6 +153,8 @@
   "updateRestart": "Reiniciar agora",
   "updateChecking": "Procurando atualizações…",
   "updateUpToDate": "O Kruftle está atualizado.",
+  "updateReadyInstall": "O Kruftle {version} está pronto para instalar.",
+  "updateNoBuild": "O Kruftle {version} está disponível, mas esta instalação não tem nenhuma versão que possa usar. Consulte o registo de atividade.",
 
   "settingsTitle": "Configurações",
   "settingsSectionAppearance": "Aparência",

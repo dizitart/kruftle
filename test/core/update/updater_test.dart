@@ -10,6 +10,14 @@ import 'package:http/testing.dart';
 import 'package:kruftle/src/core/update/updater.dart';
 import 'package:kruftle/src/core/update/version.dart';
 
+/// The update a check offered, or null.
+///
+/// `check()` reports more than that — it also says why nothing was offered —
+/// and the tests that care about the difference ask for it directly.
+extension on Updater {
+  Future<AvailableUpdate?> offered() => check().then((c) => c.update);
+}
+
 void main() {
   group('Version', () {
     test('parses the forms a release tag actually takes', () {
@@ -30,6 +38,31 @@ void main() {
       expect(Version.tryParse('1.10.0')! > Version.tryParse('1.9.0')!, isTrue);
       expect(Version.tryParse('1.0.2')! > Version.tryParse('1.0.1')!, isTrue);
       expect(Version.tryParse('1.0.0')! > Version.tryParse('1.0.0')!, isFalse);
+    });
+
+    test('a release-candidate tag sits between two releases', () {
+      // How an update is tested without spending a version number on it.
+      //
+      // A throwaway build tagged v0.2.7-rc.1 is newer than 0.2.6, so an
+      // installed 0.2.6 is offered it and the whole path can be watched; it is
+      // older than 0.2.7, so whoever took it moves on to the real release when
+      // that ships; and it consumes no number, so deleting it afterwards
+      // leaves no gap in the history. Publishing the throwaway as 0.2.5 and
+      // then releasing the fix as 0.2.6 left exactly such a gap, permanently.
+      const chain = [
+        '0.2.6',
+        '0.2.7-rc.1',
+        '0.2.7-rc.2',
+        '0.2.7',
+        '0.2.8-rc.1',
+      ];
+      for (var i = 0; i + 1 < chain.length; i++) {
+        expect(
+          Version.tryParse(chain[i + 1])! > Version.tryParse(chain[i])!,
+          isTrue,
+          reason: '${chain[i + 1]} must be newer than ${chain[i]}',
+        );
+      }
     });
 
     test('a pre-release sorts before its own release', () {
@@ -53,6 +86,9 @@ void main() {
       bool prerelease = false,
       bool draft = false,
       List<String> assets = const [installer, 'checksums.txt'],
+      // GitHub publishes the SHA-256 of every asset in the listing itself.
+      // Releases predating that, or another host, would not.
+      bool withDigest = true,
     }) => jsonEncode([
       {
         'tag_name': tag,
@@ -65,6 +101,7 @@ void main() {
               'name': name,
               'size': 1024,
               'browser_download_url': 'https://example.test/$name',
+              if (withDigest) 'digest': 'sha256:$digest',
             },
         ],
       },
@@ -97,7 +134,7 @@ void main() {
     );
 
     test('finds a newer release and its verified installer', () async {
-      final update = await updaterWith(clientFor(releasesJson())).check();
+      final update = await updaterWith(clientFor(releasesJson())).offered();
 
       expect(update, isNotNull);
       expect(update!.version.toString(), '1.4.0');
@@ -108,11 +145,17 @@ void main() {
 
     test('reports nothing when already up to date', () async {
       expect(
-        await updaterWith(clientFor(releasesJson()), current: '1.4.0').check(),
+        await updaterWith(
+          clientFor(releasesJson()),
+          current: '1.4.0',
+        ).offered(),
         isNull,
       );
       expect(
-        await updaterWith(clientFor(releasesJson()), current: '2.0.0').check(),
+        await updaterWith(
+          clientFor(releasesJson()),
+          current: '2.0.0',
+        ).offered(),
         isNull,
       );
     });
@@ -158,7 +201,7 @@ void main() {
       test('several versions ahead, it offers the newest', () async {
         final update = await updaterWith(
           clientForMany(manyReleases(['v2.0.0', 'v1.3.0', 'v1.2.0', 'v1.1.0'])),
-        ).check();
+        ).offered();
 
         expect(update!.version.toString(), '2.0.0');
       });
@@ -170,7 +213,7 @@ void main() {
         // release at a time instead of arriving at the latest.
         final update = await updaterWith(
           clientForMany(manyReleases(['v1.1.0', 'v2.0.0', 'v1.3.0'])),
-        ).check();
+        ).offered();
 
         expect(update!.version.toString(), '2.0.0');
       });
@@ -190,7 +233,7 @@ void main() {
         ]);
 
         expectLater(
-          updaterWith(clientForMany(releases)).check(),
+          updaterWith(clientForMany(releases)).offered(),
           completion(
             isA<AvailableUpdate>().having(
               (u) => u.version.toString(),
@@ -205,23 +248,154 @@ void main() {
     test('ignores drafts', () async {
       final update = await updaterWith(
         clientFor(releasesJson(draft: true)),
-      ).check();
+      ).offered();
       expect(update, isNull);
     });
 
     test('ignores pre-releases unless the user opted in', () async {
       final json = releasesJson(tag: 'v1.4.0-beta.1', prerelease: true);
-      expect(await updaterWith(clientFor(json)).check(), isNull);
+      expect(await updaterWith(clientFor(json)).offered(), isNull);
       expect(
-        await updaterWith(clientFor(json), preReleases: true).check(),
+        await updaterWith(clientFor(json), preReleases: true).offered(),
         isNotNull,
       );
     });
 
+    group('the checksum comes with the listing', () {
+      // The bug this exists to stop coming back: verifying an asset used to
+      // need a second request, to `checksums.txt` — and because a release
+      // download redirects to objects.githubusercontent.com, a second request
+      // to a different host. A machine that could reach the API but not that
+      // host got an empty map, every asset looked unverifiable, and the check
+      // came back as "no update" in silence. It did that on Windows from the
+      // day the updater shipped.
+      test('an unreachable checksums.txt does not matter any more', () async {
+        final client = MockClient((request) async {
+          if (request.url.host == 'api.github.com') {
+            return http.Response(releasesJson(), 200);
+          }
+          throw const SocketException('objects.githubusercontent.com');
+        });
+
+        final update = await updaterWith(client).offered();
+        expect(update, isNotNull);
+        expect(update!.sha256, digest);
+      });
+
+      test('the listing is not asked to be taken on trust', () async {
+        // A digest that is not a SHA-256 is no digest at all.
+        for (final bad in ['', 'sha256:', 'md5:$digest', 'sha256:zz']) {
+          expect(Updater.assetDigest({'digest': bad}), isNull, reason: bad);
+        }
+        expect(Updater.assetDigest(const {}), isNull);
+        expect(
+          Updater.assetDigest({'digest': 'SHA256:${'A' * 64}'}),
+          'a' * 64,
+          reason: 'case is not part of a hex digest',
+        );
+      });
+
+      test('a release without one still falls back to checksums.txt', () async {
+        final client = MockClient((request) async {
+          if (request.url.host == 'api.github.com') {
+            return http.Response(releasesJson(withDigest: false), 200);
+          }
+          return http.Response('$digest  $installer\n', 200);
+        });
+
+        final update = await updaterWith(client).offered();
+        expect(update!.sha256, digest);
+      });
+
+      test('and says so plainly when that fallback cannot be read', () async {
+        final client = MockClient((request) async {
+          if (request.url.host == 'api.github.com') {
+            return http.Response(releasesJson(withDigest: false), 200);
+          }
+          throw const SocketException('no route');
+        });
+
+        final result = await updaterWith(client).check();
+        expect(result.update, isNull);
+        expect(result.reason, contains('could not be read'));
+        expect(
+          result.reason,
+          isNot(contains('has no line')),
+          reason: 'a network failure is not a malformed release',
+        );
+      });
+    });
+
+    group('nothing offered says which kind of nothing', () {
+      // "Up to date" and "there is a newer release and none of it fits this
+      // install" are both no-update, and told apart nowhere else. Two reports
+      // of "updating does nothing" have turned on exactly this distinction.
+      test('being current is up to date', () async {
+        final result = await updaterWith(
+          clientFor(releasesJson()),
+          current: '1.4.0',
+        ).check();
+
+        expect(result.isUpToDate, isTrue);
+        expect(result.blockedVersion, isNull);
+        expect(result.outcome, 'up to date');
+      });
+
+      test('a release with no asset for this install is not', () async {
+        // A Linux release, asked for by a macOS build.
+        final result = await updaterWith(
+          clientFor(
+            releasesJson(
+              assets: const ['Kruftle-1.4.0-x86_64.AppImage', 'checksums.txt'],
+            ),
+          ),
+        ).check();
+
+        expect(result.isUpToDate, isFalse);
+        expect(result.update, isNull);
+        expect('${result.blockedVersion}', '1.4.0');
+        expect(result.reason, contains('.dmg'));
+        expect(
+          result.reason,
+          contains('Kruftle-1.4.0-x86_64.AppImage'),
+          reason: 'the log has to say what was on offer instead',
+        );
+      });
+
+      test('a release with no checksum for our asset is not either', () async {
+        final result = await updaterWith(
+          clientFor(
+            releasesJson(withDigest: false),
+            checksums: 'nothing  for-us.txt\n',
+          ),
+        ).check();
+
+        expect(result.isUpToDate, isFalse);
+        expect('${result.blockedVersion}', '1.4.0');
+        expect(result.reason, contains('has no line'));
+      });
+
+      test('the newest unusable release is the one reported', () async {
+        // Not the oldest one it walked past on the way down.
+        final releases = jsonEncode([
+          for (final tag in const ['v3.0.0', 'v2.0.0'])
+            {
+              'tag_name': tag,
+              'draft': false,
+              'prerelease': false,
+              'body': '',
+              'assets': const <Map<String, Object?>>[],
+            },
+        ]);
+        final result = await updaterWith(clientFor(releases)).check();
+        expect('${result.blockedVersion}', '3.0.0');
+      });
+    });
+
     test('refuses a release with no checksum for our asset', () async {
       final update = await updaterWith(
-        clientFor(releasesJson(assets: const [installer])),
-      ).check();
+        clientFor(releasesJson(assets: const [installer], withDigest: false)),
+      ).offered();
 
       expect(
         update,
@@ -249,7 +423,7 @@ void main() {
           client: clientFor(releasesJson(assets: assets), checksums: checksums),
           target: target,
           architecture: 'x64',
-        ).check();
+        ).offered();
         return update?.assetName;
       }
 
@@ -370,6 +544,115 @@ void main() {
         );
       },
     );
+
+    group('a certificate the platform trusts and we do not', () {
+      // The Windows failure, exactly: api.github.com is signed by Sectigo,
+      // whose root ships with Windows, and release downloads come from
+      // objects.githubusercontent.com, signed by Let's Encrypt and chaining to
+      // ISRG Root X2 — which `dart:io` cannot see on a machine that has never
+      // fetched it, because it verifies against a snapshot of the root store
+      // rather than asking Windows to build the chain. The check succeeded and
+      // the download died on the handshake.
+      late HttpServer server;
+
+      setUp(() async {
+        // Something for the system downloader to actually fetch, so this
+        // exercises the real `curl` rather than a stand-in for it.
+        server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
+        server.listen((request) async {
+          request.response.add(payload);
+          await request.response.close();
+        });
+      });
+      tearDown(() => server.close(force: true));
+
+      AvailableUpdate served(String digest) => AvailableUpdate(
+        version: Version.tryParse('1.4.0')!,
+        assetName: 'Kruftle-1.4.0.dmg',
+        downloadUrl: 'http://127.0.0.1:${server.port}/Kruftle-1.4.0.dmg',
+        sha256: digest,
+        notes: '',
+        sizeBytes: payload.length,
+      );
+
+      /// Refuses the handshake, as that machine's TLS does.
+      Updater refusing() => Updater(
+        currentVersion: Version.tryParse('1.0.0')!,
+        target: const InstallTarget(
+          platform: HostPlatform.macOS,
+          assetSuffixes: ['.dmg'],
+        ),
+        client: MockClient(
+          (_) async => throw const HandshakeException(
+            'CERTIFICATE_VERIFY_FAILED: unable to get local issuer certificate',
+          ),
+        ),
+      );
+
+      test('the download falls back to the system downloader', () async {
+        final file = await refusing().download(
+          served(realDigest),
+          directory: tmp.path,
+        );
+
+        expect(file.readAsBytesSync(), payload);
+      });
+
+      test('and what it fetched is still verified', () async {
+        // The fallback is only acceptable because this still happens: the
+        // digest came from the API over a connection that did verify.
+        await expectLater(
+          refusing().download(served('c' * 64), directory: tmp.path),
+          throwsA(
+            isA<UpdateFailure>().having(
+              (e) => e.message,
+              'message',
+              contains('Checksum mismatch'),
+            ),
+          ),
+        );
+      });
+
+      test('a failure there reports both halves', () async {
+        final updater = Updater(
+          currentVersion: Version.tryParse('1.0.0')!,
+          target: const InstallTarget(
+            platform: HostPlatform.macOS,
+            assetSuffixes: ['.dmg'],
+          ),
+          client: MockClient(
+            (_) async => throw const HandshakeException('no issuer'),
+          ),
+        );
+        // A port nothing is listening on, so the system downloader fails
+        // too: bound to claim a free one, then closed.
+        final closed = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
+        final deadPort = closed.port;
+        await closed.close();
+
+        final nowhere = AvailableUpdate(
+          version: Version.tryParse('1.4.0')!,
+          assetName: 'Kruftle-1.4.0.dmg',
+          downloadUrl: 'http://127.0.0.1:$deadPort/Kruftle-1.4.0.dmg',
+          sha256: realDigest,
+          notes: '',
+          sizeBytes: 0,
+        );
+
+        await expectLater(
+          updater.download(nowhere, directory: tmp.path),
+          throwsA(
+            isA<UpdateFailure>()
+                .having((e) => e.message, 'names the cause', contains('issuer'))
+                .having(
+                  (e) => e.message,
+                  'and the fallback',
+                  contains('system downloader'),
+                ),
+          ),
+        );
+      });
+    });
 
     test('a checksum comparison is case-insensitive', () async {
       final file = await downloaderFor(

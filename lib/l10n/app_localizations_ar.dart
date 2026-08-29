@@ -530,6 +530,16 @@ class LAr extends L {
   String get updateUpToDate => '‏Kruftle محدَّث.';
 
   @override
+  String updateReadyInstall(String version) {
+    return '‏Kruftle $version جاهز للتثبيت.';
+  }
+
+  @override
+  String updateNoBuild(String version) {
+    return '‏Kruftle $version متاح، لكن لا توجد نسخة تصلح لهذا التثبيت. راجع سجل النشاط.';
+  }
+
+  @override
   String get settingsTitle => 'الإعدادات';
 
   @override
