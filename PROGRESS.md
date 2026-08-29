@@ -65,14 +65,11 @@ Legend: `[ ]` not started · `[~]` in progress · `[x]` done & green
 
 ### What is left
 
-1. **A real self-update on Windows and Linux, machine to machine.** Session 18
-   drove the Windows *swap* on a real Windows 11 machine — a real install
-   directory, a real archive, the real detached launch, from a Dart process that
-   exits — and it works. What has still never happened on Windows or Linux is
-   the whole round trip over the network: an installed older build noticing a
-   release, fetching it and coming back up as the new one. On Windows that needs
-   0.2.10 published and a 0.2.10 machine, because everything below it carries
-   the launcher that cannot work.
+1. **A real self-update on Linux, machine to machine.** Windows is done: an
+   installed 0.2.10 found v0.2.11-rc.1, fetched it, verified it, swapped itself
+   and came back up as the new build — see session 18. Linux has still never
+   done the round trip from an installed older build; the `.tar.gz` and AppImage
+   swaps are exercised only in `swap_scripts_test.dart`.
 2. ~~Why the Windows update check was silent~~ — answered across sessions 15
    to 18. Four causes in a row, each hiding the next: the checksum fetch
    (0.2.7), the download's certificate chain (0.2.8), the helper's silence
@@ -220,9 +217,19 @@ Newest first.
   5.1 writes a byte order mark, which was arriving in the activity log on the
   front of the first line. And `linux_desktop_test.dart` read `.desktop` files
   with `contains('\n…')`, which a Windows checkout hands back as CRLF.
-- **What is still unproven:** the round trip over the network. That needs
-  0.2.10 published and a Windows machine already on 0.2.10 — machines below it
-  carry the launcher that cannot work and have to be reinstalled once by hand.
+- **Proved on the machine, against a real release.** v0.2.10 shipped, was
+  installed by hand, and then v0.2.11-rc.1 was published purely to be updated
+  to. The installed 0.2.10 offered it, downloaded and verified it, and the
+  helper — the thing that had never once run — unpacked it, carried the Inno
+  uninstaller across, swapped, removed its own staging, deleted the archive and
+  left the app running as `0.2.11-rc.1+22`. The next launch folded the helper's
+  ten lines into the activity log and deleted them. The candidate was then
+  deleted; `main` never carried its commit.
+- **And the old failure is in this machine's own log, from that morning.**
+  `offering 0.2.10-rc.1` at 08:57:05, `Applying update` at 08:57:20, and at
+  08:57:54 `current: 0.2.9` offering it again — with no helper log anywhere,
+  because the helper had exited before its first line. That is what this fixed,
+  written down by the app itself before anyone knew what it meant.
 
 ### Session 17 — 2026-08-29
 
