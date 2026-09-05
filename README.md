@@ -14,7 +14,20 @@
   <img alt="Platforms" src="https://img.shields.io/badge/platform-macOS%20%7C%20Windows%20%7C%20Linux-lightgrey">
 </p>
 
+<p align="center">
+  <a href="https://kruftle.dizitart.com"><strong>kruftle.dizitart.com</strong></a>
+  &nbsp;·&nbsp;
+  <a href="https://github.com/dizitart/kruftle/releases">Download</a>
+  &nbsp;·&nbsp;
+  <a href="https://kruftle.dizitart.com/manual">Manual</a>
+</p>
+
 ---
+
+<p align="center">
+  <img alt="Kruftle reviewing 8 detected projects totalling 21.5 GiB of build output"
+       src="tool/screenshots/review-dark.png" width="900">
+</p>
 
 A developer machine accumulates build output the way a workshop accumulates
 sawdust. A `target/` here, a `node_modules/` there, a `build/` in every Flutter
@@ -73,11 +86,24 @@ Each of those has a test that fails closed.
 
 ## Supported stacks
 
-Rust · Flutter · Dart · Maven · Gradle · Node (npm/yarn/pnpm/bun) · Python ·
-Go · CMake · Make · .NET · Swift · Xcode · Zig · Elixir · Ruby
+**42 toolchains**, detected by marker file and cleaned with that toolchain's own
+command.
+
+| Family | Stacks |
+|---|---|
+| **Systems** | Rust · Go · Zig · Nim · Crystal · D · Fortran · Ada |
+| **Native / C++** | CMake · Make · Bazel · Meson · Ninja · Autotools · Conan · vcpkg · PlatformIO |
+| **JVM & .NET** | Maven · Gradle · sbt · Clojure · .NET |
+| **Dart** | Flutter · Dart |
+| **Apple** | Xcode · Swift Package |
+| **Web & scripting** | Node.js · Deno · PHP / Composer · Python · Ruby · Perl |
+| **Functional** | Haskell · Cabal · Erlang · Elixir · OCaml · Gleam |
+| **Data & infra** | Julia · R · Terraform · Unity |
 
 Adding another is one file and one list entry — see
-[`lib/src/core/registry/`](lib/src/core/registry/).
+[`lib/src/core/registry/`](lib/src/core/registry/). If your stack is missing,
+[open an issue](https://github.com/dizitart/kruftle/issues/new?template=language_support.yml)
+and it is usually a short PR away.
 
 ## Install
 
