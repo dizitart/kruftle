@@ -2,6 +2,16 @@
   "kruftle.changelog": 1,
   "versions": [
     {
+      "version": "0.2.11",
+      "date": "2026-09-05",
+      "added": [
+        "Kruftle for Windows now also publishes as an MSIX, for the Microsoft Store."
+      ],
+      "fixed": [
+        "A copy installed from the Microsoft Store no longer offers to update itself by downloading and running the regular Windows installer, which would have installed a second, separate copy of Kruftle alongside the Store's. That copy is now told plainly there is a newer version and pointed at the activity log; the Store manages its updates instead."
+      ]
+    },
+    {
       "version": "0.2.10",
       "date": "2026-08-29",
       "fixed": [

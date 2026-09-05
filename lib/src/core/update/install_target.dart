@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
+import 'dart:ffi';
 import 'dart:io';
 
+import 'package:ffi/ffi.dart';
 import 'package:path/path.dart' as p;
 
 /// The operating system a build was made for, as its release assets spell it.
@@ -95,11 +97,26 @@ class InstallTarget {
     String? executable,
     String? appImage,
     bool Function(String directory)? canWrite,
+    bool? packaged,
   }) {
     final isWindows = windows ?? Platform.isWindows;
     final isMacOS = macOS ?? Platform.isMacOS;
     final exe = executable ?? Platform.resolvedExecutable;
     final writable = canWrite ?? canWriteInto;
+
+    // The Microsoft Store's own copy: installed read-only under
+    // `WindowsApps`, updated by the Store, not by us. `assetSuffixes` is
+    // empty on purpose — `selectAsset` then matches nothing from any release,
+    // so `Updater.check()` reports every newer version as one this copy
+    // cannot use, the same honest "no build for you" a `.deb` under `/usr`
+    // gets, rather than downloading the Inno Setup installer and running it
+    // to install a second, unpackaged Kruftle alongside the Store's.
+    if (isWindows && (packaged ?? hasPackageIdentity())) {
+      return const InstallTarget(
+        platform: HostPlatform.windows,
+        assetSuffixes: [],
+      );
+    }
 
     if (isMacOS) {
       // The `.zip` first, and the `.dmg` only when a release does not carry
@@ -164,5 +181,36 @@ class InstallTarget {
     } on Object {
       return false;
     }
+  }
+}
+
+/// True when this process is running with a package identity — an MSIX
+/// install, which on Windows means the Microsoft Store.
+///
+/// `GetCurrentPackageFullName` is the Win32 call for exactly this question:
+/// queried with no buffer, it answers `ERROR_INSUFFICIENT_BUFFER` when there
+/// is a package identity to report and `APPMODEL_ERROR_NO_PACKAGE` (15700)
+/// when there is none. Any other result is treated as "no package" rather
+/// than risked disabling updates for the ordinary install on some unforeseen
+/// error.
+bool hasPackageIdentity() {
+  try {
+    final kernel32 = DynamicLibrary.open('kernel32.dll');
+    final getCurrentPackageFullName = kernel32
+        .lookupFunction<
+          Int32 Function(Pointer<Uint32>, Pointer<Uint16>),
+          int Function(Pointer<Uint32>, Pointer<Uint16>)
+        >('GetCurrentPackageFullName');
+
+    final length = malloc<Uint32>()..value = 0;
+    try {
+      const errorInsufficientBuffer = 122;
+      return getCurrentPackageFullName(length, nullptr) ==
+          errorInsufficientBuffer;
+    } finally {
+      malloc.free(length);
+    }
+  } on Object {
+    return false;
   }
 }

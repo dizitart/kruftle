@@ -215,12 +215,33 @@ jobs:
             -DestinationPath "dist\Kruftle-$env:VERSION-windows-$env:ARCH.zip" `
             -CompressionLevel Optimal
 
+      # For the Microsoft Store: the Inno Setup .exe above is a plain Win32
+      # installer, and the Store refuses one of those unless it is signed with
+      # a certificate that chains to a Microsoft-trusted root — which is
+      # exactly the rejection this step exists to route around. An MSIX built
+      # with a throwaway test certificate (msix's default; see msix_config in
+      # pubspec.yaml) uploads fine: Partner Center re-signs it on ingestion.
+      # `--build-windows=false` reuses the Release directory the Build step
+      # already produced rather than building it again.
+      - name: Package MSIX
+        shell: pwsh
+        env:
+          VERSION: ${{ needs.version.outputs.version }}
+          ARCH: ${{ matrix.arch }}
+        run: |
+          dart run msix:create --store --build-windows=false `
+            --architecture $env:ARCH `
+            --version "$env:VERSION.0" `
+            --output-path dist `
+            --output-name "Kruftle-$env:VERSION-windows-$env:ARCH"
+
       - uses: actions/upload-artifact@v7
         with:
           name: windows-${{ matrix.arch }}
           path: |
             dist/*.exe
             dist/*.zip
+            dist/*.msix
 
   linux:
     name: Linux ${{ matrix.arch }}

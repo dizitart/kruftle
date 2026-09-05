@@ -16,12 +16,14 @@ void main() {
     required String executable,
     String? appImage,
     bool writable = true,
+    bool packaged = false,
   }) => InstallTarget.detect(
     windows: windows,
     macOS: macOS,
     executable: executable,
     appImage: appImage,
     canWrite: (_) => writable,
+    packaged: packaged,
   );
 
   group('macOS', () {
@@ -81,6 +83,23 @@ void main() {
         writable: false,
       );
       expect(target.assetSuffixes, ['.exe']);
+      expect(target.isSelfReplacing, isFalse);
+    });
+
+    test('an MSIX install asks for nothing, however writable it is', () {
+      // A Store install must never fall through to the Inno Setup `.exe` —
+      // that would run a second, unpackaged Kruftle install alongside the
+      // Store's own copy. `selectAsset` matching nothing is what makes every
+      // newer release "blocked" instead, the same way a `.deb` under `/usr`
+      // is: an honest "no build for you", not a broken self-update.
+      final target = detect(
+        windows: true,
+        macOS: false,
+        executable: perUser,
+        packaged: true,
+      );
+      expect(target.assetSuffixes, isEmpty);
+      expect(target.swapDirectory, isNull);
       expect(target.isSelfReplacing, isFalse);
     });
   });

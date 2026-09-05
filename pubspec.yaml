@@ -4,7 +4,7 @@ homepage: https://github.com/dizitart/kruftle
 repository: https://github.com/dizitart/kruftle
 publish_to: 'none'
 
-version: 0.2.10+1
+version: 0.2.11+1
 
 environment:
   sdk: ^3.12.2
@@ -38,6 +38,7 @@ dev_dependencies:
     sdk: flutter
   flutter_lints: ^6.0.0
   yaml: ^3.1.3
+  msix: ^3.18.0
 
 flutter:
   uses-material-design: true
@@ -47,3 +48,25 @@ flutter:
     - assets/changelog.json
     - assets/legal/privacy-policy.md
     - assets/legal/terms-of-service.md
+
+# Microsoft Store packaging. `dart run msix:create --store` reads this,
+# wraps the already-built `build\windows\<arch>\runner\Release` (see
+# .github/workflows/release.yml) and signs it with a throwaway test
+# certificate — replaced for real when the Store re-signs the package on
+# ingestion, which is the whole reason this sidesteps needing a trusted code
+# signing certificate the way the Inno Setup .exe does. Version and
+# architecture are overridden per build by CI; the rest is static.
+msix_config:
+  display_name: Kruftle
+  publisher_display_name: Dizitart
+  # TODO(store): identity_name and publisher must match Partner Center's
+  # "Product identity" page for this app exactly, or Partner Center rejects
+  # the upload on ingestion. These are placeholders — CI builds a structurally
+  # valid MSIX with them, but it is not the one to submit until they are the
+  # real values.
+  identity_name: Dizitart.Kruftle
+  publisher: CN=Dizitart
+  msix_version: 1.0.0.0
+  logo_path: assets/icon/kruftle-512.png
+  capabilities: internetClient
+  store: true

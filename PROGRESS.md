@@ -173,6 +173,73 @@ gh release delete v0.2.7-rc.1 --repo dizitart/kruftle --yes --cleanup-tag
 
 Newest first.
 
+### Session 19 — 2026-09-05
+
+**Landed** — v0.2.11: Kruftle also publishes as an MSIX, for the Microsoft Store.
+
+- **Why.** A Windows Store submission of the plain Inno Setup `.exe` was
+  rejected: policy 10.2.9, unsigned, and Kruftle ships deliberately unsigned
+  (`PROJECT_PLAN.md` §"Code signing" — ad-hoc/none, CI structured so signing
+  can be *added* via secrets later, never required). Buying a certificate or
+  standing up Azure Trusted Signing would satisfy that policy but cost money
+  and ongoing upkeep for a channel that is one of five. MSIX does not: the
+  Store re-signs an uploaded package on ingestion, which is the whole reason
+  `--store` mode ships with a throwaway self-signed test certificate rather
+  than asking for a real one.
+- **The one real incompatibility, not a formality.** `Updater.install()` runs
+  a downloaded `.exe` unconditionally — it does not check whether this copy
+  can write next to itself first, because for every install shape that
+  existed before today, if `.exe` was the chosen asset then running it was
+  always correct. An MSIX install breaks that: `WindowsApps` is read-only even
+  to an administrator, so `InstallTarget.detect` was already reporting
+  `swapDirectory: null` there — but `assetSuffixes` still fell through to
+  `const ['.exe']`, the same as any other unwritable Windows install. Kruftle
+  would have downloaded the Inno installer and run it, landing a second,
+  unpackaged Kruftle beside the Store's copy on every single Store user's
+  machine, on the very first release after this one. `InstallTarget.detect`
+  now asks Win32 `GetCurrentPackageFullName` first — `hasPackageIdentity()` in
+  `install_target.dart`, `ERROR_INSUFFICIENT_BUFFER` means yes — and a
+  packaged Windows install gets `assetSuffixes: []`. `selectAsset` then
+  matches nothing from any release, so `Updater.check()` reports every newer
+  version the honest way a `.deb` under `/usr` already does: "no build this
+  copy can use." Reused entirely — no new phase, no new l10n string in any of
+  the ten locales, just the existing `noBuild` path getting a true reason.
+  Covered by a new case in `install_target_test.dart`; `update_controller`
+  and the banner needed no changes at all, which is the point of having
+  routed the decision through one already-tested chokepoint.
+- **Not addressed: settings/log location moves under MSIX.** A packaged app's
+  `path_provider` calls resolve into the per-package redirected
+  `%LOCALAPPDATA%\Packages\...` folder rather than the plain one, transparently,
+  at the Win32 API level — nothing to fix, but a user's first Store install
+  starts with empty settings even on a machine that already ran the GitHub
+  build. Worth a line in the docs if anyone asks; not worth code.
+- **The MSIX itself.** `dart run msix:create --store` (the `msix` pub
+  package, the standard tool for this — see `pubspec.yaml`'s `msix_config`)
+  wraps the *already-built* `build\windows\<arch>\runner\Release` from the
+  release workflow's existing Build step; `--build-windows=false` stops it
+  rebuilding. Reuses `assets/icon/kruftle-512.png` as the source logo — the
+  tool auto-generates every required tile size, so no new art. New step in
+  `.github/workflows/release.yml`'s Windows job, one per architecture; the
+  `.msix` lands as a release asset like everything else, picked up by nothing
+  in the updater (no `InstallTarget` anywhere lists `.msix` as an asset
+  suffix, so this is inert until someone submits it to Partner Center by
+  hand).
+- **Left for the owner, deliberately.** `identity_name: Dizitart.Kruftle` and
+  `publisher: CN=Dizitart` in `msix_config` are placeholders — a real
+  submission needs the exact strings from Partner Center's own "Product
+  identity" page, which only exists inside that account and cannot be guessed
+  correctly. CI builds a structurally valid MSIX with the placeholders; it is
+  not the file to upload until they are the real values. Flagged with a
+  `TODO(store)` at the point of use rather than left to be discovered as a
+  Partner Center rejection.
+- **Store listing copy and box/poster art** were drafted earlier this session
+  into `packaging/windows/store-listing.md` and `assets/store/*` — short
+  description, keywords, hardware requirements, the GPL licence-terms notice,
+  and the two required marketing images, rendered from the existing app mark
+  in `assets/icon/kruftle.svg` via a new `tool/make_store_art.sh`. Unrelated
+  to whether the MSIX itself installs; needed regardless for the same Store
+  listing.
+
 ### Session 18 — 2026-08-29
 
 **Landed** — v0.2.10: the Windows helper had never once run, and now it does.
@@ -901,6 +968,7 @@ Append-only. Record *why*, so a future session does not undo it.
 
 | Date | Decision | Why |
 |---|---|---|
+| 2026-09-05 | Windows also ships as an MSIX, kept unsigned everywhere else | The Store rejects an unsigned `.exe` outright; MSIX sidesteps needing a purchased certificate because the Store re-signs it on ingestion. A packaged install now detects itself (`hasPackageIdentity()`) and reports no updatable asset, rather than running the Inno installer and creating a second Kruftle |
 | 2026-08-23 | Core engine is pure Dart, zero Flutter imports, enforced by a test | Fast tests, keeps a headless/CLI mode possible, forces the UI to stay a shell |
 | 2026-08-23 | One `StackDefinition` data class + optional hooks, **not** a class per language | A subclass per language is the obvious over-engineering trap here; the data class covers every Tier-1 stack |
 | 2026-08-23 | Size figures shown before a run are **estimates**, labelled as such | Clean commands decide for themselves what to remove; actual freed bytes are measured before-and-after and reported separately |
