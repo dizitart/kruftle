@@ -25,8 +25,8 @@
 ---
 
 <p align="center">
-  <img alt="Kruftle reviewing 8 detected projects totalling 21.5 GiB of build output"
-       src="tool/screenshots/review-dark.png" width="900">
+  <img alt="Kruftle scanning a folder, finding 21.5 GiB across 8 projects, and reclaiming 18.4 GiB by running each toolchain's own clean command"
+       src="tool/demo/kruftle-demo.gif" width="900">
 </p>
 
 A developer machine accumulates build output the way a workshop accumulates
