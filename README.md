@@ -19,7 +19,7 @@
   &nbsp;·&nbsp;
   <a href="https://github.com/dizitart/kruftle/releases">Download</a>
   &nbsp;·&nbsp;
-  <a href="https://kruftle.dizitart.com/manual">Manual</a>
+  <a href="https://kruftle.dizitart.com/docs/">Manual</a>
 </p>
 
 ---
@@ -38,9 +38,16 @@ gigabytes.
 built with, and reclaims that space by running each toolchain's *own* clean
 command.
 
-```
-cargo clean · flutter clean · mvn clean · ./gradlew clean · go clean · dotnet clean · swift package clean · mix clean · …
-```
+- `cargo clean` for Rust crates
+- `flutter clean` for Flutter apps
+- `mvn clean` for Maven projects
+- `./gradlew clean` for Gradle projects
+- `go clean` for Go projects
+- `dotnet clean` for .NET projects
+- `swift package clean` for Swift packages
+- `mix clean` for Elixir projects
+
+and so on, for 42 toolchains in total.
 
 ## Why the tool's own command
 
