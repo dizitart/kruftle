@@ -47,6 +47,3 @@ app.*.map.json
 # Kruftle
 /tool/*.log
 
-# Renders written by tool/site_screenshots.dart. They belong to the website
-# repository, not to this one.
-/tool/screenshots/
