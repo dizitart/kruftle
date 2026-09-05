@@ -112,6 +112,15 @@ Adding another is one file and one list entry — see
 [open an issue](https://github.com/dizitart/kruftle/issues/new?template=language_support.yml)
 and it is usually a short PR away.
 
+## How it compares
+
+kondo describes itself, in its own README, as *"essentially `rm -rf` with a
+prompt"* — a legitimate design, and the reason it is faster than Kruftle. It is
+also the one thing Kruftle deliberately does not do.
+
+[**Kruftle compared to kondo and npkill**](docs/comparison.md), including where
+those tools are the better choice.
+
 ## Install
 
 Download the build for your platform from

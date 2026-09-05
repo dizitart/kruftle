@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 1080" width="720" height="1080">
+  <!-- Microsoft Store poster art, 2:3. Mark, name, tagline, stacked; nothing
+       inside 60px of an edge, since Store layouts crop this one.
+       Render with ./tool/make_store_art.sh. -->
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#272A33"/>
+      <stop offset="0.55" stop-color="#191C22"/>
+      <stop offset="1" stop-color="#121418"/>
+    </linearGradient>
+    <linearGradient id="amber" gradientUnits="userSpaceOnUse"
+                    x1="230" y1="560" x2="530" y2="290">
+      <stop offset="0" stop-color="#FFD182"/>
+      <stop offset="0.5" stop-color="#EFAF48"/>
+      <stop offset="1" stop-color="#C57C18"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0.5" cy="0.39" r="0.55">
+      <stop offset="0" stop-color="#EFAF48" stop-opacity="0.14"/>
+      <stop offset="1" stop-color="#EFAF48" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <rect width="720" height="1080" fill="url(#bg)"/>
+  <rect width="720" height="1080" fill="url(#glow)"/>
+
+  <!-- assets/icon/kruftle.svg's ring and motes at 0.47, centred in the upper
+       two thirds. -->
+  <g transform="translate(120,152) scale(0.47)">
+    <path d="M 363.3 743.9 A 274 274 0 1 1 722.3 330.9" fill="none"
+          stroke="url(#amber)" stroke-width="130" stroke-linecap="round"/>
+    <g fill="url(#amber)">
+      <circle cx="776.2" cy="387.0" r="53" opacity="0.95"/>
+      <circle cx="817.6" cy="467.3" r="37" opacity="0.82"/>
+      <circle cx="834.3" cy="559.8" r="24" opacity="0.68"/>
+      <circle cx="823.1" cy="645.6" r="15" opacity="0.52"/>
+      <circle cx="792.5" cy="717.3" r="9"  opacity="0.38"/>
+    </g>
+  </g>
+
+  <text x="360" y="716" text-anchor="middle" fill="#F4F1EA"
+        font-family="Helvetica Neue, Helvetica, Segoe UI, Arial, sans-serif"
+        font-size="104" font-weight="600" letter-spacing="-1.5">Kruftle</text>
+
+  <rect x="330" y="756" width="60" height="4" rx="2" fill="#EFAF48" opacity="0.75"/>
+
+  <text x="360" y="828" text-anchor="middle" fill="#A6AAB4"
+        font-family="Helvetica Neue, Helvetica, Segoe UI, Arial, sans-serif"
+        font-size="34" font-weight="400">Reclaim your disk.</text>
+  <text x="360" y="874" text-anchor="middle" fill="#A6AAB4"
+        font-family="Helvetica Neue, Helvetica, Segoe UI, Arial, sans-serif"
+        font-size="34" font-weight="400">Kill the cruft.</text>
+</svg>

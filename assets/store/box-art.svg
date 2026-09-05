@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 1080" width="1080" height="1080">
+  <!-- Microsoft Store box art, 1:1. Same mark, same amber, same dark ground as
+       assets/icon/kruftle.svg — the ring sits on the full square instead of on
+       its own rounded tile, because the Store already frames it.
+       Render with ./tool/make_store_art.sh. -->
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#24272F"/>
+      <stop offset="1" stop-color="#15171C"/>
+    </linearGradient>
+    <linearGradient id="amber" gradientUnits="userSpaceOnUse"
+                    x1="330" y1="700" x2="750" y2="320">
+      <stop offset="0" stop-color="#FFD182"/>
+      <stop offset="0.5" stop-color="#EFAF48"/>
+      <stop offset="1" stop-color="#C57C18"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0.5" cy="0.42" r="0.5">
+      <stop offset="0" stop-color="#EFAF48" stop-opacity="0.13"/>
+      <stop offset="1" stop-color="#EFAF48" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <rect width="1080" height="1080" fill="url(#bg)"/>
+  <rect width="1080" height="1080" fill="url(#glow)"/>
+
+  <!-- The mark: assets/icon/kruftle.svg's ring and motes, 0.66 scale, sitting
+       above centre so the wordmark can have the lower third. -->
+  <g transform="translate(202,110) scale(0.66)">
+    <path d="M 363.3 743.9 A 274 274 0 1 1 722.3 330.9" fill="none"
+          stroke="url(#amber)" stroke-width="130" stroke-linecap="round"/>
+    <g fill="url(#amber)">
+      <circle cx="776.2" cy="387.0" r="53" opacity="0.95"/>
+      <circle cx="817.6" cy="467.3" r="37" opacity="0.82"/>
+      <circle cx="834.3" cy="559.8" r="24" opacity="0.68"/>
+      <circle cx="823.1" cy="645.6" r="15" opacity="0.52"/>
+      <circle cx="792.5" cy="717.3" r="9"  opacity="0.38"/>
+    </g>
+  </g>
+
+  <text x="540" y="912" text-anchor="middle" fill="#F4F1EA"
+        font-family="Helvetica Neue, Helvetica, Segoe UI, Arial, sans-serif"
+        font-size="132" font-weight="600" letter-spacing="-2">Kruftle</text>
+</svg>
