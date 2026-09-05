@@ -47,3 +47,4 @@ app.*.map.json
 # Kruftle
 /tool/*.log
 
+/Claude outputs
