@@ -359,7 +359,9 @@ void main() {
   for (var i = 0; i < 4; i++) {
     final finished = 1 + i * 2;
     // `int.clamp` is statically `num`, which a list index will not accept.
-    final nextIndex = finished < _projects.length ? finished : _projects.length - 1;
+    final nextIndex = finished < _projects.length
+        ? finished
+        : _projects.length - 1;
     testWidgets('frame run $i', (tester) async {
       await _pump(
         tester,
