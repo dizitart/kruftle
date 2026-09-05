@@ -14,12 +14,12 @@ check in §3 to confirm the tree is in the state this document claims.
 
 | | |
 |---|---|
-| **Current milestone** | **v0.2.10** — self-update without an installer, working on all three |
-| **Last updated** | 2026-08-29 |
-| **Build green?** | Yes — 663 tests (two Windows-only), analyzer clean (`--fatal-infos`), formatter clean |
+| **Current milestone** | **v0.2.11** — Windows also ships as an MSIX, for the Microsoft Store |
+| **Last updated** | 2026-09-05 |
+| **Build green?** | Yes — 670 tests (two Windows-only), analyzer clean (`--fatal-infos`), formatter clean |
 | **Repo** | https://github.com/dizitart/kruftle (public, GPL-3.0) |
 | **CI** | Green — analyze/test on Ubuntu, the update tests again on Windows, plus release builds on all three OSs |
-| **Released** | [v0.2.8](https://github.com/dizitart/kruftle/releases/tag/v0.2.8) — .dmg, macOS .zip, two .exe, two Windows .zip, two .AppImage, two .deb, two .tar.gz, checksums.txt |
+| **Released** | [v0.2.11](https://github.com/dizitart/kruftle/releases/tag/v0.2.11) — .dmg, macOS .zip, two .exe, two .msix, two Windows .zip, two .AppImage, two .deb, two .tar.gz, checksums.txt. Not yet submitted to the Store: `msix_config`'s `identity_name`/`publisher` in `pubspec.yaml` are still placeholders — see Session 19 |
 
 ---
 
