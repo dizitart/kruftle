@@ -59,13 +59,10 @@ flutter:
 msix_config:
   display_name: Kruftle
   publisher_display_name: Dizitart
-  # TODO(store): identity_name and publisher must match Partner Center's
-  # "Product identity" page for this app exactly, or Partner Center rejects
-  # the upload on ingestion. These are placeholders — CI builds a structurally
-  # valid MSIX with them, but it is not the one to submit until they are the
-  # real values.
+  # From Partner Center's "Product identity" page — must match it exactly, or
+  # Partner Center rejects the upload on ingestion.
   identity_name: Dizitart.Kruftle
-  publisher: CN=Dizitart
+  publisher: CN=BA8C138F-C78B-4DD1-BF6F-EDC73A8DA8CB
   msix_version: 1.0.0.0
   logo_path: assets/icon/kruftle-512.png
   capabilities: internetClient

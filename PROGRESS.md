@@ -19,7 +19,7 @@ check in §3 to confirm the tree is in the state this document claims.
 | **Build green?** | Yes — 670 tests (two Windows-only), analyzer clean (`--fatal-infos`), formatter clean |
 | **Repo** | https://github.com/dizitart/kruftle (public, GPL-3.0) |
 | **CI** | Green — analyze/test on Ubuntu, the update tests again on Windows, plus release builds on all three OSs |
-| **Released** | [v0.2.11](https://github.com/dizitart/kruftle/releases/tag/v0.2.11) — .dmg, macOS .zip, two .exe, two .msix, two Windows .zip, two .AppImage, two .deb, two .tar.gz, checksums.txt. Not yet submitted to the Store: `msix_config`'s `identity_name`/`publisher` in `pubspec.yaml` are still placeholders — see Session 19 |
+| **Released** | [v0.2.11](https://github.com/dizitart/kruftle/releases/tag/v0.2.11) — .dmg, macOS .zip, two .exe, two .msix, two Windows .zip, two .AppImage, two .deb, two .tar.gz, checksums.txt. `msix_config`'s `identity_name`/`publisher` now hold the real Partner Center identity; not yet actually submitted there — see Session 19/20 |
 
 ---
 
@@ -172,6 +172,24 @@ gh release delete v0.2.7-rc.1 --repo dizitart/kruftle --yes --cleanup-tag
 ## 4. Session log
 
 Newest first.
+
+### Session 20 — 2026-09-05
+
+**No code.** Asked to make MSIX auto-update, having read [WindowsAppSDK
+discussion #5125](https://github.com/microsoft/WindowsAppSDK/discussions/5125),
+which fixes auto-update for an MSIX *sideloaded* via a hosted `.appinstaller`
+file — a different distribution model from the Store submission Session 19
+built. A **Store-installed** MSIX already auto-updates, for free, with no
+app code at all — that is the Store client's job, not the app's, and it is
+what "other applications" on the Store are actually relying on. Sideloading
+one instead would need its own trusted signing certificate to install on
+anyone else's machine at all, which is the exact cost MSIX-via-Store was
+chosen in Session 19 to avoid — the article's technique does not remove that
+requirement, it only fixes the update-check schema once you have already
+paid it. Given the choice, the owner kept Store-only for MSIX and .exe/.zip
+for everyone else, so nothing here needed building. `pubspec.yaml`'s
+`msix_config` now carries the real `identity_name`/`publisher` from Partner
+Center — the stale `TODO(store)` placeholder comment was removed.
 
 ### Session 19 — 2026-09-05
 
