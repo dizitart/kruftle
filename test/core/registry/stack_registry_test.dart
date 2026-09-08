@@ -79,6 +79,7 @@ void main() {
       ('julia package', {'Project.toml', 'Manifest.toml'}, {}, {StackId.julia}),
       ('r package', {'DESCRIPTION', 'NAMESPACE'}, {}, {StackId.rlang}),
       ('perl distribution', {'Makefile.PL'}, {}, {StackId.perl}),
+      ('elm application', {'elm.json'}, {}, {StackId.elm}),
     ];
 
     for (final (name, files, dirs, expected) in cases) {
@@ -400,6 +401,7 @@ void main() {
         StackId.julia,
         StackId.rlang,
         StackId.perl,
+        StackId.elm,
       };
       expect(promised.difference(kStacks.map((s) => s.id).toSet()), isEmpty);
     });

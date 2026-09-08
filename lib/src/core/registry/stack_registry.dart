@@ -50,6 +50,7 @@ const List<StackDefinition> kStacks = [
   erlangStack,
   ocamlStack,
   gleamStack,
+  elmStack,
   nimStack,
   crystalStack,
   dlangStack,

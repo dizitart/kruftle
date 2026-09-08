@@ -52,6 +52,7 @@ enum StackId {
   julia,
   rlang,
   perl,
+  elm,
 
   /// Every user-defined profile. Profiles are told apart by display name, not
   /// by id — see `core/profiles/profile.dart`. Nothing downstream keys off
