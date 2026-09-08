@@ -81,6 +81,8 @@ void main() {
       ('r package', {'DESCRIPTION', 'NAMESPACE'}, {}, {StackId.rlang}),
       ('perl distribution', {'Makefile.PL'}, {}, {StackId.perl}),
       ('elm application', {'elm.json'}, {}, {StackId.elm}),
+      ('turborepo config', {'turbo.json'}, {}, {StackId.monorepoCache}),
+      ('nx config', {'nx.json'}, {}, {StackId.monorepoCache}),
     ];
 
     for (final (name, files, dirs, expected) in cases) {
@@ -107,6 +109,28 @@ void main() {
           .toSet();
       expect(ids, contains(StackId.cabal));
       expect(ids, isNot(contains(StackId.haskell)));
+    });
+
+    test(
+      'a Node project with turbo.json is claimed by both node and '
+      'the monorepo cache stack',
+      () {
+        // Unlike cabal/haskell above, this overlap is intentional: Turborepo
+        // is layered on top of an ordinary Node project, and the cleaner runs
+        // every matching stack's command, so both are supposed to fire.
+        final ids = registry
+            .detect(listing(files: {'package.json', 'turbo.json'}))
+            .map((s) => s.id)
+            .toSet();
+        expect(ids, containsAll([StackId.node, StackId.monorepoCache]));
+      },
+    );
+
+    test('turbo.json wins over nx.json when a repo somehow has both', () {
+      final cmd = registry.byId(StackId.monorepoCache)!.commandFor(
+        listing(files: {'turbo.json', 'nx.json'}),
+      );
+      expect(cmd, const CleanCommand('npx', ['turbo', 'daemon', 'clean']));
     });
 
     test('Assets alone does not make a directory a Unity project', () {
@@ -404,6 +428,7 @@ void main() {
         StackId.rlang,
         StackId.perl,
         StackId.elm,
+        StackId.monorepoCache,
       };
       expect(promised.difference(kStacks.map((s) => s.id).toSet()), isEmpty);
     });

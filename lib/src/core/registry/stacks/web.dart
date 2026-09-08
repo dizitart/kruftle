@@ -58,3 +58,36 @@ const nodeStack = StackDefinition(
   ],
   priority: 10,
 );
+
+/// Turborepo and Nx are almost always layered on top of an existing Node
+/// project (see [nodeStack] above), so this stack's only real job is
+/// offering their *official* cache-reset commands -- something neither
+/// `npm run clean` nor the generic Node artifact list (which already
+/// raw-deletes `.turbo`, opt-in) can express. `nodeStack`'s single
+/// `resolveCleanCommand` slot is already spoken for by the package-manager
+/// clean-script logic, so this is a separate stack rather than folded in.
+CleanCommand? _resolveMonorepoCache(DirListing listing) {
+  // A repo can genuinely carry both files (a project mid-migration between
+  // tools, or Nx orchestrating a Turborepo-configured app); Turborepo's own
+  // daemon reset is the narrower, faster one, so it wins when both exist.
+  if (listing.hasFile('turbo.json')) {
+    return const CleanCommand('npx', ['turbo', 'daemon', 'clean']);
+  }
+  if (listing.hasFile('nx.json')) {
+    return const CleanCommand('npx', ['nx', 'reset']);
+  }
+  return null;
+}
+
+const monorepoCacheStack = StackDefinition(
+  id: StackId.monorepoCache,
+  displayName: 'Turborepo / Nx',
+  markers: {'turbo.json', 'nx.json'},
+  tool: ToolProbe(binary: 'npx', installUrl: 'https://nodejs.org/'),
+  resolveCleanCommand: _resolveMonorepoCache,
+  artifacts: [
+    ArtifactPath('.turbo', risk: CleanRisk.cache),
+    ArtifactPath('.nx/cache', risk: CleanRisk.cache),
+  ],
+  priority: 11,
+);

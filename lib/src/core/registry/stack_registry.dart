@@ -26,6 +26,7 @@ const List<StackDefinition> kStacks = [
   mavenStack,
   gradleStack,
   nodeStack,
+  monorepoCacheStack,
   pythonStack,
   rubyStack,
   elixirStack,
