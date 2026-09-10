@@ -14,7 +14,7 @@ dependencies:
     sdk: flutter
 
   # State
-  flutter_riverpod: ^3.0.0
+  flutter_riverpod: ^3.4.3
 
   # Core utilities
   path: ^1.9.0
@@ -37,7 +37,7 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^6.0.0
-  yaml: ^3.1.3
+  yaml: ^3.1.4
   msix: ^3.18.0
 
 flutter:
