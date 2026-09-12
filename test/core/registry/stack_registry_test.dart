@@ -111,25 +111,22 @@ void main() {
       expect(ids, isNot(contains(StackId.haskell)));
     });
 
-    test(
-      'a Node project with turbo.json is claimed by both node and '
-      'the monorepo cache stack',
-      () {
-        // Unlike cabal/haskell above, this overlap is intentional: Turborepo
-        // is layered on top of an ordinary Node project, and the cleaner runs
-        // every matching stack's command, so both are supposed to fire.
-        final ids = registry
-            .detect(listing(files: {'package.json', 'turbo.json'}))
-            .map((s) => s.id)
-            .toSet();
-        expect(ids, containsAll([StackId.node, StackId.monorepoCache]));
-      },
-    );
+    test('a Node project with turbo.json is claimed by both node and '
+        'the monorepo cache stack', () {
+      // Unlike cabal/haskell above, this overlap is intentional: Turborepo
+      // is layered on top of an ordinary Node project, and the cleaner runs
+      // every matching stack's command, so both are supposed to fire.
+      final ids = registry
+          .detect(listing(files: {'package.json', 'turbo.json'}))
+          .map((s) => s.id)
+          .toSet();
+      expect(ids, containsAll([StackId.node, StackId.monorepoCache]));
+    });
 
     test('turbo.json wins over nx.json when a repo somehow has both', () {
-      final cmd = registry.byId(StackId.monorepoCache)!.commandFor(
-        listing(files: {'turbo.json', 'nx.json'}),
-      );
+      final cmd = registry
+          .byId(StackId.monorepoCache)!
+          .commandFor(listing(files: {'turbo.json', 'nx.json'}));
       expect(cmd, const CleanCommand('npx', ['turbo', 'daemon', 'clean']));
     });
 
