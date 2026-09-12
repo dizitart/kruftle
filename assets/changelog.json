@@ -2,6 +2,13 @@
   "kruftle.changelog": 1,
   "versions": [
     {
+      "version": "0.2.12",
+      "date": "2026-09-12",
+      "added": [
+        "Three more project types: Godot, Elm, and Turborepo / Nx workspaces. Godot's import cache and export output and Elm's elm-stuff folder are cleaned from their allow-lists, since neither tool has a clean command of its own. A Turborepo or Nx workspace also runs that tool's own cache reset, alongside the Node.js clean it already got."
+      ]
+    },
+    {
       "version": "0.2.11",
       "date": "2026-09-05",
       "added": [

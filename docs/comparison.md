@@ -9,7 +9,7 @@ to win an argument.
 | | **Kruftle** | **kondo** | **npkill** |
 |---|---|---|---|
 | How it removes artifacts | Runs the toolchain's **own clean command** | Deletes the directory | Deletes the directory |
-| Stacks detected | 42 | 20+ | Node only |
+| Stacks detected | 45 | 20+ | Node only |
 | Interface | Desktop GUI | CLI + GUI | Interactive CLI |
 | Platforms | macOS · Windows · Linux | macOS · Windows · Linux | Anywhere Node runs |
 | Needs the SDK installed | Yes, for the proper clean | No | No |

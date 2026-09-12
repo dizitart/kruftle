@@ -14,9 +14,9 @@ check in §3 to confirm the tree is in the state this document claims.
 
 | | |
 |---|---|
-| **Current milestone** | **v0.2.11** — Windows also ships as an MSIX, for the Microsoft Store |
-| **Last updated** | 2026-09-05 |
-| **Build green?** | Yes — 670 tests (two Windows-only), analyzer clean (`--fatal-infos`), formatter clean |
+| **Current milestone** | **v0.2.12** (bumped, not yet tagged): Godot, Elm and Turborepo / Nx stacks, from community PRs #19 to #21 |
+| **Last updated** | 2026-09-12 |
+| **Build green?** | Yes: 677 tests (two Windows-only), analyzer clean (`--fatal-infos`), formatter clean |
 | **Repo** | https://github.com/dizitart/kruftle (public, GPL-3.0) |
 | **CI** | Green — analyze/test on Ubuntu, the update tests again on Windows, plus release builds on all three OSs |
 | **Released** | [v0.2.11](https://github.com/dizitart/kruftle/releases/tag/v0.2.11) — .dmg, macOS .zip, two .exe, two .msix, two Windows .zip, two .AppImage, two .deb, two .tar.gz, checksums.txt. `msix_config`'s `identity_name`/`publisher` now hold the real Partner Center identity; not yet actually submitted there — see Session 19/20 |
@@ -172,6 +172,28 @@ gh release delete v0.2.7-rc.1 --repo dizitart/kruftle --yes --cleanup-tag
 ## 4. Session log
 
 Newest first.
+
+### Session 21 — 2026-09-12
+
+**Landed**: three community PRs from kasapdev, all from `docs/good-first-issues.md`,
+and the version bumped to 0.2.12 with its changelog entry. Not tagged yet.
+
+- **#19 Godot** (`project.godot`) and **#20 Elm** (`elm.json`): correct as
+  submitted, CI green, merged unchanged.
+- **#21 Turborepo / Nx** (`turbo.json`, `nx.json`): rebased onto #20 (both
+  appended to `StackId` and the test lists), `dart format`ted (its CI failure),
+  and one real defect fixed. It listed `.turbo`, which `nodeStack` already
+  lists. Stacks matching the same directory are measured and planned
+  independently, so the shared path was counted twice in the estimate and got
+  two delete steps. `nodeStack` keeps `.turbo` (workspace packages have one
+  without their own `turbo.json`); a registry test now fails on any artifact
+  two co-matching stacks both list. Pushed to the contributor's fork directly,
+  which works because the PR allows maintainer edits.
+- README and `docs/comparison.md` now say 45 toolchains and name the three.
+- Open question, not acted on: `npx turbo daemon clean` is the command issue #12
+  named. Worth confirming it clears the task cache and not just daemon state,
+  and that `npx` won't fetch `turbo`/`nx` from the registry when a project
+  lacks them locally.
 
 ### Session 20 — 2026-09-05
 
