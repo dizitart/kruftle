@@ -130,6 +130,19 @@ void main() {
       expect(cmd, const CleanCommand('npx', ['turbo', 'daemon', 'clean']));
     });
 
+    test('stacks sharing a directory never list the same artifact twice', () {
+      // Each stack's artifacts are measured and planned on their own, so a
+      // path two matching stacks both list is counted twice in the estimate
+      // and deleted twice in the run.
+      final relatives = [
+        for (final stack in registry.detect(
+          listing(files: {'package.json', 'turbo.json', 'nx.json'}),
+        ))
+          for (final artifact in stack.artifacts) artifact.relative,
+      ];
+      expect(relatives.toSet().length, relatives.length);
+    });
+
     test('Assets alone does not make a directory a Unity project', () {
       // "Assets" is one of the most common folder names there is. Claiming a
       // directory on it alone would offer to delete a web project's images.

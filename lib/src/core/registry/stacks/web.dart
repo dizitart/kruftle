@@ -85,9 +85,9 @@ const monorepoCacheStack = StackDefinition(
   markers: {'turbo.json', 'nx.json'},
   tool: ToolProbe(binary: 'npx', installUrl: 'https://nodejs.org/'),
   resolveCleanCommand: _resolveMonorepoCache,
-  artifacts: [
-    ArtifactPath('.turbo', risk: CleanRisk.cache),
-    ArtifactPath('.nx/cache', risk: CleanRisk.cache),
-  ],
+  // `.turbo` is deliberately not listed here: `nodeStack` already owns it
+  // (workspace packages get one without a `turbo.json` of their own), and a
+  // path listed by two matching stacks is measured and deleted twice.
+  artifacts: [ArtifactPath('.nx/cache', risk: CleanRisk.cache)],
   priority: 11,
 );
