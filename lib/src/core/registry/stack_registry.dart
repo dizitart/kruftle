@@ -59,6 +59,7 @@ const List<StackDefinition> kStacks = [
   composerStack,
   terraformStack,
   unityStack,
+  godotStack,
   juliaStack,
   rlangStack,
   perlStack,

@@ -49,6 +49,7 @@ enum StackId {
   composer,
   terraform,
   unity,
+  godot,
   julia,
   rlang,
   perl,

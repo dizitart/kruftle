@@ -132,6 +132,23 @@ const unityStack = StackDefinition(
 bool _isUnityProject(DirListing listing) =>
     listing.hasDirectory('ProjectSettings') && listing.hasDirectory('Assets');
 
+const godotStack = StackDefinition(
+  id: StackId.godot,
+  displayName: 'Godot',
+  markers: {'project.godot'},
+  // No headless clean worth invoking here either: `.godot/` (Godot 4) and
+  // `.import/` (Godot 3) both regenerate automatically the next time the
+  // project is opened in the editor, at the cost of a reimport. `build/` and
+  // `export/` are common (not Godot-enforced) export-output locations.
+  artifacts: [
+    ArtifactPath('.godot', risk: CleanRisk.cache),
+    ArtifactPath('.import', risk: CleanRisk.cache),
+    ArtifactPath('build'),
+    ArtifactPath('export'),
+  ],
+  priority: 30,
+);
+
 const juliaStack = StackDefinition(
   id: StackId.julia,
   displayName: 'Julia',
