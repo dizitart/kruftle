@@ -335,6 +335,7 @@
   "settingsMadeWith": "Made with ❤️ in Kolkata, India",
   "settingsSourceCode": "Source code",
   "settingsWebsite": "Kruftle website",
+  "settingsDiscord": "Join us on Discord",
 
   "tourWelcomeTitle": "Welcome to Kruftle",
   "tourWelcomeBody": "Build artifacts pile up quietly. Kruftle finds every project on your disk, works out what built it, and asks that toolchain to clean up after itself.",

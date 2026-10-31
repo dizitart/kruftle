@@ -173,6 +173,16 @@ gh release delete v0.2.7-rc.1 --repo dizitart/kruftle --yes --cleanup-tag
 
 Newest first.
 
+### Session 22 — 2026-11-01
+
+**Landed**: the Dizitart Discord (`discord.dizitart.com`). It now appears as a
+Settings → About row (`settingsDiscord`, all ten locales), in the README link
+row and in CONTRIBUTING. The Privacy Policy names the new host, because
+`about_test` requires the policy to list every host the app links to. The
+website already links to Discord too (kruftle-site `d507ec3`).
+**Gotcha**: running `./tool/build.py` on the site regenerates its privacy page
+from this checkout, so do that once this change ships.
+
 ### Session 21 — 2026-09-12
 
 **Landed**: three community PRs from kasapdev, all from `docs/good-first-issues.md`,

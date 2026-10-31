@@ -3,6 +3,9 @@
 Thanks for looking. Kruftle is a disk cleanup tool, so the bar for changes that
 touch deletion is deliberately high — everything else is easy.
 
+Questions, ideas, or want to talk a change through before you write it? Join
+the [Dizitart Discord](https://discord.dizitart.com).
+
 ## Getting set up
 
 Kruftle pins its Flutter version so that local and CI agree byte for byte,

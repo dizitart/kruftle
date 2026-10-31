@@ -719,6 +719,9 @@ class LPt extends L {
   String get settingsWebsite => 'Site do Kruftle';
 
   @override
+  String get settingsDiscord => 'Junte-se a nós no Discord';
+
+  @override
   String get tourWelcomeTitle => 'Boas-vindas ao Kruftle';
 
   @override

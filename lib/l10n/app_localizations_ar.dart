@@ -725,6 +725,9 @@ class LAr extends L {
   String get settingsWebsite => 'موقع Kruftle';
 
   @override
+  String get settingsDiscord => 'انضم إلينا على Discord';
+
+  @override
   String get tourWelcomeTitle => 'مرحبًا بك في Kruftle';
 
   @override

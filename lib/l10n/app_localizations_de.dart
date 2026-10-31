@@ -720,6 +720,9 @@ class LDe extends L {
   String get settingsWebsite => 'Kruftle-Website';
 
   @override
+  String get settingsDiscord => 'Komm zu uns auf Discord';
+
+  @override
   String get tourWelcomeTitle => 'Willkommen bei Kruftle';
 
   @override

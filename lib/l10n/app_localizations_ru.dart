@@ -727,6 +727,9 @@ class LRu extends L {
   String get settingsWebsite => 'Сайт Kruftle';
 
   @override
+  String get settingsDiscord => 'Присоединяйтесь к нам в Discord';
+
+  @override
   String get tourWelcomeTitle => 'Добро пожаловать в Kruftle';
 
   @override

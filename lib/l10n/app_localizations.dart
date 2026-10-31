@@ -1289,6 +1289,12 @@ abstract class L {
   /// **'Kruftle website'**
   String get settingsWebsite;
 
+  /// No description provided for @settingsDiscord.
+  ///
+  /// In en, this message translates to:
+  /// **'Join us on Discord'**
+  String get settingsDiscord;
+
   /// No description provided for @tourWelcomeTitle.
   ///
   /// In en, this message translates to:

@@ -12,7 +12,7 @@
   <a href="https://github.com/dizitart/kruftle/releases"><img alt="Release" src="https://img.shields.io/github/v/release/dizitart/kruftle?sort=semver"></a>
   <a href="LICENSE"><img alt="License" src="https://img.shields.io/badge/license-GPL--3.0-blue"></a>
   <img alt="Platforms" src="https://img.shields.io/badge/platform-macOS%20%7C%20Windows%20%7C%20Linux-lightgrey">
-  <a href="https://img.shields.io/discord/1565965879177519118?logo=discord&logoColor=white&label=Discord&color=5865F2"><img alt="Discord" src="https://img.shields.io/discord/1565965879177519118?logo=discord&logoColor=white&label=Discord&color=5865F2"></a>
+  <a href="https://discord.dizitart.com"><img alt="Discord" src="https://img.shields.io/discord/1565965879177519118?logo=discord&logoColor=white&label=Discord&color=5865F2"></a>
 </p>
 
 <p align="center">
@@ -21,6 +21,8 @@
   <a href="https://github.com/dizitart/kruftle/releases">Download</a>
   &nbsp;·&nbsp;
   <a href="https://kruftle.dizitart.com/docs/">Manual</a>
+  &nbsp;·&nbsp;
+  <a href="https://discord.dizitart.com">Discord</a>
 </p>
 
 ---

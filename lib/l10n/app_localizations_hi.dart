@@ -718,6 +718,9 @@ class LHi extends L {
   String get settingsWebsite => 'Kruftle वेबसाइट';
 
   @override
+  String get settingsDiscord => 'Discord पर हमसे जुड़ें';
+
+  @override
   String get tourWelcomeTitle => 'Kruftle में आपका स्वागत है';
 
   @override

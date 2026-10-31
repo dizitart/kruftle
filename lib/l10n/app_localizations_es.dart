@@ -721,6 +721,9 @@ class LEs extends L {
   String get settingsWebsite => 'Sitio web de Kruftle';
 
   @override
+  String get settingsDiscord => 'Únete a nosotros en Discord';
+
+  @override
   String get tourWelcomeTitle => 'Te damos la bienvenida a Kruftle';
 
   @override

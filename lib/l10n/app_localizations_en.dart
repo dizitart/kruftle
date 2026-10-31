@@ -716,6 +716,9 @@ class LEn extends L {
   String get settingsWebsite => 'Kruftle website';
 
   @override
+  String get settingsDiscord => 'Join us on Discord';
+
+  @override
   String get tourWelcomeTitle => 'Welcome to Kruftle';
 
   @override

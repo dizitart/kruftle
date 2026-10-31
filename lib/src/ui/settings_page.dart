@@ -318,6 +318,16 @@ class SettingsPage extends ConsumerWidget {
                   ),
                 ),
               ),
+              _LinkRow(
+                label: l.settingsDiscord,
+                icon: Icons.forum_rounded,
+                onTap: () => unawaited(
+                  launchUrl(
+                    Uri.https('discord.dizitart.com', '/'),
+                    mode: LaunchMode.externalApplication,
+                  ),
+                ),
+              ),
               // ponytail: the publisher's name is a brand, not prose, so it is
               // the same in every language and needs no ARB entry.
               _LinkRow(

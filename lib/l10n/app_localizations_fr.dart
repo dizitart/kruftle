@@ -722,6 +722,9 @@ class LFr extends L {
   String get settingsWebsite => 'Site web de Kruftle';
 
   @override
+  String get settingsDiscord => 'Rejoignez-nous sur Discord';
+
+  @override
   String get tourWelcomeTitle => 'Bienvenue dans Kruftle';
 
   @override

@@ -691,6 +691,9 @@ class LZh extends L {
   String get settingsWebsite => 'Kruftle 网站';
 
   @override
+  String get settingsDiscord => '加入我们的 Discord';
+
+  @override
   String get tourWelcomeTitle => '欢迎使用 Kruftle';
 
   @override

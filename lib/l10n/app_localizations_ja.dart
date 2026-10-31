@@ -699,6 +699,9 @@ class LJa extends L {
   String get settingsWebsite => 'Kruftle のウェブサイト';
 
   @override
+  String get settingsDiscord => 'Discord に参加する';
+
+  @override
   String get tourWelcomeTitle => 'Kruftle へようこそ';
 
   @override
