@@ -21,8 +21,6 @@
   <a href="https://github.com/dizitart/kruftle/releases">Download</a>
   &nbsp;·&nbsp;
   <a href="https://kruftle.dizitart.com/docs/">Manual</a>
-  &nbsp;·&nbsp;
-  <a href="https://discord.dizitart.com">Discord</a>
 </p>
 
 ---

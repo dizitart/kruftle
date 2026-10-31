@@ -51,6 +51,16 @@ Future<ProviderContainer> pumpSettings(
 }
 
 void main() {
+  testWidgets('About offers the Discord invite', (tester) async {
+    await pumpSettings(tester);
+    await tester.scrollUntilVisible(
+      find.text('Join us on Discord'),
+      400,
+      scrollable: find.byType(Scrollable).first,
+    );
+    expect(find.text('Join us on Discord'), findsOneWidget);
+  });
+
   group('the colophon', () {
     testWidgets('sits below the About card, not inside it', (tester) async {
       await pumpSettings(tester);

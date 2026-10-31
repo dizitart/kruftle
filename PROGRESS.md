@@ -176,8 +176,8 @@ Newest first.
 ### Session 22 — 2026-11-01
 
 **Landed**: the Dizitart Discord (`discord.dizitart.com`). It now appears as a
-Settings → About row (`settingsDiscord`, all ten locales), in the README link
-row and in CONTRIBUTING. The Privacy Policy names the new host, because
+Settings → About row (`settingsDiscord`, all ten locales, covered by
+`settings_page_test`) and in CONTRIBUTING. The README relies on its Discord badge. The Privacy Policy names the new host, because
 `about_test` requires the policy to list every host the app links to. The
 website already links to Discord too (kruftle-site `d507ec3`).
 **Gotcha**: running `./tool/build.py` on the site regenerates its privacy page
