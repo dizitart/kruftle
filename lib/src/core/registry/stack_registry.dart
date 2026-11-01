@@ -35,6 +35,7 @@ const List<StackDefinition> kStacks = [
   dotnetStack,
   swiftStack,
   xcodeStack,
+  cocoapodsStack,
 
   // Tier 2.
   bazelStack,

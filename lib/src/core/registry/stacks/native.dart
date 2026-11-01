@@ -121,3 +121,19 @@ const xcodeStack = StackDefinition(
 bool _isXcodeProject(DirListing listing) => listing.directories.any(
   (d) => d.endsWith('.xcodeproj') || d.endsWith('.xcworkspace'),
 );
+
+const cocoapodsStack = StackDefinition(
+  id: StackId.cocoapods,
+  displayName: 'CocoaPods',
+  markers: {'Podfile'},
+  tool: ToolProbe(
+    binary: 'pod',
+    installUrl: 'https://guides.cocoapods.org/using/getting-started.html',
+  ),
+  // CocoaPods has no per-project clean. `pod deintegrate` rewrites the Xcode
+  // project, and `pod cache clean --all` empties the shared cache under
+  // `~/Library/Caches/CocoaPods`, which belongs to the global caches screen.
+  // `Pods/` itself is restored by the next `pod install`.
+  artifacts: [ArtifactPath('Pods', risk: CleanRisk.dependencies)],
+  priority: 12,
+);
