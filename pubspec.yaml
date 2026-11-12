@@ -24,7 +24,7 @@ dependencies:
 
   # Desktop integration
   file_selector: ^1.0.3
-  window_manager: ^0.6.0
+  window_manager: ^0.5.2
   url_launcher: ^6.3.3
   path_provider: ^2.1.5
   shared_preferences: ^2.5.6
