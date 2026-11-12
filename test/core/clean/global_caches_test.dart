@@ -22,13 +22,11 @@ void main() {
       kGlobalCaches.firstWhere((c) => c.displayName == name);
 
   test('reports only paths that exist on this machine', () {
-    Directory(
-      p.join(home.path, '.cargo', 'registry'),
-    ).createSync(recursive: true);
+    Directory(p.join(home.path, '.cargo', 'registry'))
+        .createSync(recursive: true);
 
-    final resolved = cacheNamed(
-      'Cargo registry',
-    ).resolve(home: home.path, windows: false);
+    final resolved = cacheNamed('Cargo registry')
+        .resolve(home: home.path, windows: false);
 
     expect(resolved, hasLength(1));
     expect(resolved.single, endsWith(p.join('.cargo', 'registry')));
@@ -42,12 +40,10 @@ void main() {
   });
 
   test('uses the Windows location where it differs', () {
-    Directory(
-      p.join(home.path, 'AppData', 'Local', 'npm-cache'),
-    ).createSync(recursive: true);
-    Directory(
-      p.join(home.path, '.npm', '_cacache'),
-    ).createSync(recursive: true);
+    Directory(p.join(home.path, 'AppData', 'Local', 'npm-cache'))
+        .createSync(recursive: true);
+    Directory(p.join(home.path, '.npm', '_cacache'))
+        .createSync(recursive: true);
 
     final npm = cacheNamed('npm cache');
     expect(
@@ -126,9 +122,8 @@ void main() {
     void seed(String relative, int bytes) {
       final dir = Directory(p.joinAll([home.path, ...relative.split('/')]))
         ..createSync(recursive: true);
-      File(
-        p.join(dir.path, 'blob.bin'),
-      ).writeAsBytesSync(List.filled(bytes, 0));
+      File(p.join(dir.path, 'blob.bin'))
+          .writeAsBytesSync(List.filled(bytes, 0));
     }
 
     test('surveys only caches that exist here', () async {
@@ -174,9 +169,8 @@ void main() {
       expect(outcomes.single.status, StepStatus.success);
       expect(outcomes.single.bytesFreed, 2048);
       expect(
-        Directory(
-          p.join(home.path, 'Library/Developer/Xcode/DerivedData'),
-        ).existsSync(),
+        Directory(p.join(home.path, 'Library/Developer/Xcode/DerivedData'))
+            .existsSync(),
         isFalse,
       );
     });

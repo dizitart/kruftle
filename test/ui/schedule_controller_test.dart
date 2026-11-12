@@ -203,9 +203,8 @@ void main() {
 
   test('a schedule with no folder never raises anything', () async {
     final (container, clock, notifier) = await harness(
-      stored: const CleanupSchedule(
-        enabled: true,
-      ).copyWith(lastRun: DateTime(2020)),
+      stored: const CleanupSchedule(enabled: true)
+          .copyWith(lastRun: DateTime(2020)),
     );
 
     clock.advance(const Duration(days: 400));

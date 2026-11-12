@@ -48,9 +48,8 @@ void main() {
       write('real/big.bin', 5000);
       Directory(p.join(tmp.path, 'measured')).createSync();
       write('measured/small.bin', 100);
-      Link(
-        p.join(tmp.path, 'measured', 'link'),
-      ).createSync(p.join(tmp.path, 'real'));
+      Link(p.join(tmp.path, 'measured', 'link'))
+          .createSync(p.join(tmp.path, 'real'));
 
       expect(
         directorySizeSync(
@@ -220,9 +219,8 @@ void main() {
     test('still refuses to follow a symlink', () {
       write('real/big.bin', 40000);
       Directory(p.join(tmp.path, 'measured')).createSync();
-      Link(
-        p.join(tmp.path, 'measured', 'link'),
-      ).createSync(p.join(tmp.path, 'real'));
+      Link(p.join(tmp.path, 'measured', 'link'))
+          .createSync(p.join(tmp.path, 'real'));
 
       final onDisk = directorySizeSync(
         p.join(tmp.path, 'measured'),

@@ -14,9 +14,9 @@ check in §3 to confirm the tree is in the state this document claims.
 
 | | |
 |---|---|
-| **Current milestone** | **v0.2.12** (bumped, not yet tagged): Godot, Elm and Turborepo / Nx stacks, from community PRs #19 to #21 |
-| **Last updated** | 2026-09-12 |
-| **Build green?** | Yes: 677 tests (two Windows-only), analyzer clean (`--fatal-infos`), formatter clean |
+| **Current milestone** | **v0.2.13** (bumped, not yet tagged): dependency and toolchain upgrade to Flutter 3.50 / Dart 3.14, window_manager 0.6, material_ui and cupertino_ui |
+| **Last updated** | 2026-11-12 |
+| **Build green?** | Locally on Flutter 3.50.0: 679 tests, analyzer clean (`--fatal-infos`). CI not yet run on the pushed branch |
 | **Repo** | https://github.com/dizitart/kruftle (public, GPL-3.0) |
 | **CI** | Green — analyze/test on Ubuntu, the update tests again on Windows, plus release builds on all three OSs |
 | **Released** | [v0.2.11](https://github.com/dizitart/kruftle/releases/tag/v0.2.11) — .dmg, macOS .zip, two .exe, two .msix, two Windows .zip, two .AppImage, two .deb, two .tar.gz, checksums.txt. `msix_config`'s `identity_name`/`publisher` now hold the real Partner Center identity; not yet actually submitted there — see Session 19/20 |
@@ -172,6 +172,32 @@ gh release delete v0.2.7-rc.1 --repo dizitart/kruftle --yes --cleanup-tag
 ## 4. Session log
 
 Newest first.
+
+### Session 23 — 2026-11-12
+
+**Landed (on the Dependabot branch behind PR #25, not yet merged)**: the
+dart-dependencies bump, finished. Flutter 3.50.0 (Dart 3.14.0) in CI and the
+release workflow; `window_manager` ^0.7.0 (native API; 0.6.0 could not build on this SDK, see below); `material_ui` and
+`cupertino_ui` added; version 0.2.13 with its changelog entry.
+
+- **Why the earlier pin**: #25 failed because `window_manager` 0.6 needs Dart
+  ^3.13 and CI was on 3.12. The pin to 0.5.2 got CI green (commit `e7fe9b9`);
+  this session replaces it with the real upgrade.
+- **Flutter 3.50 deprecates `package:flutter/material.dart` and cupertino**
+  (42 files). `dart fix --apply --code=migrate_design_widgets` did the
+  imports; `directives_ordering` fixed the order.
+- **Window code**: `main.dart` now uses the native API through one
+  `_presentWindow` helper. The 0.5 `waitUntilReadyToShow` is gone; the window
+  shows after its properties are set. Not run on a real window yet; see Next.
+- **Localizations**: `kLocalizationsDelegates` in `lib/src/ui/localizations.dart`
+  is the one list every `MaterialApp` uses. It is `L.delegate` plus
+  `GlobalMaterialLocalizations.delegates` from material_ui.
+- **Gotcha**: gen-l10n (SDK 3.50) still emits `flutter_localizations` delegates
+  in `app_localizations.dart`, so that generated file is excluded from analysis
+  (`analysis_options.yaml`). Any `MaterialApp` built with the generated
+  `L.localizationsDelegates` fails with "locale … is not supported by all of its
+  localization delegates". Use `kLocalizationsDelegates` instead.
+- `flutter_lints` deprecated `unnecessary_await_in_return`; removed from the rules.
 
 ### Session 22 — 2026-11-01
 

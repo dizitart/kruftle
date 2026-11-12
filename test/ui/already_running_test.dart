@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kruftle/l10n/app_localizations.dart';
 import 'package:kruftle/src/core/settings/settings.dart';
 import 'package:kruftle/src/ui/already_running_page.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// The second-instance window is small and cannot be shrunk below 480x300 —
 /// see the `WindowOptions` in `main.dart`. It has no scroll view, so a long

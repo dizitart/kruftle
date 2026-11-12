@@ -72,9 +72,8 @@ void main() {
     test('later this week', () {
       // 2026-08-24 is a Monday.
       expect(
-        weekly(
-          dayOfWeek: DateTime.friday,
-        ).nextRunAfter(DateTime(2026, 8, 24, 9)),
+        weekly(dayOfWeek: DateTime.friday)
+            .nextRunAfter(DateTime(2026, 8, 24, 9)),
         DateTime(2026, 8, 28, 10),
       );
     });
@@ -103,9 +102,8 @@ void main() {
 
     test('every weekday lands on the weekday it was asked for', () {
       for (var day = DateTime.monday; day <= DateTime.sunday; day++) {
-        final next = weekly(
-          dayOfWeek: day,
-        ).nextRunAfter(DateTime(2026, 8, 24, 12));
+        final next = weekly(dayOfWeek: day)
+            .nextRunAfter(DateTime(2026, 8, 24, 12));
         expect(next.weekday, day, reason: 'asked for weekday $day');
         expect(next.isAfter(DateTime(2026, 8, 24, 12)), isTrue);
       }

@@ -67,9 +67,8 @@ void main() {
     for (final (relative, risk) in artifacts) {
       final full = p.join(projectPath, relative);
       Directory(full).createSync(recursive: true);
-      File(
-        p.join(full, 'blob.bin'),
-      ).writeAsBytesSync(List.filled(bytesEach, 0));
+      File(p.join(full, 'blob.bin'))
+          .writeAsBytesSync(List.filled(bytesEach, 0));
       hits.add(ArtifactHit(absolutePath: full, relative: relative, risk: risk));
     }
 
@@ -415,9 +414,8 @@ void main() {
         risks: {CleanRisk.buildOutput},
       );
 
-      Directory(
-        project.allArtifacts.single.absolutePath,
-      ).deleteSync(recursive: true);
+      Directory(project.allArtifacts.single.absolutePath)
+          .deleteSync(recursive: true);
 
       final report = await execute(plan);
       expect(report.count(StepStatus.skipped), 1);
@@ -476,9 +474,9 @@ void main() {
     });
 
     test('emits progress for every step', () async {
-      final events = await Cleaner(
-        runner: FakeRunner(),
-      ).run(await planFor([makeProject('a'), makeProject('b')])).toList();
+      final events = await Cleaner(runner: FakeRunner())
+          .run(await planFor([makeProject('a'), makeProject('b')]))
+          .toList();
 
       expect(events.whereType<StepStarted>(), hasLength(2));
       expect(events.whereType<StepFinished>(), hasLength(2));

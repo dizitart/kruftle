@@ -2,6 +2,13 @@
   "kruftle.changelog": 1,
   "versions": [
     {
+      "version": "0.2.13",
+      "date": "2026-11-12",
+      "changed": [
+        "Rebuilt on Flutter 3.50 and Dart 3.14, with window handling moved to window_manager 0.7 and Material and Cupertino strings to material_ui and cupertino_ui."
+      ]
+    },
+    {
       "version": "0.2.12",
       "date": "2026-09-12",
       "added": [

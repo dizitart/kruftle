@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kruftle/l10n/app_localizations.dart';
@@ -9,11 +8,13 @@ import 'package:kruftle/src/core/models/project.dart';
 import 'package:kruftle/src/core/models/stack.dart';
 import 'package:kruftle/src/core/scan/toolchain.dart';
 import 'package:kruftle/src/core/settings/settings.dart';
+import 'package:kruftle/src/ui/localizations.dart';
 import 'package:kruftle/src/ui/state/app_state.dart';
 import 'package:kruftle/src/ui/state/wizard_controller.dart';
 import 'package:kruftle/src/ui/theme.dart';
 import 'package:kruftle/src/ui/widgets/common.dart';
 import 'package:kruftle/src/ui/wizard/wizard_shell.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// Puts the wizard on screen with [state] already applied, so each step can be
@@ -56,7 +57,7 @@ Future<void> pumpWizard(
             ? KruftleTheme.dark()
             : KruftleTheme.light(),
         locale: locale,
-        localizationsDelegates: L.localizationsDelegates,
+        localizationsDelegates: kLocalizationsDelegates,
         supportedLocales: L.supportedLocales,
         home: const Scaffold(body: WizardShell()),
       ),

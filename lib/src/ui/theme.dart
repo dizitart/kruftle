@@ -2,7 +2,7 @@
 
 import 'dart:io';
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// Kruftle's visual language: dense, dark-first, and tabular — a tool that
 /// sits next to a terminal rather than one that competes with a consumer app.

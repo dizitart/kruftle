@@ -128,9 +128,9 @@ void main() {
 
     test('rejects a path that starts at the home directory', () {
       expect(
-        unreal(
-          artifactDirs: const ['~/Library'],
-        ).validate().map((e) => e.problem),
+        unreal(artifactDirs: const ['~/Library'])
+            .validate()
+            .map((e) => e.problem),
         contains(ProfileProblem.escapingPath),
       );
     });
@@ -139,9 +139,9 @@ void main() {
       // Every list is an allow-list, so every list is checked. Only checking
       // the first would be exactly the kind of gap this test exists to close.
       expect(
-        unreal(
-          dependencyDirs: const ['../vendor'],
-        ).validate().map((e) => e.problem),
+        unreal(dependencyDirs: const ['../vendor'])
+            .validate()
+            .map((e) => e.problem),
         contains(ProfileProblem.escapingPath),
       );
       expect(
@@ -292,9 +292,8 @@ void main() {
     });
 
     test('adding a profile with an existing name replaces it', () {
-      final set = ProfileSet([
-        unreal(),
-      ]).withProfile(unreal(command: 'make distclean'));
+      final set = ProfileSet([unreal()])
+          .withProfile(unreal(command: 'make distclean'));
 
       expect(set.profiles, hasLength(1));
       expect(set.profiles.single.command, 'make distclean');

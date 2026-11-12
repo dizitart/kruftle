@@ -19,7 +19,6 @@
 import 'dart:io';
 import 'dart:ui' as ui;
 
-import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -32,6 +31,7 @@ import 'package:kruftle/src/core/settings/settings.dart';
 import 'package:kruftle/src/ui/app.dart';
 import 'package:kruftle/src/ui/consent_page.dart';
 import 'package:kruftle/src/ui/global_caches_page.dart';
+import 'package:kruftle/src/ui/localizations.dart';
 import 'package:kruftle/src/ui/profiles_page.dart';
 import 'package:kruftle/src/ui/schedule_page.dart';
 import 'package:kruftle/src/ui/settings_page.dart';
@@ -41,6 +41,7 @@ import 'package:kruftle/src/ui/theme.dart';
 import 'package:kruftle/src/ui/tour_page.dart';
 import 'package:kruftle/src/ui/widgets/common.dart';
 import 'package:kruftle/src/ui/wizard/wizard_shell.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 const _locale = String.fromEnvironment('locale', defaultValue: 'en');
@@ -118,9 +119,8 @@ void main() {
     await tester.runAsync(() async {
       final image = await boundary.toImage(pixelRatio: 2);
       final bytes = await image.toByteData(format: ui.ImageByteFormat.png);
-      File(
-        'build/shots/$name.png',
-      ).writeAsBytesSync(bytes!.buffer.asUint8List());
+      File('build/shots/$name.png')
+          .writeAsBytesSync(bytes!.buffer.asUint8List());
     });
   }
 
@@ -175,7 +175,7 @@ void main() {
                                 : null,
                           ),
                   locale: const Locale(_locale),
-                  localizationsDelegates: L.localizationsDelegates,
+                  localizationsDelegates: kLocalizationsDelegates,
                   supportedLocales: L.supportedLocales,
                   home: screen,
                 ),

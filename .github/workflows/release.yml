@@ -19,7 +19,7 @@ permissions:
 # the check for no real reason. Pinning makes local and CI byte-identical.
 # Bumping is deliberate: change this one value, run `dart format .`, commit.
 env:
-  FLUTTER_VERSION: '3.44.8'
+  FLUTTER_VERSION: '3.50.0'
 
 jobs:
   version:

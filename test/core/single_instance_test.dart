@@ -43,18 +43,14 @@ void main() {
     return (result.stdout as String).contains('granted');
   }
 
-  test(
-    'a second Kruftle is refused while the first holds the lock',
-    () {
-      final lock = InstanceLock.tryAcquire(temp.path);
-      expect(lock, isNotNull);
+  test('a second Kruftle is refused while the first holds the lock', () {
+    final lock = InstanceLock.tryAcquire(temp.path);
+    expect(lock, isNotNull);
 
-      expect(acquiredElsewhere(temp.path), isFalse);
+    expect(acquiredElsewhere(temp.path), isFalse);
 
-      // And the moment the first one goes away, the next one may start.
-      lock!.release();
-      expect(acquiredElsewhere(temp.path), isTrue);
-    },
-    timeout: const Timeout(Duration(minutes: 2)),
-  );
+    // And the moment the first one goes away, the next one may start.
+    lock!.release();
+    expect(acquiredElsewhere(temp.path), isTrue);
+  }, timeout: const Timeout(Duration(minutes: 2)));
 }

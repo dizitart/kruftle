@@ -2,7 +2,6 @@
 
 import 'dart:io';
 
-import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -11,10 +10,12 @@ import 'package:kruftle/src/core/changelog/changelog.dart';
 import 'package:kruftle/src/core/settings/settings.dart';
 import 'package:kruftle/src/ui/about_pages.dart';
 import 'package:kruftle/src/ui/consent_page.dart';
+import 'package:kruftle/src/ui/localizations.dart';
 import 'package:kruftle/src/ui/state/app_state.dart';
 import 'package:kruftle/src/ui/theme.dart';
 import 'package:kruftle/src/ui/tour_page.dart';
 import 'package:kruftle/src/ui/widgets/document.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:yaml/yaml.dart';
 
@@ -47,7 +48,7 @@ Future<ProviderContainer> pumpAbout(
       container: container,
       child: MaterialApp(
         theme: KruftleTheme.dark(),
-        localizationsDelegates: L.localizationsDelegates,
+        localizationsDelegates: kLocalizationsDelegates,
         supportedLocales: L.supportedLocales,
         home: child,
       ),
@@ -168,11 +169,11 @@ void main() {
         '0.2.0',
       ]);
       expect(changelog.since('0.3.0'), isEmpty);
-      expect(
-        changelog.since('9.9.9').map((e) => e.version),
-        ['0.3.0', '0.2.0', '0.1.0'],
-        reason: 'an unknown version means we cannot tell, so show everything',
-      );
+      expect(changelog.since('9.9.9').map((e) => e.version), [
+        '0.3.0',
+        '0.2.0',
+        '0.1.0',
+      ], reason: 'an unknown version means we cannot tell, so show everything');
       expect(changelog.since(null), hasLength(3));
     });
   });

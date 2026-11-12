@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:material_ui/material_ui.dart';
 
 import '../../core/scan/sizer.dart';
 import 'motion.dart';
@@ -104,9 +104,8 @@ class _MeasuringShimmerState extends ConsumerState<MeasuringShimmer>
             width: widget.width,
             height: widget.height,
             decoration: BoxDecoration(
-              color: Theme.of(
-                context,
-              ).colorScheme.onSurfaceVariant.withValues(alpha: 0.1 + 0.14 * t),
+              color: Theme.of(context).colorScheme.onSurfaceVariant
+                  .withValues(alpha: 0.1 + 0.14 * t),
               borderRadius: BorderRadius.circular(widget.height / 2),
             ),
           );
