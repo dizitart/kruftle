@@ -246,9 +246,8 @@ void main() {
     });
 
     test('ignores drafts', () async {
-      final update = await updaterWith(
-        clientFor(releasesJson(draft: true)),
-      ).offered();
+      final update = await updaterWith(clientFor(releasesJson(draft: true)))
+          .offered();
       expect(update, isNull);
     });
 
@@ -513,9 +512,8 @@ void main() {
     );
 
     test('writes the file when the checksum matches', () async {
-      final file = await downloaderFor(
-        200,
-      ).download(updateWith(realDigest), directory: tmp.path);
+      final file = await downloaderFor(200)
+          .download(updateWith(realDigest), directory: tmp.path);
 
       expect(file.existsSync(), isTrue);
       expect(file.readAsBytesSync(), payload);
@@ -655,17 +653,15 @@ void main() {
     });
 
     test('a checksum comparison is case-insensitive', () async {
-      final file = await downloaderFor(
-        200,
-      ).download(updateWith(realDigest.toUpperCase()), directory: tmp.path);
+      final file = await downloaderFor(200)
+          .download(updateWith(realDigest.toUpperCase()), directory: tmp.path);
       expect(file.existsSync(), isTrue);
     });
 
     test('an HTTP error is a clear failure, not a corrupt file', () async {
       await expectLater(
-        downloaderFor(
-          404,
-        ).download(updateWith(realDigest), directory: tmp.path),
+        downloaderFor(404)
+            .download(updateWith(realDigest), directory: tmp.path),
         throwsA(isA<UpdateFailure>()),
       );
     });

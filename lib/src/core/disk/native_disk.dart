@@ -373,17 +373,15 @@ typedef _PosixPathNative = Int32 Function(Pointer<Utf8>, Pointer<Void>);
 typedef _PosixPathDart = int Function(Pointer<Utf8>, Pointer<Void>);
 typedef _PosixPathCall = _PosixPathDart;
 
-typedef _GetDiskFreeSpaceExNative =
-    Int32 Function(
-      Pointer<Utf16>,
-      Pointer<Uint64>,
-      Pointer<Uint64>,
-      Pointer<Uint64>,
-    );
-typedef _GetDiskFreeSpaceExDart =
-    int Function(
-      Pointer<Utf16>,
-      Pointer<Uint64>,
-      Pointer<Uint64>,
-      Pointer<Uint64>,
-    );
+typedef _GetDiskFreeSpaceExNative = Int32 Function(
+  Pointer<Utf16>,
+  Pointer<Uint64>,
+  Pointer<Uint64>,
+  Pointer<Uint64>,
+);
+typedef _GetDiskFreeSpaceExDart = int Function(
+  Pointer<Utf16>,
+  Pointer<Uint64>,
+  Pointer<Uint64>,
+  Pointer<Uint64>,
+);

@@ -168,9 +168,8 @@ SafetyViolation? checkDeleteTarget({
     return SafetyViolation.outsideRoot;
   }
 
-  final forbidden = forbiddenRoots(
-    windows: isWindows,
-  ).map((r) => _normalize(r, windows: isWindows));
+  final forbidden = forbiddenRoots(windows: isWindows)
+      .map((r) => _normalize(r, windows: isWindows));
   if (forbidden.contains(resolvedTarget)) return SafetyViolation.forbiddenRoot;
 
   return null;

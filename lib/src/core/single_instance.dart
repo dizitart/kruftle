@@ -44,9 +44,8 @@ class InstanceLock {
     final RandomAccessFile handle;
     try {
       Directory(directory).createSync(recursive: true);
-      handle = File(
-        p.join(directory, fileName),
-      ).openSync(mode: FileMode.append);
+      handle = File(p.join(directory, fileName))
+          .openSync(mode: FileMode.append);
     } on FileSystemException {
       return _held = const InstanceLock._(null);
     }

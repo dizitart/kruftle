@@ -158,18 +158,14 @@ void main() {
       expect(await scanProjects(), isEmpty);
     });
 
-    test(
-      'survives a symlink cycle instead of looping forever',
-      () async {
-        file('app/Cargo.toml');
-        dir('app/target');
-        Link(p.join(root, 'app', 'loop')).createSync(root);
+    test('survives a symlink cycle instead of looping forever', () async {
+      file('app/Cargo.toml');
+      dir('app/target');
+      Link(p.join(root, 'app', 'loop')).createSync(root);
 
-        final projects = await scanProjects();
-        expect(projects, hasLength(1));
-      },
-      timeout: const Timeout(Duration(seconds: 20)),
-    );
+      final projects = await scanProjects();
+      expect(projects, hasLength(1));
+    }, timeout: const Timeout(Duration(seconds: 20)));
 
     test(
       'does not report a symlinked artifact directory as cleanable',

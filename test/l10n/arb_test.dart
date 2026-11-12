@@ -114,8 +114,9 @@ Set<String> _messageKeys(Map<String, Object?> arb) =>
 
 /// Every `{name}` in a message, ignoring the `plural`/`select` machinery so a
 /// language with a different set of plural categories still matches.
-Set<String> _placeholders(String message) => RegExp(r'\{(\w+)[,}]')
-    .allMatches(message)
-    .map((m) => m.group(1)!)
-    .where((name) => name != 'count' || !message.contains('$name, plural'))
-    .toSet();
+Set<String> _placeholders(String message) =>
+    RegExp(r'\{(\w+)[,}]')
+        .allMatches(message)
+        .map((m) => m.group(1)!)
+        .where((name) => name != 'count' || !message.contains('$name, plural'))
+        .toSet();

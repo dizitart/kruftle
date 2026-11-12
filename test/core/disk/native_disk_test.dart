@@ -75,9 +75,8 @@ void main() {
       fixture = Directory.systemTemp.createTempSync('kruftle_alloc');
       // A file whose apparent size is deliberately not a block multiple.
       File('${fixture.path}/small.bin').writeAsBytesSync(List.filled(10, 7));
-      File(
-        '${fixture.path}/big.bin',
-      ).writeAsBytesSync(List.filled(300 * 1024, 7));
+      File('${fixture.path}/big.bin')
+          .writeAsBytesSync(List.filled(300 * 1024, 7));
     });
 
     tearDown(() => fixture.deleteSync(recursive: true));
