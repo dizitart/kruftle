@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kruftle/src/core/disk/native_disk.dart';
 import 'package:kruftle/src/core/models/clean.dart';
@@ -8,6 +7,7 @@ import 'package:kruftle/src/core/models/project.dart';
 import 'package:kruftle/src/core/models/stack.dart';
 import 'package:kruftle/src/ui/viz/artifact_treemap.dart';
 import 'package:kruftle/src/ui/viz/disk_gauge.dart';
+import 'package:material_ui/material_ui.dart';
 
 import '../anim_test.dart' show painterOf, pumpAnimated;
 

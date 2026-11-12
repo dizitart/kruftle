@@ -2,9 +2,9 @@
 
 import 'dart:io';
 
-import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/date_symbol_data_local.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:window_manager/window_manager.dart';
@@ -15,6 +15,19 @@ import 'src/core/single_instance.dart';
 import 'src/ui/already_running_page.dart';
 import 'src/ui/app.dart';
 import 'src/ui/state/app_state.dart';
+
+/// Sizes and shows the app's one window. Minimum first, so the size is never
+/// clamped up to a minimum set after it.
+void _presentWindow({required Size size, required Size minimumSize}) {
+  final window = WindowManager.instance.getCurrent()!;
+  window.title = 'Kruftle';
+  window.titleBarStyle = TitleBarStyle.normal;
+  window.minimumSize = minimumSize.toNative();
+  window.setSize(size.toNative(), false);
+  window.center();
+  window.show();
+  window.focus();
+}
 
 Future<void> main(List<String> args) async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -29,8 +42,6 @@ Future<void> main(List<String> args) async {
     exit(0);
   }
 
-  await windowManager.ensureInitialized();
-
   // `DateFormat` refuses any locale but the system's until the symbols are
   // loaded, and the language picker can choose any of the ten.
   await initializeDateFormatting();
@@ -41,20 +52,11 @@ Future<void> main(List<String> args) async {
   // when we exit, however we exit.
   final supportDirectory = await getApplicationSupportDirectory();
   if (InstanceLock.tryAcquire(supportDirectory.path) == null) {
-    await windowManager.waitUntilReadyToShow(
-      const WindowOptions(
-        // Small, but not so small that a long translation of the notice runs
-        // out of room — `already_running_test.dart` holds the minimum to it.
-        size: Size(560, 340),
-        minimumSize: Size(480, 300),
-        center: true,
-        title: 'Kruftle',
-        titleBarStyle: TitleBarStyle.normal,
-      ),
-      () async {
-        await windowManager.show();
-        await windowManager.focus();
-      },
+    // Small, but not so small that a long translation of the notice runs out
+    // of room — `already_running_test.dart` holds the minimum to it.
+    _presentWindow(
+      size: const Size(560, 340),
+      minimumSize: const Size(480, 300),
     );
     runApp(const AlreadyRunningApp());
     return;
@@ -62,18 +64,9 @@ Future<void> main(List<String> args) async {
 
   // A results table is unreadable below this width, so the window refuses to
   // go there rather than reflowing into something cramped.
-  await windowManager.waitUntilReadyToShow(
-    const WindowOptions(
-      size: Size(1160, 780),
-      minimumSize: Size(940, 620),
-      center: true,
-      title: 'Kruftle',
-      titleBarStyle: TitleBarStyle.normal,
-    ),
-    () async {
-      await windowManager.show();
-      await windowManager.focus();
-    },
+  _presentWindow(
+    size: const Size(1160, 780),
+    minimumSize: const Size(940, 620),
   );
 
   // Only available asynchronously, and every provider wants it synchronously,

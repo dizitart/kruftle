@@ -2,9 +2,10 @@
 
 import 'dart:io';
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 import '../../l10n/app_localizations.dart';
+import 'localizations.dart';
 import 'theme.dart';
 
 /// The whole app, when the app is already open.
@@ -20,7 +21,7 @@ class AlreadyRunningApp extends StatelessWidget {
     debugShowCheckedModeBanner: false,
     theme: KruftleTheme.light(),
     darkTheme: KruftleTheme.dark(),
-    localizationsDelegates: L.localizationsDelegates,
+    localizationsDelegates: kLocalizationsDelegates,
     supportedLocales: L.supportedLocales,
     home: const _AlreadyRunning(),
   );

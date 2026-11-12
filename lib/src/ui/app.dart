@@ -1,13 +1,14 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:material_ui/material_ui.dart';
 
 import '../../l10n/app_localizations.dart';
 import '../core/settings/settings.dart';
 import 'about_pages.dart';
 import 'consent_page.dart';
 import 'global_caches_page.dart';
+import 'localizations.dart';
 import 'profiles_page.dart';
 import 'schedule_page.dart';
 import 'settings_page.dart';
@@ -40,7 +41,7 @@ class KruftleApp extends ConsumerWidget {
       // Null means "follow the operating system", which is what Flutter does
       // when `locale` is unset.
       locale: settings.localeCode == null ? null : Locale(settings.localeCode!),
-      localizationsDelegates: L.localizationsDelegates,
+      localizationsDelegates: kLocalizationsDelegates,
       supportedLocales: L.supportedLocales,
       home: const _Root(),
     );

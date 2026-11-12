@@ -2,9 +2,9 @@
 
 import 'dart:math' as math;
 
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kruftle/src/ui/theme.dart';
+import 'package:material_ui/material_ui.dart';
 
 import 'wizard_test.dart' show pumpWizard;
 

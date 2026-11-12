@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kruftle/src/ui/theme.dart';
 import 'package:kruftle/src/ui/widgets/document.dart';
+import 'package:material_ui/material_ui.dart';
 
 Future<void> pumpDocument(
   WidgetTester tester,

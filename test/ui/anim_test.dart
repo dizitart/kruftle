@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kruftle/l10n/app_localizations.dart';
@@ -8,8 +7,10 @@ import 'package:kruftle/src/core/settings/settings.dart';
 import 'package:kruftle/src/ui/anim/animated_bytes.dart';
 import 'package:kruftle/src/ui/anim/cleaning_sweep.dart';
 import 'package:kruftle/src/ui/anim/radar_sweep.dart';
+import 'package:kruftle/src/ui/localizations.dart';
 import 'package:kruftle/src/ui/state/app_state.dart';
 import 'package:kruftle/src/ui/theme.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// Puts one widget on screen with settings and localisation in place.
@@ -33,7 +34,7 @@ Future<void> pumpAnimated(
       ],
       child: MaterialApp(
         theme: KruftleTheme.dark(),
-        localizationsDelegates: L.localizationsDelegates,
+        localizationsDelegates: kLocalizationsDelegates,
         supportedLocales: L.supportedLocales,
         home: MediaQuery(
           data: MediaQueryData(disableAnimations: platformDisablesAnimations),

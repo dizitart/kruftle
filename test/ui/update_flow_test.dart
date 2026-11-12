@@ -4,7 +4,6 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:crypto/crypto.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
@@ -12,10 +11,12 @@ import 'package:http/testing.dart';
 import 'package:kruftle/l10n/app_localizations.dart';
 import 'package:kruftle/src/core/update/updater.dart';
 import 'package:kruftle/src/core/update/version.dart';
+import 'package:kruftle/src/ui/localizations.dart';
 import 'package:kruftle/src/ui/state/app_state.dart';
 import 'package:kruftle/src/ui/state/update_controller.dart';
 import 'package:kruftle/src/ui/theme.dart';
 import 'package:kruftle/src/ui/widgets/update_banner.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:path/path.dart' as p;
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -96,7 +97,7 @@ void main() {
         container: container,
         child: MaterialApp(
           theme: KruftleTheme.dark(),
-          localizationsDelegates: L.localizationsDelegates,
+          localizationsDelegates: kLocalizationsDelegates,
           supportedLocales: L.supportedLocales,
           home: const Scaffold(body: UpdateBanner()),
         ),

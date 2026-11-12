@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kruftle/src/ui/widgets/common.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// A `SnackBar` given an action defaults to `persist: true`, and a persistent
 /// snack bar never times out. The "log exported" toast therefore sat over the
