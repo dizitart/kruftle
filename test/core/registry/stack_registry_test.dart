@@ -83,6 +83,7 @@ void main() {
       ('elm application', {'elm.json'}, {}, {StackId.elm}),
       ('turborepo config', {'turbo.json'}, {}, {StackId.monorepoCache}),
       ('nx config', {'nx.json'}, {}, {StackId.monorepoCache}),
+      ('cocoapods project', {'Podfile'}, {}, {StackId.cocoapods}),
     ];
 
     for (final (name, files, dirs, expected) in cases) {
@@ -121,6 +122,18 @@ void main() {
           .map((s) => s.id)
           .toSet();
       expect(ids, containsAll([StackId.node, StackId.monorepoCache]));
+    });
+
+    test('an iOS folder with a Podfile is claimed by both Xcode and '
+        'CocoaPods', () {
+      // What `pod install` leaves behind, as in a Flutter app's `ios/`.
+      final ios = listing(
+        files: {'Podfile', 'Podfile.lock'},
+        dirs: {'Pods', 'Runner.xcodeproj', 'Runner.xcworkspace'},
+      );
+      final ids = registry.detect(ios).map((s) => s.id).toSet();
+      expect(ids, containsAll([StackId.xcode, StackId.cocoapods]));
+      expect(registry.byId(StackId.cocoapods)!.commandFor(ios), isNull);
     });
 
     test('turbo.json wins over nx.json when a repo somehow has both', () {
@@ -382,6 +395,7 @@ void main() {
         'venv',
         'deps',
         'vendor/bundle',
+        'Pods',
       };
       for (final stack in kStacks) {
         for (final artifact in stack.artifacts) {
@@ -439,6 +453,7 @@ void main() {
         StackId.perl,
         StackId.elm,
         StackId.monorepoCache,
+        StackId.cocoapods,
       };
       expect(promised.difference(kStacks.map((s) => s.id).toSet()), isEmpty);
     });
