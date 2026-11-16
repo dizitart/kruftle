@@ -14,7 +14,7 @@ dependencies:
     sdk: flutter
 
   # State
-  flutter_riverpod: ^3.4.3
+  flutter_riverpod: ^3.5.0
 
   # Core utilities
   path: ^1.9.0
