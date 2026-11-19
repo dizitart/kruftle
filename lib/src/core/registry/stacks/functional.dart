@@ -124,3 +124,14 @@ const elmStack = StackDefinition(
   artifacts: [ArtifactPath('elm-stuff', risk: CleanRisk.cache)],
   priority: 20,
 );
+
+const purescriptStack = StackDefinition(
+  id: StackId.purescript,
+  displayName: 'PureScript',
+  markers: {'spago.yaml', 'spago.dhall'},
+  // Spago has no clean command; both directories are rebuilt by `spago build`.
+  artifacts: [
+    ArtifactPath('output'),
+    ArtifactPath('.spago', risk: CleanRisk.dependencies),
+  ],
+);

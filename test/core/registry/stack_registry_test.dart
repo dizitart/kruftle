@@ -84,6 +84,12 @@ void main() {
       ('turborepo config', {'turbo.json'}, {}, {StackId.monorepoCache}),
       ('nx config', {'nx.json'}, {}, {StackId.monorepoCache}),
       ('cocoapods project', {'Podfile'}, {}, {StackId.cocoapods}),
+      ('unreal project', {'Shooter.uproject'}, {}, {StackId.unreal}),
+      ('purescript spago', {'spago.yaml'}, {}, {StackId.purescript}),
+      ('purescript legacy spago', {'spago.dhall'}, {}, {StackId.purescript}),
+      ('latexmk project', {'thesis.tex', 'latexmkrc'}, {}, {StackId.latex}),
+      ('latexmk dotfile', {'paper.tex', '.latexmkrc'}, {}, {StackId.latex}),
+      ('jupyter notebooks', {'analysis.ipynb'}, {}, {StackId.jupyter}),
     ];
 
     for (final (name, files, dirs, expected) in cases) {
@@ -164,6 +170,24 @@ void main() {
           .map((s) => s.id)
           .toSet();
       expect(ids, isNot(contains(StackId.unity)));
+    });
+
+    test('a bare .tex file is not assumed to be a latexmk project', () {
+      final ids = registry
+          .detect(listing(files: {'notes.tex'}))
+          .map((s) => s.id)
+          .toSet();
+      expect(ids, isNot(contains(StackId.latex)));
+    });
+
+    test('experiment results are never on the jupyter allow-list', () {
+      // mlruns/, wandb/, lightning_logs/ and Hydra outputs/ hold run results
+      // that no rebuild can bring back.
+      final relatives = registry
+          .byId(StackId.jupyter)!
+          .artifacts
+          .map((a) => a.relative);
+      expect(relatives, ['.ipynb_checkpoints']);
     });
 
     test('a bare Project.toml is not assumed to be Julia', () {
@@ -454,6 +478,10 @@ void main() {
         StackId.elm,
         StackId.monorepoCache,
         StackId.cocoapods,
+        StackId.unreal,
+        StackId.purescript,
+        StackId.latex,
+        StackId.jupyter,
       };
       expect(promised.difference(kStacks.map((s) => s.id).toSet()), isEmpty);
     });

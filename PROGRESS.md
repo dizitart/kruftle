@@ -14,9 +14,9 @@ check in §3 to confirm the tree is in the state this document claims.
 
 | | |
 |---|---|
-| **Current milestone** | **v0.2.13** (bumped, not yet tagged): dependency and toolchain upgrade to Flutter 3.50 / Dart 3.14, window_manager 0.6, material_ui and cupertino_ui |
-| **Last updated** | 2026-11-12 |
-| **Build green?** | Locally on Flutter 3.50.0: 679 tests, analyzer clean (`--fatal-infos`). CI not yet run on the pushed branch |
+| **Current milestone** | **v0.2.13** (tagged): Flutter 3.50 upgrade, plus CocoaPods, Unreal, PureScript, LaTeX and Jupyter stacks (#11, #10, #14, #15, #16) |
+| **Last updated** | 2026-11-19 |
+| **Build green?** | Yes: 690 tests, analyzer clean (`--fatal-infos`), formatter clean |
 | **Repo** | https://github.com/dizitart/kruftle (public, GPL-3.0) |
 | **CI** | Green — analyze/test on Ubuntu, the update tests again on Windows, plus release builds on all three OSs |
 | **Released** | [v0.2.11](https://github.com/dizitart/kruftle/releases/tag/v0.2.11) — .dmg, macOS .zip, two .exe, two .msix, two Windows .zip, two .AppImage, two .deb, two .tar.gz, checksums.txt. `msix_config`'s `identity_name`/`publisher` now hold the real Partner Center identity; not yet actually submitted there — see Session 19/20 |
@@ -172,6 +172,17 @@ gh release delete v0.2.7-rc.1 --repo dizitart/kruftle --yes --cleanup-tag
 ## 4. Session log
 
 Newest first.
+
+### Session 24 — 2026-11-19
+
+**Landed**: issues #10 Unreal (`*.uproject`), #14 PureScript (`spago.yaml`/
+`spago.dhall`), #15 LaTeX (`*.tex` + `latexmkrc`, runs `latexmk -C`) and #16
+Jupyter. Folded into the untagged 0.2.13 entry (0.2.12 was never tagged
+either) and tagged v0.2.13. Discord invite checked live.
+**Decision**: Jupyter's allow-list is `.ipynb_checkpoints` only. `mlruns/`,
+`wandb/`, `lightning_logs/` and Hydra `outputs/` are experiment results, not
+build output; no rebuild restores them. A Makefile-with-latexmk-rule LaTeX
+project is not detected (it would mean reading the Makefile).
 
 ### Session 23 — 2026-11-12
 

@@ -47,9 +47,9 @@ Future<ProviderContainer> pumpProfiles(
   return container;
 }
 
-const _unreal = CleanupProfile(
-  name: 'Unreal Engine',
-  markers: ['*.uproject'],
+const _acme = CleanupProfile(
+  name: 'Acme Engine',
+  markers: ['*.acmeproj'],
   command: 'make clean',
   artifactDirs: ['Binaries'],
 );
@@ -66,10 +66,10 @@ void main() {
   });
 
   testWidgets('a saved profile is listed with what it will do', (tester) async {
-    await pumpProfiles(tester, seed: const ProfileSet([_unreal]));
+    await pumpProfiles(tester, seed: const ProfileSet([_acme]));
 
-    expect(find.text('Unreal Engine'), findsOneWidget);
-    expect(find.text('*.uproject'), findsOneWidget);
+    expect(find.text('Acme Engine'), findsOneWidget);
+    expect(find.text('*.acmeproj'), findsOneWidget);
     expect(find.text('make clean'), findsOneWidget);
     expect(find.text('Binaries'), findsOneWidget);
   });
@@ -79,7 +79,7 @@ void main() {
   ) async {
     final container = await pumpProfiles(
       tester,
-      seed: const ProfileSet([_unreal]),
+      seed: const ProfileSet([_acme]),
     );
 
     expect(container.read(registryProvider).stacks.length, greaterThan(42));
@@ -92,7 +92,7 @@ void main() {
       container
           .read(registryProvider)
           .stacks
-          .any((s) => s.displayName == 'Unreal Engine'),
+          .any((s) => s.displayName == 'Acme Engine'),
       isFalse,
       reason: 'a disabled profile must take no part in the next scan',
     );
@@ -184,7 +184,7 @@ void main() {
   });
 
   testWidgets('a duplicate name is refused', (tester) async {
-    await pumpProfiles(tester, seed: const ProfileSet([_unreal]));
+    await pumpProfiles(tester, seed: const ProfileSet([_acme]));
     final l = L.of(tester.element(find.byType(ProfilesPage)));
 
     await tester.tap(find.text(l.profilesNew));
@@ -192,7 +192,7 @@ void main() {
 
     await tester.enterText(
       find.widgetWithText(TextField, l.profilesNameHint),
-      'Unreal Engine',
+      'Acme Engine',
     );
     await tester.enterText(
       find.widgetWithText(TextField, l.profilesMarkersHint),
@@ -204,22 +204,19 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(
-      find.text(l.profilesErrorDuplicate('Unreal Engine')),
-      findsOneWidget,
-    );
+    expect(find.text(l.profilesErrorDuplicate('Acme Engine')), findsOneWidget);
   });
 
   testWidgets('editing a profile does not report it as its own duplicate', (
     tester,
   ) async {
-    await pumpProfiles(tester, seed: const ProfileSet([_unreal]));
+    await pumpProfiles(tester, seed: const ProfileSet([_acme]));
     final l = L.of(tester.element(find.byType(ProfilesPage)));
 
     await tester.tap(find.byTooltip(l.actionEdit));
     await tester.pumpAndSettle();
 
-    expect(find.text(l.profilesErrorDuplicate('Unreal Engine')), findsNothing);
+    expect(find.text(l.profilesErrorDuplicate('Acme Engine')), findsNothing);
     expect(
       tester
           .widget<FilledButton>(find.widgetWithText(FilledButton, l.actionSave))
@@ -231,13 +228,13 @@ void main() {
   testWidgets('deleting asks first, then removes', (tester) async {
     final container = await pumpProfiles(
       tester,
-      seed: const ProfileSet([_unreal]),
+      seed: const ProfileSet([_acme]),
     );
     final l = L.of(tester.element(find.byType(ProfilesPage)));
 
     await tester.tap(find.byTooltip(l.actionDelete));
     await tester.pumpAndSettle();
-    expect(find.text(l.profilesDeleteConfirm('Unreal Engine')), findsOneWidget);
+    expect(find.text(l.profilesDeleteConfirm('Acme Engine')), findsOneWidget);
 
     await tester.tap(find.widgetWithText(TextButton, l.actionCancel));
     await tester.pumpAndSettle();

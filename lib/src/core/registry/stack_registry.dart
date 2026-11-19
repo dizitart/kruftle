@@ -66,6 +66,10 @@ const List<StackDefinition> kStacks = [
   juliaStack,
   rlangStack,
   perlStack,
+  unrealStack,
+  purescriptStack,
+  latexStack,
+  jupyterStack,
 ];
 
 /// Looks up stack definitions and matches directories against them.

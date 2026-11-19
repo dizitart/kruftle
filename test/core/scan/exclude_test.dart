@@ -128,7 +128,7 @@ void main() {
     setUp(() {
       tmp = Directory.systemTemp.createTempSync('kruftle_profile_scan');
       final game = Directory(p.join(tmp.path, 'MyGame'))..createSync();
-      File(p.join(game.path, 'MyGame.uproject')).writeAsStringSync('');
+      File(p.join(game.path, 'MyGame.acmeproj')).writeAsStringSync('');
       Directory(p.join(game.path, 'Binaries')).createSync();
       File(p.join(game.path, 'Binaries', 'a.dll')).writeAsStringSync('x');
     });
@@ -138,7 +138,7 @@ void main() {
     test('a profile finds a project no built-in stack would', () async {
       const profile = CleanupProfile(
         name: 'Unreal Engine',
-        markers: ['*.uproject'],
+        markers: ['*.acmeproj'],
         artifactDirs: ['Binaries'],
       );
 
@@ -151,7 +151,7 @@ void main() {
       expect(
         withoutProfile,
         isEmpty,
-        reason: 'no built-in stack knows what a .uproject is',
+        reason: 'no built-in stack knows what a .acmeproj is',
       );
 
       final withProfile = <DetectedProjectSummary>[];
@@ -182,7 +182,7 @@ void main() {
       () async {
         const profile = CleanupProfile(
           name: 'Unreal Engine',
-          markers: ['*.uproject'],
+          markers: ['*.acmeproj'],
           artifactDirs: ['Intermediate'],
         );
 
@@ -206,7 +206,7 @@ void main() {
     test('a custom profile contributes its binary to the tool probe', () async {
       const profile = CleanupProfile(
         name: 'Unreal Engine',
-        markers: ['*.uproject'],
+        markers: ['*.acmeproj'],
         command: 'unrealbuildtool clean',
         artifactDirs: ['Binaries'],
       );

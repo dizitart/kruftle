@@ -3,7 +3,11 @@
   "versions": [
     {
       "version": "0.2.13",
-      "date": "2026-11-12",
+      "date": "2026-11-19",
+      "added": [
+        "Five more project types: CocoaPods (a Podfile), Unreal Engine (any .uproject), PureScript (spago.yaml or spago.dhall), LaTeX built with latexmk (a .tex file next to a latexmkrc), and Jupyter notebooks. Unreal's Binaries and Intermediate folders, and PureScript's output and .spago folders, are cleaned from their allow-lists; LaTeX runs latexmk -C. For notebooks only the .ipynb_checkpoints autosaves are offered: MLflow, Weights & Biases, Lightning and Hydra run folders hold experiment results nothing can regenerate, so Kruftle leaves them alone.",
+        "Settings now links to the Dizitart Discord."
+      ],
       "changed": [
         "Rebuilt on Flutter 3.50 and Dart 3.14, with window handling moved to window_manager 0.7 and Material and Cupertino strings to material_ui and cupertino_ui."
       ]

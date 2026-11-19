@@ -200,3 +200,59 @@ const perlStack = StackDefinition(
   ],
   priority: 15,
 );
+
+const unrealStack = StackDefinition(
+  id: StackId.unreal,
+  displayName: 'Unreal Engine',
+  markers: {'.uproject'},
+  matches: _isUnrealProject,
+  // No portable headless clean. Everything here is rebuilt by the editor or
+  // UnrealBuildTool; `Saved` also holds logs and crash dumps, so it is opt-in.
+  artifacts: [
+    ArtifactPath('Binaries'),
+    ArtifactPath('Intermediate'),
+    ArtifactPath('Saved', risk: CleanRisk.cache),
+    ArtifactPath('DerivedDataCache', risk: CleanRisk.cache),
+  ],
+  priority: 30,
+);
+
+/// The `.uproject` file is named after the project, so match by extension.
+bool _isUnrealProject(DirListing listing) =>
+    listing.files.any((f) => f.endsWith('.uproject'));
+
+const latexStack = StackDefinition(
+  id: StackId.latex,
+  displayName: 'LaTeX',
+  markers: {'latexmkrc', '.latexmkrc'},
+  matches: _isLatexmkProject,
+  tool: ToolProbe(
+    binary: 'latexmk',
+    versionArgs: ['-v'],
+    installUrl: 'https://ctan.org/pkg/latexmk',
+  ),
+  cleanCommand: CleanCommand('latexmk', ['-C']),
+  artifacts: [ArtifactPath('build'), ArtifactPath('out')],
+  priority: 10,
+);
+
+/// A `.tex` file alone is too weak (plenty of repos carry one document); a
+/// latexmk config next to it says the directory is built with latexmk.
+bool _isLatexmkProject(DirListing listing) =>
+    listing.files.any((f) => f.endsWith('.tex')) &&
+    listing.hasAnyFile(const ['latexmkrc', '.latexmkrc']);
+
+const jupyterStack = StackDefinition(
+  id: StackId.jupyter,
+  displayName: 'Jupyter',
+  markers: {'.ipynb'},
+  matches: _hasNotebook,
+  // Only autosave checkpoints. mlruns/, wandb/, lightning_logs/ and Hydra's
+  // outputs/ are experiment results, not build output: nothing regenerates
+  // them, so they stay off the allow-list (safety rail: never delete what a
+  // rebuild cannot restore).
+  artifacts: [ArtifactPath('.ipynb_checkpoints', risk: CleanRisk.cache)],
+);
+
+bool _hasNotebook(DirListing listing) =>
+    listing.files.any((f) => f.endsWith('.ipynb'));

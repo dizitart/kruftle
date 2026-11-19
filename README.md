@@ -48,7 +48,7 @@ command.
 - `swift package clean` for Swift packages
 - `mix clean` for Elixir projects
 
-and so on, for 45 toolchains in total.
+and so on, for 50 toolchains in total.
 
 ## Why the tool's own command
 
@@ -94,7 +94,7 @@ Each of those has a test that fails closed.
 
 ## Supported stacks
 
-**45 toolchains**, detected by marker file and cleaned with that toolchain's own
+**50 toolchains**, detected by marker file and cleaned with that toolchain's own
 command.
 
 | Family | Stacks |
@@ -103,10 +103,10 @@ command.
 | **Native / C++** | CMake · Make · Bazel · Meson · Ninja · Autotools · Conan · vcpkg · PlatformIO |
 | **JVM & .NET** | Maven · Gradle · sbt · Clojure · .NET |
 | **Dart** | Flutter · Dart |
-| **Apple** | Xcode · Swift Package |
+| **Apple** | Xcode · Swift Package · CocoaPods |
 | **Web & scripting** | Node.js · Turborepo / Nx · Deno · PHP / Composer · Python · Ruby · Perl |
-| **Functional** | Haskell · Cabal · Erlang · Elixir · OCaml · Gleam |
-| **Data & infra** | Julia · R · Terraform · Unity · Godot |
+| **Functional** | Haskell · Cabal · Erlang · Elixir · OCaml · Gleam · Elm · PureScript |
+| **Data & infra** | Julia · R · Terraform · Unity · Godot · Unreal · Jupyter · LaTeX |
 
 Adding another is one file and one list entry — see
 [`lib/src/core/registry/`](lib/src/core/registry/). If your stack is missing,

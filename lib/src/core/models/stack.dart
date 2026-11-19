@@ -56,6 +56,10 @@ enum StackId {
   elm,
   monorepoCache,
   cocoapods,
+  unreal,
+  purescript,
+  latex,
+  jupyter,
 
   /// Every user-defined profile. Profiles are told apart by display name, not
   /// by id — see `core/profiles/profile.dart`. Nothing downstream keys off
