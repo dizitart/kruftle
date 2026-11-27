@@ -357,3 +357,29 @@ jobs:
           gh api repos/dizitart/kruftle-site/dispatches --input - <<JSON
           {"event_type":"kruftle-release","client_payload":{"version":"$VERSION"}}
           JSON
+
+  # Opens the "Update: Dizitart.Kruftle" PR on microsoft/winget-pkgs from the
+  # dizitart fork. komac copies scopes, switches and ProductCode from the last
+  # merged manifest, so only URLs and hashes change. Needs WINGET_TOKEN (classic
+  # PAT, public_repo); without it the job stands down like the site step.
+  winget:
+    name: Update winget
+    needs: [version, publish]
+    runs-on: windows-latest
+    steps:
+      - name: Check token
+        id: token
+        shell: bash
+        run: echo "set=${{ secrets.WINGET_TOKEN != '' }}" >> "$GITHUB_OUTPUT"
+      - if: steps.token.outputs.set != 'true'
+        shell: bash
+        run: echo "no WINGET_TOKEN set; winget not updated."
+      - if: steps.token.outputs.set == 'true'
+        uses: vedantmgoyal9/winget-releaser@v2
+        with:
+          identifier: Dizitart.Kruftle
+          version: ${{ needs.version.outputs.version }}
+          release-tag: v${{ needs.version.outputs.version }}
+          installers-regex: '-windows-(x64|arm64)-setup\.exe$'
+          fork-user: dizitart
+          token: ${{ secrets.WINGET_TOKEN }}

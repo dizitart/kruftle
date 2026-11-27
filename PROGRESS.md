@@ -173,6 +173,15 @@ gh release delete v0.2.7-rc.1 --repo dizitart/kruftle --yes --cleanup-tag
 
 Newest first.
 
+### Session 25 — 2026-11-28
+
+**Landed**: first winget manifest (Dizitart.Kruftle 0.2.13, Inno, user and
+machine scope per arch) pushed to `dizitart/winget-pkgs` branch
+`kruftle-0.2.13`; PR not opened yet. New `winget` job in `release.yml` runs
+`vedantmgoyal9/winget-releaser` after `publish` for every later tag.
+**Open [H]**: open and get the 0.2.13 PR merged; add repo secret
+`WINGET_TOKEN` (classic PAT, `public_repo`).
+
 ### Session 24 — 2026-11-19
 
 **Landed**: issues #10 Unreal (`*.uproject`), #14 PureScript (`spago.yaml`/
@@ -1098,6 +1107,10 @@ Append-only. Record *why*, so a future session does not undo it.
 
 ## 6. Known gotchas
 
+- **winget updates ride the release workflow, not a `release` trigger.** The
+  release is created with `GITHUB_TOKEN`, which never fires other workflows, so
+  a separate `on: release` workflow would not run. The job also only works
+  once the first manifest is merged upstream: komac updates, it does not create.
 - **Anything that runs after the app exits must write its own log.** The update
   helpers do their work with nothing left to report to; a swap that quietly did
   nothing on Windows was indistinguishable from a helper that never started,
