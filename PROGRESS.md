@@ -180,7 +180,7 @@ machine scope per arch) pushed to `dizitart/winget-pkgs` branch
 `kruftle-0.2.13`; PR not opened yet. New `winget` job in `release.yml` runs
 `vedantmgoyal9/winget-releaser` after `publish` for every later tag.
 **Open [H]**: open and get the 0.2.13 PR merged; add repo secret
-`WINGET_TOKEN` (classic PAT, `public_repo`).
+`WINGET_TOKEN` (classic PAT, `public_repo`). Both secrets set 2026-11-28.
 Also: `dizitart/homebrew-tap` created with `Casks/kruftle.rb` 0.2.13; new
 `homebrew` job in `release.yml` bumps version and sha256 there on each
 release. **Open [H]**: add repo secret `TAP_TOKEN` (fine-grained PAT,
