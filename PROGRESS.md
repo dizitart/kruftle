@@ -181,6 +181,10 @@ machine scope per arch) pushed to `dizitart/winget-pkgs` branch
 `vedantmgoyal9/winget-releaser` after `publish` for every later tag.
 **Open [H]**: open and get the 0.2.13 PR merged; add repo secret
 `WINGET_TOKEN` (classic PAT, `public_repo`).
+Also: `dizitart/homebrew-tap` created with `Casks/kruftle.rb` 0.2.13; new
+`homebrew` job in `release.yml` bumps version and sha256 there on each
+release. **Open [H]**: add repo secret `TAP_TOKEN` (fine-grained PAT,
+contents: write on `dizitart/homebrew-tap`).
 
 ### Session 24 — 2026-11-19
 

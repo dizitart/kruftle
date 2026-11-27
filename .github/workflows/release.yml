@@ -383,3 +383,30 @@ jobs:
           installers-regex: '-windows-(x64|arm64)-setup\.exe$'
           fork-user: dizitart
           token: ${{ secrets.WINGET_TOKEN }}
+
+  # Bumps Casks/kruftle.rb in dizitart/homebrew-tap to this release. Needs
+  # TAP_TOKEN (contents: write on that repo); without it the job stands down.
+  homebrew:
+    name: Update Homebrew tap
+    needs: [version, publish]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Bump cask
+        env:
+          GH_TOKEN: ${{ secrets.TAP_TOKEN }}
+          VERSION: ${{ needs.version.outputs.version }}
+        run: |
+          if [ -z "$GH_TOKEN" ]; then
+            echo "no TAP_TOKEN set; Homebrew tap not updated."
+            exit 0
+          fi
+          SHA=$(gh release download "v$VERSION" --repo "$GITHUB_REPOSITORY" -p checksums.txt -O - \
+            | awk -v f="Kruftle-$VERSION-macos.zip" '$2 == f { print $1 }')
+          [ -n "$SHA" ] || { echo "no checksum for the macOS zip"; exit 1; }
+          git clone -q "https://x-access-token:$GH_TOKEN@github.com/dizitart/homebrew-tap.git" tap
+          cd tap
+          sed -i -E "s/^  version \".*\"/  version \"$VERSION\"/; s/^  sha256 \".*\"/  sha256 \"$SHA\"/" Casks/kruftle.rb
+          git diff --quiet && { echo "cask already at $VERSION"; exit 0; }
+          git -c user.name="github-actions[bot]" -c user.email="41898282+github-actions[bot]@users.noreply.github.com" \
+            commit -qam "kruftle $VERSION"
+          git push -q origin HEAD:main
