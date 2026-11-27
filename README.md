@@ -50,6 +50,15 @@ command.
 
 and so on, for 50 toolchains in total.
 
+## Install
+
+- **macOS** — `brew install --cask dizitart/tap/kruftle`
+- **Windows** — the `-setup.exe` from [Releases](https://github.com/dizitart/kruftle/releases/latest)
+- **Linux** — the `.deb` or `.AppImage` from the [latest release](https://github.com/dizitart/kruftle/releases/latest)
+
+Builds are unsigned; see [Installing by hand](#installing-by-hand) for the
+first-launch step.
+
 ## Why the tool's own command
 
 Because `rm -rf` on a guessed directory name is how people lose work.
@@ -122,7 +131,7 @@ also the one thing Kruftle deliberately does not do.
 [**Kruftle compared to kondo and npkill**](docs/comparison.md), including where
 those tools are the better choice.
 
-## Install
+## Installing by hand
 
 Download the build for your platform from
 [Releases](https://github.com/dizitart/kruftle/releases).
