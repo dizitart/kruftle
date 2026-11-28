@@ -3,6 +3,8 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:path/path.dart' as p;
+
 import '../disk/native_disk.dart';
 import '../models/clean.dart';
 import '../models/project.dart';
@@ -45,7 +47,30 @@ class CleanPlanner {
 
       for (final stack in project.stacks) {
         final toolReady = toolStatus[stack.toolBinary] == ToolStatus.available;
-        final hasCommand = stack.command != null && toolReady;
+        var hasCommand = stack.command != null && toolReady;
+
+        // Rail 6 for commands: a clean command deletes its build output
+        // whether or not git tracks it, and it reaches nested output too
+        // (a root `gradle clean` clears every subproject's build/). If any
+        // directory the command would clear holds committed files, the
+        // command is not run at all. Untracked output can still fall back
+        // to a direct delete below, if the user opted in.
+        if (hasCommand) {
+          final names = stack.artifacts
+              .where((a) => a.risk == CleanRisk.buildOutput)
+              .map((a) => p.basename(a.relative))
+              .toSet();
+          final committed = await gitGuard.trackedDirsNamed(
+            project.path,
+            names,
+          );
+          if (committed.isNotEmpty) {
+            hasCommand = false;
+            for (final dir in committed) {
+              tracked.add(p.join(project.path, dir));
+            }
+          }
+        }
 
         if (hasCommand) {
           steps.add(

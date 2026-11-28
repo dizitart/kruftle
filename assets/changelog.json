@@ -2,6 +2,13 @@
   "kruftle.changelog": 1,
   "versions": [
     {
+      "version": "0.2.14",
+      "date": "2026-11-28",
+      "fixed": [
+        "A project's own clean command (gradle clean, cargo clean and the rest) could delete files committed to git inside its build folder. The git check only covered Kruftle's direct deletes. Now, if git tracks anything in a folder the clean command would clear, at the top level or in a nested subproject, Kruftle does not run that command and the review screen lists the folder as left alone. Untracked build output in that project is still deleted directly if you turned that on."
+      ]
+    },
+    {
       "version": "0.2.13",
       "date": "2026-11-19",
       "added": [

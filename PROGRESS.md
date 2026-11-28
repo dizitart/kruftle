@@ -14,7 +14,7 @@ check in §3 to confirm the tree is in the state this document claims.
 
 | | |
 |---|---|
-| **Current milestone** | **v0.2.13** (tagged): Flutter 3.50 upgrade, plus CocoaPods, Unreal, PureScript, LaTeX and Jupyter stacks (#11, #10, #14, #15, #16) |
+| **Current milestone** | **v0.2.14** (untagged): clean commands no longer run when git tracks anything in their output dirs, nested included (rail 6 gap reported on dev.to). Previous: v0.2.13 Flutter 3.50 + 5 stacks |
 | **Last updated** | 2026-11-19 |
 | **Build green?** | Yes: 690 tests, analyzer clean (`--fatal-infos`), formatter clean |
 | **Repo** | https://github.com/dizitart/kruftle (public, GPL-3.0) |

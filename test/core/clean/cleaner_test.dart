@@ -237,6 +237,58 @@ void main() {
       );
     });
 
+    test('does not run the clean command when its output is tracked', () async {
+      // Regression: `gradle clean` deleted a committed file in build/
+      // because the guard only filtered direct deletes.
+      final project = makeProject('gradleish');
+      await Process.run('git', ['init', '-q', project.path]);
+      await Process.run('git', ['-C', project.path, 'add', '-f', 'target']);
+
+      final plan = await planFor([project], risks: {CleanRisk.buildOutput});
+
+      expect(plan.steps, isEmpty);
+      expect(
+        plan.gitTracked,
+        contains(project.allArtifacts.single.absolutePath),
+      );
+    });
+
+    test(
+      'does not run the clean command when nested output is tracked',
+      () async {
+        final project = makeProject('multi');
+        await Process.run('git', ['init', '-q', project.path]);
+        final nested = p.join(project.path, 'sub', 'target');
+        Directory(nested).createSync(recursive: true);
+        File(p.join(nested, 'keep.jar')).writeAsStringSync('x');
+        await Process.run('git', [
+          '-C',
+          project.path,
+          'add',
+          '-f',
+          'sub/target',
+        ]);
+
+        final plan = await planFor([project]);
+
+        expect(plan.steps, isEmpty);
+        expect(plan.gitTracked, contains(nested));
+      },
+    );
+
+    test(
+      'still runs the command when nothing under its output is tracked',
+      () async {
+        final project = makeProject('clean');
+        await Process.run('git', ['init', '-q', project.path]);
+        File(p.join(project.path, 'README')).writeAsStringSync('x');
+        await Process.run('git', ['-C', project.path, 'add', 'README']);
+
+        final plan = await planFor([project]);
+        expect(plan.steps.map((s) => s.kind), [StepKind.command]);
+      },
+    );
+
     test(
       'an untracked artifact directory in a git repo is still cleanable',
       () async {
